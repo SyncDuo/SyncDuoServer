@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-07-16T15:13:41.113Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="yayfYCQ6fE1E7F0X7XpJ" version="24.6.5" type="github">
+<mxfile host="app.diagrams.net" modified="2024-07-16T15:38:43.360Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="ktUykuRMxmtkOGOnShet" version="24.6.5" type="github">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
     <mxGraphModel dx="1094" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
@@ -8,20 +8,21 @@
           <mxGeometry x="120" y="320" width="280" height="400" as="geometry" />
         </mxCell>
         <mxCell id="FV4cB3aGJ8yGmwrdIlaF-104" value="" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="560" y="320" width="650" height="400" as="geometry" />
+          <mxGeometry x="520" y="320" width="690" height="400" as="geometry" />
         </mxCell>
         <mxCell id="FV4cB3aGJ8yGmwrdIlaF-96" value="Device" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="120" y="320" width="280" height="40" as="geometry" />
         </mxCell>
         <mxCell id="FV4cB3aGJ8yGmwrdIlaF-105" value="NAS" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="560" y="320" width="650" height="40" as="geometry" />
+          <mxGeometry x="520" y="320" width="690" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-126" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="FV4cB3aGJ8yGmwrdIlaF-124" target="FV4cB3aGJ8yGmwrdIlaF-125" edge="1">
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-126" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" target="FV4cB3aGJ8yGmwrdIlaF-125" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="770" y="450" />
               <mxPoint x="620" y="450" />
             </Array>
+            <mxPoint x="770" y="410" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="FV4cB3aGJ8yGmwrdIlaF-132" value="Snapshot" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="FV4cB3aGJ8yGmwrdIlaF-126" vertex="1" connectable="0">
@@ -29,12 +30,13 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-129" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="FV4cB3aGJ8yGmwrdIlaF-124" target="FV4cB3aGJ8yGmwrdIlaF-127" edge="1">
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-129" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" target="FV4cB3aGJ8yGmwrdIlaF-127" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="770" y="450" />
               <mxPoint x="910" y="450" />
             </Array>
+            <mxPoint x="770" y="410" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="FV4cB3aGJ8yGmwrdIlaF-133" value="Incremental Sync" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="FV4cB3aGJ8yGmwrdIlaF-129" vertex="1" connectable="0">
@@ -56,15 +58,12 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-100" value="Folder A" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="230" y="380" width="60" height="30" as="geometry" />
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-100" value="SyncThing Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="200" y="380" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-124" value="Folder B" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="740" y="380" width="60" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-108" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="FV4cB3aGJ8yGmwrdIlaF-100" target="FV4cB3aGJ8yGmwrdIlaF-124" edge="1">
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-108" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="FV4cB3aGJ8yGmwrdIlaF-100" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="837.5" y="395" as="targetPoint" />
+            <mxPoint x="740" y="395" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="FV4cB3aGJ8yGmwrdIlaF-121" value="Sync" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="FV4cB3aGJ8yGmwrdIlaF-108" vertex="1" connectable="0">
@@ -72,19 +71,19 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-125" value="Folder C" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="590" y="490" width="60" height="30" as="geometry" />
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-125" value="Snapshot Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="555" y="490" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-131" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" parent="1" source="FV4cB3aGJ8yGmwrdIlaF-127" target="FV4cB3aGJ8yGmwrdIlaF-130" edge="1">
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-131" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=none;startFill=0;" parent="1" source="FV4cB3aGJ8yGmwrdIlaF-127" target="FV4cB3aGJ8yGmwrdIlaF-130" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-134" value="&lt;div&gt;HardLink&lt;/div&gt;&lt;div&gt;Filter&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="FV4cB3aGJ8yGmwrdIlaF-131" vertex="1" connectable="0">
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-134" value="Filter&lt;div&gt;Copy&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="FV4cB3aGJ8yGmwrdIlaF-131" vertex="1" connectable="0">
           <mxGeometry x="0.0297" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-127" value="Folder D" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="880" y="490" width="60" height="30" as="geometry" />
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-127" value="Incremental Sync Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="825" y="490" width="170" height="30" as="geometry" />
         </mxCell>
         <mxCell id="FV4cB3aGJ8yGmwrdIlaF-150" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="FV4cB3aGJ8yGmwrdIlaF-130" target="FV4cB3aGJ8yGmwrdIlaF-149" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -94,11 +93,11 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-130" value="Folder E" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="880" y="600" width="60" height="30" as="geometry" />
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-130" value="Content Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="830" y="600" width="160" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-149" value="Folder F" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="1120" y="490" width="60" height="30" as="geometry" />
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-149" value="Trash Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="1090" y="490" width="90" height="30" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="120" y="175" width="80" height="20" as="geometry" />
@@ -117,6 +116,27 @@
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-6" value="Cloud-Application" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="210" y="250" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-8" value="1. contains old file&lt;div&gt;2. can be empty&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="560" y="160" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-9" value="1. Snapshot folder recommend in another disk&lt;div&gt;2. Snapshot must be compressed&lt;/div&gt;&lt;div&gt;3.&amp;nbsp;Take a snapshot every three days. If there is no difference since last snapshot, no snapshot will be taken.&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="760" y="160" width="470" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-11" value="SyncThing" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="615" y="130" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-12" value="SyncDuo-Snapshot" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="912.5" y="130" width="165" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-13" value="SyncThing Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="740" y="380" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. Only update and add operation sync&amp;nbsp;&lt;div&gt;2. Snapshot must be compressed&lt;/div&gt;&lt;div&gt;3.&amp;nbsp;Take a snapshot every three days. If there is no difference since last snapshot, no snapshot will be taken.&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="160" width="470" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-19" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1432.5" y="130" width="165" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
