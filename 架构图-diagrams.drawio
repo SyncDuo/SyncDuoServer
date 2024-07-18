@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-07-18T16:13:38.329Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="awopVgjs6Rb7i_9tLqEq" version="24.6.5" type="github">
+<mxfile host="app.diagrams.net" modified="2024-07-18T16:14:17.291Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="p9Oyi3HHtzDbILGHpAnu" version="24.6.5" type="github">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
     <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
@@ -128,15 +128,6 @@
         <mxCell id="p-s9N60HYd-SyPe_iOL1-13" value="SyncThing Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="740" y="380" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-1" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="1760" y="330" width="210" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="p-s9N60HYd-SyPe_iOL1-8" value="1. contains old file&lt;div&gt;2. can be empty&lt;/div&gt;&lt;div&gt;3. no local change would happen&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="oRY6-fE0OnWp-fExXrlh-1" vertex="1">
-          <mxGeometry y="30" width="210" height="70" as="geometry" />
-        </mxCell>
-        <mxCell id="p-s9N60HYd-SyPe_iOL1-11" value="SyncThing" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="oRY6-fE0OnWp-fExXrlh-1" vertex="1">
-          <mxGeometry x="75" width="60" height="30" as="geometry" />
-        </mxCell>
         <mxCell id="oRY6-fE0OnWp-fExXrlh-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="RCgKCgoef3klD9U7Rnbw-1" target="oRY6-fE0OnWp-fExXrlh-6">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -202,6 +193,12 @@
         </mxCell>
         <mxCell id="oRY6-fE0OnWp-fExXrlh-7" value="SyncDuo-Trash" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="oRY6-fE0OnWp-fExXrlh-20">
           <mxGeometry width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-8" value="1. contains old file&lt;div&gt;2. can be empty&lt;/div&gt;&lt;div&gt;3. no local change would happen&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="1760" y="360" width="210" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-11" value="SyncThing" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1760" y="330" width="60" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
