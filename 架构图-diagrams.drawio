@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-07-18T16:16:19.333Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="3SJ84OgyRWRucTD-MUBX" version="24.6.5" type="github">
+<mxfile host="app.diagrams.net" modified="2024-07-18T16:28:59.098Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="nlNSiOyR8Lr7y530FXfX" version="24.6.5" type="github">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
     <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
@@ -136,8 +136,8 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="p-s9N60HYd-SyPe_iOL1-9" value="1. Snapshot folder recommend in another disk&lt;div&gt;2. Snapshot must be compressed&lt;/div&gt;&lt;div&gt;3.&amp;nbsp;Take a snapshot every three days. If there is no difference since last snapshot, no snapshot will be taken.&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="190" y="960" width="470" height="70" as="geometry" />
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-9" value="1. Snapshot folder recommend in another disk&lt;div&gt;2. Snapshot must be compressed&lt;/div&gt;&lt;div&gt;3.&amp;nbsp;Take a snapshot every three days. If there is no difference since last snapshot, no snapshot will be taken.&lt;/div&gt;&lt;div&gt;4. Snapshot older than one year will be delete&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="190" y="960" width="470" height="90" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-12" value="SyncDuo-Snapshot" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="190" y="930" width="165" height="30" as="geometry" />
