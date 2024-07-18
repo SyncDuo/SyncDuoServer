@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-07-18T16:08:12.318Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="Gl6xs6s_u4opau3ucWqZ" version="24.6.5" type="github">
+<mxfile host="app.diagrams.net" modified="2024-07-18T16:13:38.329Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="awopVgjs6Rb7i_9tLqEq" version="24.6.5" type="github">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
     <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
@@ -197,7 +197,7 @@
         <mxCell id="oRY6-fE0OnWp-fExXrlh-20" value="" style="group" vertex="1" connectable="0" parent="1">
           <mxGeometry x="2640" y="610" width="320" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-6" value="1. file delete in content will move to here&lt;br&gt;&lt;div&gt;2. file will be expire 30 day&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="oRY6-fE0OnWp-fExXrlh-20">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-6" value="1. file delete in content will move to here&lt;br&gt;&lt;div&gt;2. file will be expire 30 day, then be deleted and trigger incremental folder delete file&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="oRY6-fE0OnWp-fExXrlh-20">
           <mxGeometry y="30" width="320" height="70" as="geometry" />
         </mxCell>
         <mxCell id="oRY6-fE0OnWp-fExXrlh-7" value="SyncDuo-Trash" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="oRY6-fE0OnWp-fExXrlh-20">
