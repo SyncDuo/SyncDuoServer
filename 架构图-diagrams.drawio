@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-07-16T16:55:15.932Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="ykVsXjIAXRih68AaUz-9" version="24.6.5" type="github">
+<mxfile host="app.diagrams.net" modified="2024-07-18T15:28:44.998Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="nFk4JqW36kicJokwoWrt" version="24.6.5" type="github">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
     <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
@@ -140,16 +140,16 @@
         <mxCell id="p-s9N60HYd-SyPe_iOL1-13" value="SyncThing Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="740" y="380" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. Only update and add operation sync&amp;nbsp;&lt;div&gt;2. Syncing trigger by ItemFinished-update event, will ovenwritten existing file&lt;/div&gt;&lt;div&gt;3. (wait for implement) before incremental sync completed, hold syncthing for deleting file&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="1280" y="160" width="470" height="70" as="geometry" />
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. Only update and add operation sync&amp;nbsp;&lt;div&gt;2. Syncing trigger by ItemFinished-update event, will ovenwritten existing file&lt;/div&gt;&lt;div&gt;3. (wait for implement) before incremental sync completed, hold syncthing from deleting file&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="1280" y="160" width="490" height="70" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-19" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="1432.5" y="130" width="165" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="RCgKCgoef3klD9U7Rnbw-1" value="1. Filter by file content and copy to content folder&lt;div&gt;2.&amp;nbsp; File won&#39;t be delete, but move to trash folder&lt;/div&gt;&lt;div&gt;3. if the same file modified in both incremental folder and content folder, it won&#39;t be sync again, but throw warning like git merge confict&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+        <mxCell id="RCgKCgoef3klD9U7Rnbw-1" value="1. Incremental folder filter by file type and copy to content folder&lt;div&gt;2.&amp;nbsp; File won&#39;t be delete, but move to trash folder&lt;/div&gt;&lt;div&gt;3. if the same file modified in both incremental folder and content folder, it won&#39;t be sync again, but throw warning like git merge confict&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="1800" y="160" width="470" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="RCgKCgoef3klD9U7Rnbw-2" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+        <mxCell id="RCgKCgoef3klD9U7Rnbw-2" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="1952.5" y="130" width="165" height="30" as="geometry" />
         </mxCell>
       </root>
