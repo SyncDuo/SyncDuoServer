@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-07-18T16:41:32.009Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="eyQfz1YfGVjaxdtGICTZ" version="24.6.5" type="github">
+<mxfile host="app.diagrams.net" modified="2024-07-19T16:55:44.841Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="pIJk1wFp2PNQ2UPHUdrA" version="24.7.1" type="github">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
     <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
@@ -128,10 +128,10 @@
         <mxCell id="p-s9N60HYd-SyPe_iOL1-13" value="SyncThing Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="740" y="380" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="RCgKCgoef3klD9U7Rnbw-1" target="oRY6-fE0OnWp-fExXrlh-6">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="RCgKCgoef3klD9U7Rnbw-1" target="oRY6-fE0OnWp-fExXrlh-6" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-12" value="Delete&lt;div&gt;Move&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="oRY6-fE0OnWp-fExXrlh-8">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-12" value="Delete&lt;div&gt;Move&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="oRY6-fE0OnWp-fExXrlh-8" vertex="1" connectable="0">
           <mxGeometry x="-0.083" y="-1" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
@@ -142,30 +142,32 @@
         <mxCell id="p-s9N60HYd-SyPe_iOL1-12" value="SyncDuo-Snapshot" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="190" y="930" width="165" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="p-s9N60HYd-SyPe_iOL1-8" target="p-s9N60HYd-SyPe_iOL1-9">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="p-s9N60HYd-SyPe_iOL1-8" target="p-s9N60HYd-SyPe_iOL1-9" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-22" value="snapshot" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="oRY6-fE0OnWp-fExXrlh-16">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-22" value="snapshot" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="oRY6-fE0OnWp-fExXrlh-16" vertex="1" connectable="0">
           <mxGeometry x="0.0801" y="1" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="p-s9N60HYd-SyPe_iOL1-18" target="RCgKCgoef3klD9U7Rnbw-1">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="p-s9N60HYd-SyPe_iOL1-18" target="RCgKCgoef3klD9U7Rnbw-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-23" value="Filter&lt;div&gt;Copy&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="oRY6-fE0OnWp-fExXrlh-18">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-23" value="Filter&lt;div&gt;Copy&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="oRY6-fE0OnWp-fExXrlh-18" vertex="1" connectable="0">
           <mxGeometry x="-0.0128" y="-3" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. Only update and add operation sync&amp;nbsp;&lt;div&gt;2. Syncing trigger by ItemFinished-update event, will ovenwritten existing file&lt;/div&gt;&lt;div&gt;3. (wait for implement) before incremental sync completed, hold syncthing from deleting file&lt;/div&gt;&lt;div&gt;4. delete file trigger by file in trash folder expire&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. Only update and add operation sync&amp;nbsp;&lt;div&gt;2. Syncing trigger by ItemFinished-update event, will ovenwritten existing file&lt;/div&gt;&lt;div&gt;3. before incremental sync completed, pause syncthing&lt;/div&gt;&lt;div&gt;4. deleting file trigger by file in trash folder expire&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="951" y="960" width="490" height="70" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-19" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="951" y="930" width="165" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-17" value="Incremental&lt;div&gt;Sync&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="p-s9N60HYd-SyPe_iOL1-8" target="p-s9N60HYd-SyPe_iOL1-18">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-17" value="Incremental&lt;div&gt;Sync&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="p-s9N60HYd-SyPe_iOL1-8" target="p-s9N60HYd-SyPe_iOL1-18" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="RCgKCgoef3klD9U7Rnbw-1" value="1. Incremental folder filter by file type and copy to content folder&lt;div&gt;2. Trigger by incremental sync finish&lt;br&gt;&lt;div&gt;3.&amp;nbsp; File won&#39;t be delete, but move to trash folder&lt;/div&gt;&lt;div&gt;4. if the same file modified in both incremental folder and content folder, it won&#39;t be sync again, but throw warning like git merge confict&lt;/div&gt;&lt;/div&gt;&lt;div&gt;5. file add in content will also be added in incremental&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="951" y="1159" width="490.00000000000006" height="91" as="geometry" />
@@ -173,25 +175,25 @@
         <mxCell id="RCgKCgoef3klD9U7Rnbw-2" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="950.9993617021275" y="1120" width="172.0212765957447" height="39" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="oRY6-fE0OnWp-fExXrlh-6" target="p-s9N60HYd-SyPe_iOL1-18">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="oRY6-fE0OnWp-fExXrlh-6" target="p-s9N60HYd-SyPe_iOL1-18" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="1751" y="995" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-21" value="Delete" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="oRY6-fE0OnWp-fExXrlh-19">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-21" value="Delete" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="oRY6-fE0OnWp-fExXrlh-19" vertex="1" connectable="0">
           <mxGeometry x="-0.2244" y="3" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-20" value="" style="group" vertex="1" connectable="0" parent="1">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-20" value="" style="group" parent="1" vertex="1" connectable="0">
           <mxGeometry x="1591" y="1050" width="320" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-6" value="1. file delete in content will move to here&lt;br&gt;&lt;div&gt;2. file will be expire 30 day, then be deleted and trigger incremental folder delete file&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="oRY6-fE0OnWp-fExXrlh-20">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-6" value="1. file delete in content will move to here&lt;br&gt;&lt;div&gt;2. file will be expire 30 day, then be deleted and trigger incremental folder delete file&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="oRY6-fE0OnWp-fExXrlh-20" vertex="1">
           <mxGeometry y="30" width="320" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-7" value="SyncDuo-Trash" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="oRY6-fE0OnWp-fExXrlh-20">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-7" value="SyncDuo-Trash" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="oRY6-fE0OnWp-fExXrlh-20" vertex="1">
           <mxGeometry width="120" height="30" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-8" value="1. contains old file&lt;div&gt;2. can be empty&lt;/div&gt;&lt;div&gt;3. no local change would happen&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
@@ -200,16 +202,16 @@
         <mxCell id="p-s9N60HYd-SyPe_iOL1-11" value="SyncThing" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="711" y="770" width="60" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-24" value="Kopia" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-24" value="Kopia" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" parent="1" vertex="1">
           <mxGeometry x="130" y="960" width="60" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-25" value="" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-25" value="java" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" parent="1" vertex="1">
           <mxGeometry x="891" y="960" width="60" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-26" value="" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-26" value="java" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" parent="1" vertex="1">
           <mxGeometry x="891" y="1159" width="60" height="91" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-27" value="" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-27" value="java" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" parent="1" vertex="1">
           <mxGeometry x="1531" y="1080" width="60" height="70" as="geometry" />
         </mxCell>
       </root>
