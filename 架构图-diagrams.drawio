@@ -24,7 +24,7 @@
             <mxPoint x="770" y="410" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-133" value="Incremental Sync" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="FV4cB3aGJ8yGmwrdIlaF-129" vertex="1" connectable="0">
+        <mxCell id="FV4cB3aGJ8yGmwrdIlaF-133" value="Incremental Sync&lt;div&gt;HardLink&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="FV4cB3aGJ8yGmwrdIlaF-129" vertex="1" connectable="0">
           <mxGeometry x="0.1254" y="-2" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
@@ -255,7 +255,7 @@
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-7" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="120" y="1560" width="165" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-8" value="&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;user predefined rule for filter pattern and flatten incremental sync folder&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;expose api to accept incremental sync finish per file, then copy file with filter&lt;/span&gt;&lt;br&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;(wait for implemented)&lt;/li&gt;&lt;li&gt;(wait for implemented)&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-8" value="&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;user predefined rule for filter pattern and (optional) flatten incremental sync folder&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;expose api to accept incremental sync finish per file, then copy file with filter&lt;/span&gt;&lt;br&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;(wait for implemented)&lt;/li&gt;&lt;li&gt;(wait for implemented)&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1390" width="560" height="110" as="geometry" />
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-9" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
