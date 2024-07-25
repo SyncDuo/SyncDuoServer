@@ -158,7 +158,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. Only update and add operation sync&amp;nbsp;&lt;div&gt;2. Syncing trigger by ItemFinished-update event, will ovenwritten existing file&lt;/div&gt;&lt;div&gt;3. before add/update/delete operation completed, pause syncthing&lt;/div&gt;&lt;div&gt;4. deleting operation trigger by file in trash folder expire&lt;/div&gt;&lt;div&gt;5. file can&#39;t be local change, only syncthing folder change is accept&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. Only update and add operation sync&amp;nbsp;&lt;div&gt;2. Syncing trigger by ItemFinished-update event, will ovenwritten existing file&lt;/div&gt;&lt;div&gt;3. deleting operation trigger by file in trash folder expire&lt;/div&gt;&lt;div&gt;4. file can&#39;t be local change, only syncthing folder change is accept&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="951" y="960" width="490" height="80" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-19" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
@@ -235,7 +235,7 @@
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-4" value="SyncDuo-Snapshot" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="120" y="1360" width="165" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;java file-level copy directory recursively, using file lastModifiedDate to get updated file&lt;/li&gt;&lt;li&gt;polling itemFinished event from syncthing rest api, trigger full scan, not specifiy file&lt;/li&gt;&lt;li&gt;send a PATCH request to /rest/config/folders/&amp;lt;id&amp;gt; with json payload {&quot;paused&quot;:true} to pause syncthing, {&quot;pause&quot;:false} to resume&lt;/li&gt;&lt;li&gt;delete file record into database for not incremental sync again&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;java file-level copy directory recursively, using file lastModifiedDate to get updated file&lt;/li&gt;&lt;li&gt;polling itemFinished event from syncthing rest api, fire work thread to&amp;nbsp;exclusive lock file for adding/updating.periodically full scan is also needed&lt;/li&gt;&lt;li&gt;delete operation send to an api and fire work thread to exclusive lock for deleting, also add record to database for not incremental sync again&lt;/li&gt;&lt;li&gt;&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="120" y="1590" width="560" height="110" as="geometry" />
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-7" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
