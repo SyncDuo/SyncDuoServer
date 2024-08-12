@@ -229,7 +229,7 @@
           <mxGeometry x="1531" y="1080" width="60" height="70" as="geometry" />
         </mxCell>
         <mxCell id="_8dwR4073q-e48-UyYh1-1" value="&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;run in docker&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;repository dir, syncthing dir need to be mount&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
-          <mxGeometry x="120" y="1390" width="560" height="110" as="geometry" />
+          <mxGeometry x="120" y="1500" width="560" height="110" as="geometry" />
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-2" value="" style="endArrow=none;html=1;rounded=0;fontStyle=0;strokeWidth=4;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
@@ -244,25 +244,25 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-4" value="SyncDuo-Snapshot" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
-          <mxGeometry x="120" y="1360" width="165" height="30" as="geometry" />
+          <mxGeometry x="120" y="1470" width="165" height="30" as="geometry" />
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;polling itemFinished event from syncthing rest api, fire work thread to hard link file that are add/update.periodically full scan is also needed&lt;/li&gt;&lt;li&gt;expose an api for receiving delete operation and fire work thread to exclusive lock for deleting, also add record to database for not incremental sync again&lt;/li&gt;&lt;li&gt;every operation is record to database before taking operation(Write-Ahead Logging) and mark success after&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
-          <mxGeometry x="120" y="1590" width="560" height="110" as="geometry" />
-        </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-7" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
-          <mxGeometry x="120" y="1560" width="165" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-8" value="&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;user predefined rule for filter pattern and (optional) flatten incremental sync folder&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;expose api to accept incremental sync finish per file, then copy file with filter&lt;/span&gt;&lt;br&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;(wait for implemented)&lt;/li&gt;&lt;li&gt;(wait for implemented)&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1390" width="560" height="110" as="geometry" />
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-9" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-7" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="800" y="1360" width="165" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-10" value="&lt;ul&gt;&lt;li&gt;&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-8" value="&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;user predefined rule for filter pattern and (optional) flatten incremental sync folder&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;expose api to accept incremental sync finish per file, then copy file with filter&lt;/span&gt;&lt;br&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;(wait for implemented)&lt;/li&gt;&lt;li&gt;(wait for implemented)&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1590" width="560" height="110" as="geometry" />
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-11" value="SyncDuo-Trash" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-9" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="800" y="1560" width="165" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-10" value="&lt;ul&gt;&lt;li&gt;&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+          <mxGeometry x="1531" y="1500" width="560" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-11" value="SyncDuo-Trash" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1531" y="1470" width="165" height="30" as="geometry" />
         </mxCell>
         <mxCell id="HABQAX602SkIrpShChZR-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="oRY6-fE0OnWp-fExXrlh-25" target="p-s9N60HYd-SyPe_iOL1-9" edge="1">
           <mxGeometry relative="1" as="geometry" />
