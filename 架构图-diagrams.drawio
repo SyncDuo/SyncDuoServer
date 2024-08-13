@@ -159,7 +159,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="RCgKCgoef3klD9U7Rnbw-1" value="1. Incremental folder filter by file type and copy to content folder&lt;div&gt;2. Trigger by incremental sync finish&lt;br&gt;&lt;div&gt;3. File deleted will trigger delete in incremental folder&lt;/div&gt;&lt;div&gt;4. If the same file modified in both incremental folder and content folder, it won&#39;t be sync again, but throw warning like git merge confict&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="951" y="1159" width="490" height="111" as="geometry" />
+          <mxGeometry x="951" y="1159" width="490" height="91" as="geometry" />
         </mxCell>
         <mxCell id="RCgKCgoef3klD9U7Rnbw-2" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="950.9993617021275" y="1120" width="172.0212765957447" height="39" as="geometry" />
@@ -193,7 +193,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="oRY6-fE0OnWp-fExXrlh-26" value="java" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" parent="1" vertex="1">
-          <mxGeometry x="891" y="1159" width="60" height="111" as="geometry" />
+          <mxGeometry x="891" y="1159" width="60" height="91" as="geometry" />
         </mxCell>
         <mxCell id="_8dwR4073q-e48-UyYh1-1" value="&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;run in docker&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;repository dir, syncthing dir need to be mount&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="120" y="1500" width="560" height="110" as="geometry" />
