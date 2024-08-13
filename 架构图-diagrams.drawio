@@ -134,21 +134,13 @@
         <mxCell id="p-s9N60HYd-SyPe_iOL1-13" value="SyncThing Folder" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="740" y="380" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="RCgKCgoef3klD9U7Rnbw-1" target="oRY6-fE0OnWp-fExXrlh-6" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-12" value="Delete&lt;div&gt;Move&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="oRY6-fE0OnWp-fExXrlh-8" vertex="1" connectable="0">
-          <mxGeometry x="-0.083" y="-1" relative="1" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-9" value="1. Snapshot folder recommend in another disk&lt;div&gt;2. Snapshot must be compressed&lt;/div&gt;&lt;div&gt;3.&amp;nbsp;Take a snapshot every three days. If there is no difference since last snapshot, no snapshot will be taken.&lt;/div&gt;&lt;div&gt;4. Snapshot older than one year will be delete&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="190" y="960" width="470" height="90" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-12" value="SyncDuo-Snapshot" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="190" y="930" width="165" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="p-s9N60HYd-SyPe_iOL1-18" target="RCgKCgoef3klD9U7Rnbw-1" edge="1">
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" parent="1" source="p-s9N60HYd-SyPe_iOL1-18" target="RCgKCgoef3klD9U7Rnbw-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="oRY6-fE0OnWp-fExXrlh-23" value="Filter&lt;div&gt;Copy&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="oRY6-fE0OnWp-fExXrlh-18" vertex="1" connectable="0">
@@ -167,32 +159,19 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="Pt8NlPGo18cKOHMlV979-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="RCgKCgoef3klD9U7Rnbw-1" target="p-s9N60HYd-SyPe_iOL1-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Pt8NlPGo18cKOHMlV979-2" value="Delete" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="Pt8NlPGo18cKOHMlV979-1">
+          <mxGeometry x="0.0582" y="4" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="RCgKCgoef3klD9U7Rnbw-1" value="1. Incremental folder filter by file type and copy to content folder&lt;div&gt;2. Trigger by incremental sync finish&lt;br&gt;&lt;div&gt;3. File deleted will trigger delete in incremental folder&lt;/div&gt;&lt;div&gt;4. If the same file modified in both incremental folder and content folder, it won&#39;t be sync again, but throw warning like git merge confict&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="951" y="1159" width="490" height="111" as="geometry" />
         </mxCell>
         <mxCell id="RCgKCgoef3klD9U7Rnbw-2" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="950.9993617021275" y="1120" width="172.0212765957447" height="39" as="geometry" />
-        </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="oRY6-fE0OnWp-fExXrlh-6" target="p-s9N60HYd-SyPe_iOL1-18" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1751" y="995" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-21" value="Delete" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="oRY6-fE0OnWp-fExXrlh-19" vertex="1" connectable="0">
-          <mxGeometry x="-0.2244" y="3" relative="1" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-20" value="" style="group" parent="1" vertex="1" connectable="0">
-          <mxGeometry x="1591" y="1050" width="320" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-6" value="1. file delete in content will move to here&lt;br&gt;&lt;div&gt;2. file will be expire 30 day, then be deleted and trigger incremental folder delete file&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="oRY6-fE0OnWp-fExXrlh-20" vertex="1">
-          <mxGeometry y="30" width="320" height="70" as="geometry" />
-        </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-7" value="SyncDuo-Trash" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="oRY6-fE0OnWp-fExXrlh-20" vertex="1">
-          <mxGeometry width="120" height="30" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-8" value="1. contains old file&lt;div&gt;2. can be empty&lt;/div&gt;&lt;div&gt;3. no local change would happen&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="711" y="800" width="210" height="70" as="geometry" />
@@ -225,9 +204,6 @@
         <mxCell id="oRY6-fE0OnWp-fExXrlh-26" value="java" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" parent="1" vertex="1">
           <mxGeometry x="891" y="1159" width="60" height="111" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-27" value="java" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" parent="1" vertex="1">
-          <mxGeometry x="1531" y="1080" width="60" height="70" as="geometry" />
-        </mxCell>
         <mxCell id="_8dwR4073q-e48-UyYh1-1" value="&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;run in docker&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;repository dir, syncthing dir need to be mount&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="120" y="1500" width="560" height="110" as="geometry" />
         </mxCell>
@@ -258,9 +234,6 @@
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-7" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="800" y="1360" width="165" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="ECWo1m8Fi9RXr4LYJiaZ-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="ec7xJqQuYl15cwVy1hZ_-8" target="ec7xJqQuYl15cwVy1hZ_-10" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="ECWo1m8Fi9RXr4LYJiaZ-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ec7xJqQuYl15cwVy1hZ_-8" target="_8dwR4073q-e48-UyYh1-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -269,19 +242,6 @@
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-9" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="800" y="1560" width="165" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="ECWo1m8Fi9RXr4LYJiaZ-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ec7xJqQuYl15cwVy1hZ_-10" target="ec7xJqQuYl15cwVy1hZ_-6" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1810" y="1445" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-10" value="&lt;ul&gt;&lt;li&gt;&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
-          <mxGeometry x="1531" y="1500" width="560" height="110" as="geometry" />
-        </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-11" value="SyncDuo-Trash" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
-          <mxGeometry x="1531" y="1470" width="165" height="30" as="geometry" />
         </mxCell>
         <mxCell id="HABQAX602SkIrpShChZR-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="oRY6-fE0OnWp-fExXrlh-25" target="p-s9N60HYd-SyPe_iOL1-9" edge="1">
           <mxGeometry relative="1" as="geometry" />
