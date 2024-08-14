@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" version="24.7.7">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="888" dy="481" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -249,7 +249,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-14" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="440" y="1840" width="200" height="90" as="geometry" />
+          <mxGeometry x="440" y="1990" width="200" height="90" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-12" value="base" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-14">
           <mxGeometry width="200" height="20" as="geometry" />
@@ -258,23 +258,23 @@
           <mxGeometry y="20" width="200" height="70" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-15" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="80" y="1960" width="200" height="190" as="geometry" />
+          <mxGeometry x="80" y="2110" width="200" height="190" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-16" value="folder" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-15">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-17" value="&lt;div&gt;long: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;ffull_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;sync_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;date:&lt;b&gt;&amp;nbsp;last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; parent_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;upstream_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-15">
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-17" value="&lt;div&gt;long: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; folder_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;sync_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;date:&lt;b&gt;&amp;nbsp;last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; parent_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long&lt;b&gt;: root_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;upstream_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-15">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IIC6WvYA1fez5i_vmn7t-16" target="IIC6WvYA1fez5i_vmn7t-13">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="180" y="1895" />
+              <mxPoint x="180" y="2045" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-22" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="320" y="1960" width="200" height="190" as="geometry" />
+          <mxGeometry x="320" y="2110" width="200" height="190" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-23" value="file" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-22">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
@@ -286,9 +286,9 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-26" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="560" y="1960" width="200" height="190" as="geometry" />
+          <mxGeometry x="560" y="2110" width="200" height="190" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-27" value="sync_setting" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-26">
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-27" value="content_sync_setting" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-26">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-28" value="&lt;div&gt;long: &lt;b&gt;sync_setting_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;bool:&lt;b&gt;&amp;nbsp;flatten&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;filter_&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;b&gt;criteria&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-26">
@@ -298,7 +298,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-30" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="800" y="1960" width="200" height="190" as="geometry" />
+          <mxGeometry x="1010" y="2110" width="200" height="190" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-31" value="folder_operation_log" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-30">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
@@ -306,15 +306,8 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-32" value="&lt;div&gt;long: &lt;b&gt;sync_folder_log_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;operation_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; sync_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;error_message&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-30">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IIC6WvYA1fez5i_vmn7t-31" target="IIC6WvYA1fez5i_vmn7t-13">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="900" y="1895" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-34" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="1039" y="1960" width="200" height="190" as="geometry" />
+          <mxGeometry x="782.5" y="2110" width="200" height="190" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-35" value="file_operation_log" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-34">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
@@ -325,7 +318,14 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IIC6WvYA1fez5i_vmn7t-35" target="IIC6WvYA1fez5i_vmn7t-13">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1140" y="1895" />
+              <mxPoint x="880" y="2045" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-46" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IIC6WvYA1fez5i_vmn7t-31" target="IIC6WvYA1fez5i_vmn7t-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1110" y="2045" />
             </Array>
           </mxGeometry>
         </mxCell>
