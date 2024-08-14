@@ -248,11 +248,42 @@
             <mxPoint x="2462" y="1754" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-12" value="base" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="440" y="1840" width="200" height="20" as="geometry" />
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-14" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="440" y="1840" width="200" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-13" value="str: &lt;b&gt;created_user&lt;/b&gt;&lt;div&gt;date: &lt;b&gt;created_date&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;last_updated_user&lt;/b&gt;&lt;/div&gt;&lt;div&gt;date: &lt;b&gt;last_updated_date&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
-          <mxGeometry x="440" y="1860" width="200" height="70" as="geometry" />
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-12" value="base" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-14">
+          <mxGeometry width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-13" value="str: &lt;b&gt;created_user&lt;/b&gt;&lt;div&gt;date: &lt;b&gt;created_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;last_updated_user&lt;/b&gt;&lt;/div&gt;&lt;div&gt;date: &lt;b&gt;last_updated_time&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-14">
+          <mxGeometry y="20" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-15" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="80" y="1960" width="200" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-16" value="folder" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-15">
+          <mxGeometry width="200" height="29.23076923076923" as="geometry" />
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-17" value="&lt;div&gt;long: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;ffull_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;sync_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;date:&lt;b&gt;&amp;nbsp;last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; parent_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;upstream_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-15">
+          <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IIC6WvYA1fez5i_vmn7t-16" target="IIC6WvYA1fez5i_vmn7t-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="1895" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-22" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="320" y="1960" width="200" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-23" value="file" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-22">
+          <mxGeometry width="200" height="29.23076923076923" as="geometry" />
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-24" value="&lt;div&gt;long: &lt;b&gt;file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;size&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; sync_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;date:&lt;b&gt; last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; last_modified_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;upstream_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="IIC6WvYA1fez5i_vmn7t-22">
+          <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
+        </mxCell>
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="IIC6WvYA1fez5i_vmn7t-23" target="IIC6WvYA1fez5i_vmn7t-13">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
