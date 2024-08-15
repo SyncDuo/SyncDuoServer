@@ -139,7 +139,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. only update and add operation sync,&amp;nbsp;&lt;span style=&quot;background-color: initial;&quot;&gt;trigger by ItemFinished-update event, will overwrite existing file&lt;/span&gt;&lt;div&gt;2. deleting operation trigger by file deleted in content folder, deleted file will not be sync from SyncThing again&lt;/div&gt;&lt;div&gt;3. file can&#39;t be local change, only syncthing folder change is accept&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. only update and add operation sync,&amp;nbsp;&lt;span style=&quot;background-color: initial;&quot;&gt;trigger by system watcher, will overwrite existing file&lt;/span&gt;&lt;div&gt;2. deleting operation trigger by file deleted in content folder, deleted file will not be sync from SyncThing again&lt;/div&gt;&lt;div&gt;3. file can&#39;t be local change, only syncthing folder change is accept&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="951" y="960" width="490" height="80" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-19" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
