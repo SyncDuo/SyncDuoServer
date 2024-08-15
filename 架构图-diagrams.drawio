@@ -131,8 +131,13 @@
         <mxCell id="p-s9N60HYd-SyPe_iOL1-12" value="SyncDuo-Snapshot" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="190" y="930" width="165" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="oRY6-fE0OnWp-fExXrlh-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" parent="1" source="p-s9N60HYd-SyPe_iOL1-18" target="RCgKCgoef3klD9U7Rnbw-1" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="oRY6-fE0OnWp-fExXrlh-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="p-s9N60HYd-SyPe_iOL1-8" target="RCgKCgoef3klD9U7Rnbw-1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="816" y="1100" />
+              <mxPoint x="1074" y="1100" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="oRY6-fE0OnWp-fExXrlh-23" value="Filter&lt;div&gt;Copy&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="oRY6-fE0OnWp-fExXrlh-18" vertex="1" connectable="0">
           <mxGeometry x="-0.0128" y="-3" relative="1" as="geometry">
