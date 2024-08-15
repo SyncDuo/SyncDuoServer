@@ -377,23 +377,23 @@
         <mxCell id="IcKSqmq6yABAYZnoPidn-13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-10" target="IcKSqmq6yABAYZnoPidn-12">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="IcKSqmq6yABAYZnoPidn-10" value="新建watcher监测 syncthing 目录的新增和修改" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+        <mxCell id="IcKSqmq6yABAYZnoPidn-10" value="新建 watcher 监测 syncthing 目录的新增和修改" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="440" y="2200" width="260" height="60" as="geometry" />
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-12" target="IcKSqmq6yABAYZnoPidn-14">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="IcKSqmq6yABAYZnoPidn-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-12" target="IcKSqmq6yABAYZnoPidn-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-12" value="有新增或修改则记录到数据库" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="760" y="2200" width="170" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="IcKSqmq6yABAYZnoPidn-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-14" target="IcKSqmq6yABAYZnoPidn-17">
-          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-14" value="incr 目录 hardlink 同步" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="1010" y="2200" width="170" height="60" as="geometry" />
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-17" value="content 目录 filter copy 同步" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="1260" y="2200" width="170" height="60" as="geometry" />
+          <mxGeometry x="1010" y="2300" width="170" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
