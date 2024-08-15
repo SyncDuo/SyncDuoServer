@@ -404,7 +404,7 @@
         <mxCell id="IcKSqmq6yABAYZnoPidn-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-20" target="IcKSqmq6yABAYZnoPidn-12">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="IcKSqmq6yABAYZnoPidn-20" value="新建定时全量扫描任务比对三个目录" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+        <mxCell id="IcKSqmq6yABAYZnoPidn-20" value="新建定时全量扫描任务比对 syncthing 和 incr 目录" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="440" y="2290" width="260" height="60" as="geometry" />
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-23" target="IcKSqmq6yABAYZnoPidn-24">
