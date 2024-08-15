@@ -355,6 +355,9 @@
         <mxCell id="IcKSqmq6yABAYZnoPidn-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-2" target="IcKSqmq6yABAYZnoPidn-20">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="IcKSqmq6yABAYZnoPidn-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-2" target="IcKSqmq6yABAYZnoPidn-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-2" value="记录文件夹关联关系" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="240" y="2200" width="130" height="60" as="geometry" />
         </mxCell>
@@ -402,7 +405,16 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-20" value="新建定时全量扫描任务比对三个目录" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="440" y="2320" width="260" height="60" as="geometry" />
+          <mxGeometry x="440" y="2290" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IcKSqmq6yABAYZnoPidn-25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-23" target="IcKSqmq6yABAYZnoPidn-24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IcKSqmq6yABAYZnoPidn-23" value="新建 watcher 监测 content 目录的删除" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="440" y="2390" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IcKSqmq6yABAYZnoPidn-24" value="incr 目录删除文件" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="760" y="2390" width="170" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
