@@ -340,8 +340,11 @@
         <mxCell id="IcKSqmq6yABAYZnoPidn-1" value="用户提交关联关系" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="2200" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="IcKSqmq6yABAYZnoPidn-2" value="1. 监测 syncthing 目录的新增和修改&lt;div&gt;2. incremental 目录 hardlink 同步&lt;/div&gt;&lt;div&gt;3. content 目录 copy 同步&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="240" y="2200" width="200" height="60" as="geometry" />
+        <mxCell id="IcKSqmq6yABAYZnoPidn-11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-2" target="IcKSqmq6yABAYZnoPidn-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IcKSqmq6yABAYZnoPidn-2" value="存储文件夹关联关系" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="240" y="2200" width="130" height="60" as="geometry" />
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IIC6WvYA1fez5i_vmn7t-23" target="IIC6WvYA1fez5i_vmn7t-13">
           <mxGeometry relative="1" as="geometry" />
@@ -361,6 +364,15 @@
               <mxPoint x="140" y="1855" />
             </Array>
           </mxGeometry>
+        </mxCell>
+        <mxCell id="IcKSqmq6yABAYZnoPidn-13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IcKSqmq6yABAYZnoPidn-10" target="IcKSqmq6yABAYZnoPidn-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IcKSqmq6yABAYZnoPidn-10" value="新建监测 syncthing 目录的新增和修改" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="450" y="2200" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IcKSqmq6yABAYZnoPidn-12" value="有新增或修改则&lt;div&gt;&lt;div&gt;2. incremental 目录 hardlink 同步&lt;/div&gt;&lt;div&gt;3. content 目录 copy 同步&lt;/div&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="760" y="2200" width="230" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
