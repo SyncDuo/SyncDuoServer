@@ -371,7 +371,7 @@
         <mxCell id="IcKSqmq6yABAYZnoPidn-10" value="新建监测 syncthing 目录的新增和修改" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="450" y="2200" width="230" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="IcKSqmq6yABAYZnoPidn-12" value="有新增或修改则&lt;div&gt;&lt;div&gt;2. incremental 目录 hardlink 同步&lt;/div&gt;&lt;div&gt;3. content 目录 copy 同步&lt;/div&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+        <mxCell id="IcKSqmq6yABAYZnoPidn-12" value="有新增或修改则&lt;div&gt;&lt;div&gt;2. incremental 目录 hardlink 同步&lt;/div&gt;&lt;div&gt;3. content 目录 filter copy 同步&lt;/div&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="760" y="2200" width="230" height="60" as="geometry" />
         </mxCell>
       </root>
