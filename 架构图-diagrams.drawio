@@ -178,14 +178,6 @@
         <mxCell id="oRY6-fE0OnWp-fExXrlh-24" value="Kopia" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" parent="1" vertex="1">
           <mxGeometry x="130" y="960" width="60" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="HABQAX602SkIrpShChZR-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="p-s9N60HYd-SyPe_iOL1-8" target="p-s9N60HYd-SyPe_iOL1-9" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="HABQAX602SkIrpShChZR-9" value="snapshot" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="HABQAX602SkIrpShChZR-7" vertex="1" connectable="0">
-          <mxGeometry x="-0.0224" y="3" relative="1" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="oRY6-fE0OnWp-fExXrlh-25" value="java" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;" parent="1" vertex="1">
           <mxGeometry x="891" y="960" width="60" height="80" as="geometry" />
         </mxCell>
