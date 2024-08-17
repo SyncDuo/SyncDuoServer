@@ -168,7 +168,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="RCgKCgoef3klD9U7Rnbw-1" value="1. syncthing folder filter by file type and copy to content folder&lt;div&gt;2. Trigger by syncthing folder change&lt;br&gt;&lt;div&gt;3. File deleted will trigger delete in incremental folder&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+        <mxCell id="RCgKCgoef3klD9U7Rnbw-1" value="1. syncthing folder filter by file type and copy to content folder&lt;div&gt;&lt;div&gt;2. File deleted will trigger delete in incremental folder&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="951" y="1159" width="490" height="91" as="geometry" />
         </mxCell>
         <mxCell id="RCgKCgoef3klD9U7Rnbw-2" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
@@ -230,7 +230,7 @@
         <mxCell id="ECWo1m8Fi9RXr4LYJiaZ-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ec7xJqQuYl15cwVy1hZ_-8" target="_8dwR4073q-e48-UyYh1-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-8" value="&lt;ul&gt;&lt;li&gt;triggerby system watcher on syncthing folder, fire work thread to filter copy file that are add/update.periodically full scan is also needed&lt;/li&gt;&lt;li&gt;WatchService monitor content folder,file delete will record to database then fire thread to delete file in incremental folder&lt;/li&gt;&lt;li&gt;WatchService monitor content folder, file change will trigger file comparision(checksum), if differ from incremental folder, will mark as changed, record to database and never sync from incremental folder&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-8" value="&lt;ul&gt;&lt;li&gt;triggerby system watcher on syncthing folder, fire work thread to filter copy file that are add/update.periodically full scan is also needed&lt;/li&gt;&lt;li&gt;WatchService monitor content folder,file delete will record to database then fire thread to delete file in incremental folder&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1590" width="560" height="110" as="geometry" />
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-9" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
