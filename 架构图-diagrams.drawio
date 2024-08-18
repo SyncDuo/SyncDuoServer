@@ -395,6 +395,27 @@
         <mxCell id="wrEZppvQPQj9igWy5DTG-14" value="&lt;span&gt;更新 file 表的 sync_status&lt;/span&gt;" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" vertex="1" parent="1">
           <mxGeometry x="760" y="2320" width="240" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-16" target="wrEZppvQPQj9igWy5DTG-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-16" value="syncthing folder watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2440" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-17" target="wrEZppvQPQj9igWy5DTG-19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-17" value="关注新增和更新的操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="2440" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-19" value="关注新增和更新的操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="2440" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-21" value="incremental folder watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2560" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-22" value="content folder" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2680" width="120" height="60" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
