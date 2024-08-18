@@ -410,11 +410,14 @@
         <mxCell id="wrEZppvQPQj9igWy5DTG-19" value="插入" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="520" y="2440" width="200" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-21" target="wrEZppvQPQj9igWy5DTG-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-21" value="incremental folder watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="2560" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-22" value="content folder" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="2680" width="120" height="60" as="geometry" />
+        <mxCell id="wrEZppvQPQj9igWy5DTG-23" value="关注新增，更新操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="2560" width="200" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
