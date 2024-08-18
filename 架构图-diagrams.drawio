@@ -149,7 +149,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. only update and add operation sync,&amp;nbsp;&lt;span style=&quot;background-color: initial;&quot;&gt;trigger by system watcher, will overwrite existing file&lt;/span&gt;&lt;div&gt;2. file delete in incremental folder will not be sync from syncthing folder again&lt;/div&gt;&lt;div&gt;3. incremental sync folder can have multiple content folder, should record&amp;nbsp;reference count,for file cleaning convenient&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;*&amp;nbsp;&lt;span style=&quot;background-color: initial;&quot;&gt;incremental sync finish mark that syncthing folder is safe to delete&lt;/span&gt;&lt;/b&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+        <mxCell id="p-s9N60HYd-SyPe_iOL1-18" value="1. only update and add operation sync,&amp;nbsp;&lt;span style=&quot;background-color: initial;&quot;&gt;trigger by system watcher, will overwrite existing file&lt;/span&gt;&lt;div&gt;2. incremental sync folder can have multiple content folder, should record&amp;nbsp;reference count,for file cleaning convenient&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;*&amp;nbsp;&lt;span style=&quot;background-color: initial;&quot;&gt;incremental sync finish mark that syncthing folder is safe to delete&lt;/span&gt;&lt;/b&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="951" y="960" width="490" height="100" as="geometry" />
         </mxCell>
         <mxCell id="p-s9N60HYd-SyPe_iOL1-19" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
@@ -210,6 +210,14 @@
         <mxCell id="ECWo1m8Fi9RXr4LYJiaZ-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ec7xJqQuYl15cwVy1hZ_-6" target="_8dwR4073q-e48-UyYh1-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ec7xJqQuYl15cwVy1hZ_-6" target="ec7xJqQuYl15cwVy1hZ_-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-2" value="filter&lt;div&gt;copy&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wrEZppvQPQj9igWy5DTG-1">
+          <mxGeometry x="0.013" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;triggerby system watcher on syncthing folder, fire work thread to hard link file that are add/update. full scan after syncthing folder doesn&#39;t changed for 5 min&lt;/li&gt;&lt;li&gt;expose an api for receiving delete operation and fire work thread to exclusive lock for deleting, also add record to database for not incremental sync again&lt;/li&gt;&lt;li&gt;every operation is record to database before taking operation(Write-Ahead Logging) and mark success after&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1390" width="560" height="110" as="geometry" />
         </mxCell>
@@ -218,16 +226,6 @@
         </mxCell>
         <mxCell id="ECWo1m8Fi9RXr4LYJiaZ-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ec7xJqQuYl15cwVy1hZ_-8" target="_8dwR4073q-e48-UyYh1-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="whZf_1cXE5JJgBkz5Tt_-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="ec7xJqQuYl15cwVy1hZ_-8" target="ec7xJqQuYl15cwVy1hZ_-6" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1080" y="1510" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="whZf_1cXE5JJgBkz5Tt_-2" value="delete" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="whZf_1cXE5JJgBkz5Tt_-1" vertex="1" connectable="0">
-          <mxGeometry x="0.1204" y="3" relative="1" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-8" value="&lt;ul&gt;&lt;li&gt;triggerby system watcher on incremental folder, fire work thread to filter copy file that are add/update.full scan after incremental folder doesn&#39;t changed for 5 min&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1590" width="560" height="110" as="geometry" />
