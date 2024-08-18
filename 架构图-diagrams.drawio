@@ -377,11 +377,23 @@
         <mxCell id="wrEZppvQPQj9igWy5DTG-6" value="扫描&lt;div&gt;folder sync flow 表&lt;/div&gt;&lt;div&gt;建立 watcher&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="2200" width="120" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-8" target="wrEZppvQPQj9igWy5DTG-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-8" value="检查 folder operation log&lt;div&gt;重放没有完成的操作&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="440" y="2200" width="200" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-10" target="wrEZppvQPQj9igWy5DTG-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-10" value="检查 file operation log&lt;div&gt;重放没有完成的操作&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="440" y="2320" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-12" value="更新 folder 表的 sync_status" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="760" y="2200" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-14" value="&lt;span&gt;更新 file 表的 sync_status&lt;/span&gt;" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="760" y="2320" width="240" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
