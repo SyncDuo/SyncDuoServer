@@ -407,53 +407,20 @@
         <mxCell id="wrEZppvQPQj9igWy5DTG-17" value="关注新增和更新的操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="2440" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-19" value="插入" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="wrEZppvQPQj9igWy5DTG-19" value="新增文件夹" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="520" y="2440" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-21" target="wrEZppvQPQj9igWy5DTG-23">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="wrEZppvQPQj9igWy5DTG-39" value="删除文件夹" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="2560" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-21" value="incremental folder watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="2560" width="120" height="60" as="geometry" />
+        <mxCell id="wrEZppvQPQj9igWy5DTG-40" value="新增文件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="2800" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-23" value="关注新增和更新的操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="240" y="2560" width="200" height="60" as="geometry" />
+        <mxCell id="wrEZppvQPQj9igWy5DTG-41" value="更新文件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="2920" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-25" value="full scan 进程" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="2680" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-26" target="wrEZppvQPQj9igWy5DTG-27">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-26" value="sync operation 进程" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="40" y="2800" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-27" target="wrEZppvQPQj9igWy5DTG-29">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-27" target="wrEZppvQPQj9igWy5DTG-31">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-27" value="扫描 folder 表和 file 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="240" y="2800" width="200" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-36" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-29" target="wrEZppvQPQj9igWy5DTG-35">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-29" value="运行中的操作&lt;div&gt;是否超时&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="520" y="2800" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-38" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-31" target="wrEZppvQPQj9igWy5DTG-37">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-31" value="等待中的操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="520" y="2920" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-35" value="超时重试" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="720" y="2800" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-37" value="串行操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="720" y="2920" width="120" height="60" as="geometry" />
+        <mxCell id="wrEZppvQPQj9igWy5DTG-43" value="移动文件夹" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="2680" width="200" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
