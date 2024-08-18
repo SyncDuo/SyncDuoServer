@@ -218,7 +218,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;triggerby system watcher on syncthing folder, fire work thread to hard link file that are add/update. full scan after syncthing folder doesn&#39;t changed for 5 min&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;every operation is record to database before taking operation(Write-Ahead Logging) and mark success after&lt;/span&gt;&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;triggerby system watcher on syncthing folder, fire work thread to hard link file that are add/update. full scan after syncthing folder doesn&#39;t changed for 5 min&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1390" width="560" height="110" as="geometry" />
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-7" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
@@ -409,6 +409,12 @@
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-24" value="incr 目录删除文件" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="760" y="2390" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-3" value="&lt;ul style=&quot;text-align: left;&quot;&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;every operation is record to database before taking operation(Write-Ahead Logging) and mark success after&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="1390" width="500" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-4" value="&lt;ul style=&quot;text-align: left;&quot;&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;every operation is record to database before taking operation(Write-Ahead Logging) and mark success after&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="1590" width="500" height="110" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
