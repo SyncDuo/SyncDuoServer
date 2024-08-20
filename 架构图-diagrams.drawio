@@ -363,10 +363,10 @@
         <mxCell id="wrEZppvQPQj9igWy5DTG-10" value="检查 file operation log&lt;div&gt;重放没有完成的操作&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="440" y="2320" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-12" value="更新 folder 表的 operation_status" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+        <mxCell id="wrEZppvQPQj9igWy5DTG-12" value="更新 folder_opeartion 表的 operation_status" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="760" y="2200" width="240" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-14" value="&lt;span&gt;更新 file 表的 operation_status&lt;/span&gt;" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" parent="1" vertex="1">
+        <mxCell id="wrEZppvQPQj9igWy5DTG-14" value="&lt;span&gt;更新 file_operation 表的 operation_status&lt;/span&gt;" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" parent="1" vertex="1">
           <mxGeometry x="760" y="2320" width="240" height="60" as="geometry" />
         </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wrEZppvQPQj9igWy5DTG-16" target="wrEZppvQPQj9igWy5DTG-17" edge="1">
@@ -395,7 +395,7 @@
         <mxCell id="wrEZppvQPQj9igWy5DTG-19" value="新增文件夹" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="520" y="2440" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-46" value="folder operation 表&lt;span style=&quot;background-color: initial;&quot;&gt;新增一行&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;operation type 是 create&lt;/span&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+        <mxCell id="wrEZppvQPQj9igWy5DTG-46" value="folder_operation 表&lt;span style=&quot;background-color: initial;&quot;&gt;新增一行&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;operation_type 是 create&lt;/span&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="720" y="2440" width="180" height="60" as="geometry" />
         </mxCell>
         <mxCell id="2OahrU1iOWOdpbc31MzJ-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-64" target="2OahrU1iOWOdpbc31MzJ-3">
@@ -416,7 +416,7 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-28" value="&lt;div&gt;long: &lt;b&gt;sync_setting_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;filter_&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;b&gt;criteria&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;str:&lt;b&gt; sync_patten&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-26" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
-        <mxCell id="2OahrU1iOWOdpbc31MzJ-3" value="file_operation 表增加一行&lt;div&gt;operation type 是 hardlink&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="2OahrU1iOWOdpbc31MzJ-3" value="file_operation 表增加一行&lt;div&gt;operation_type 是 hardlink&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="720" y="2560" width="180" height="60" as="geometry" />
         </mxCell>
         <mxCell id="2OahrU1iOWOdpbc31MzJ-5" value="修改文件夹" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
