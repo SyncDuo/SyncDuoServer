@@ -266,7 +266,7 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-16" value="folder" style="rounded=0;whiteSpace=wrap;html=1;" parent="IIC6WvYA1fez5i_vmn7t-15" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-17" value="&lt;div&gt;long: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; folder_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;sync_status&lt;/b&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;date:&lt;b&gt;&amp;nbsp;last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-15" vertex="1">
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-17" value="&lt;div&gt;long: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; folder_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-15" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="IIC6WvYA1fez5i_vmn7t-16" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
@@ -346,7 +346,7 @@
         <mxCell id="IcKSqmq6yABAYZnoPidn-7" value="folder_sync_flow" style="rounded=0;whiteSpace=wrap;html=1;" parent="IcKSqmq6yABAYZnoPidn-6" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IcKSqmq6yABAYZnoPidn-8" value="&lt;div&gt;long: &lt;b&gt;folder_sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;downstream_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; sync_flow_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IcKSqmq6yABAYZnoPidn-6" vertex="1">
+        <mxCell id="IcKSqmq6yABAYZnoPidn-8" value="&lt;div&gt;long: &lt;b&gt;folder_sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;downstream_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;sync_status&lt;/b&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;date:&lt;b&gt;&amp;nbsp;last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IcKSqmq6yABAYZnoPidn-6" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="IcKSqmq6yABAYZnoPidn-7" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
