@@ -502,6 +502,21 @@
         <mxCell id="2OahrU1iOWOdpbc31MzJ-31" value="执行 full scan&lt;div&gt;+ syncthing-&amp;gt;incr 前者是后者子集&lt;/div&gt;&lt;div&gt;+ incr-&amp;gt;content 根据 filter 规则检查&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="470" y="3240" width="240" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="2OahrU1iOWOdpbc31MzJ-33" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="2OahrU1iOWOdpbc31MzJ-34" target="2OahrU1iOWOdpbc31MzJ-36">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2OahrU1iOWOdpbc31MzJ-34" value="multiple hardlink in same type of folder" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="3400" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="2OahrU1iOWOdpbc31MzJ-35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="2OahrU1iOWOdpbc31MzJ-36" target="2OahrU1iOWOdpbc31MzJ-37">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2OahrU1iOWOdpbc31MzJ-36" value="检查 folder_sync_flow 表&lt;div&gt;require_full_scan 为 true&amp;nbsp;&lt;/div&gt;&lt;div&gt;的记录&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="3400" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="2OahrU1iOWOdpbc31MzJ-37" value="执行 full scan&lt;div&gt;+ syncthing-&amp;gt;incr 前者是后者子集&lt;/div&gt;&lt;div&gt;+ incr-&amp;gt;content 根据 filter 规则检查&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="3400" width="240" height="60" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
