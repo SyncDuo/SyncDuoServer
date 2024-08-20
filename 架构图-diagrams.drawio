@@ -282,7 +282,7 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-31" value="folder_operation" style="rounded=0;whiteSpace=wrap;html=1;" parent="IIC6WvYA1fez5i_vmn7t-30" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-32" value="&lt;div&gt;long: &lt;b&gt;sync_folder_log_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;operation_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; operation_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;error_message&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-30" vertex="1">
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-32" value="&lt;div&gt;long: &lt;b&gt;folder_operation_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;operation_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; operation_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;error_message&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-30" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-34" value="" style="group" parent="1" vertex="1" connectable="0">
@@ -291,7 +291,7 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-35" value="file_operation" style="rounded=0;whiteSpace=wrap;html=1;" parent="IIC6WvYA1fez5i_vmn7t-34" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-36" value="&lt;div&gt;long: &lt;b&gt;sync_file_log_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;operation_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; sync_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;error_message&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-34" vertex="1">
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-36" value="&lt;div&gt;long: &lt;b&gt;file_operation_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;operation_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_file_full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_file_full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; operation_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;error_message&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-34" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="IIC6WvYA1fez5i_vmn7t-31" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
