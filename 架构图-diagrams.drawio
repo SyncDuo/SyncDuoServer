@@ -514,6 +514,40 @@
             </Array>
           </mxGeometry>
         </mxCell>
+        <mxCell id="DBui69mx9t86G-LjJont-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="DBui69mx9t86G-LjJont-24" target="DBui69mx9t86G-LjJont-25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DBui69mx9t86G-LjJont-24" value="sync process" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="3280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DBui69mx9t86G-LjJont-32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="440" y="3310" as="sourcePoint" />
+            <mxPoint x="520" y="3310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DBui69mx9t86G-LjJont-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="DBui69mx9t86G-LjJont-33">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="440" y="3310" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DBui69mx9t86G-LjJont-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="DBui69mx9t86G-LjJont-35">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="440" y="3310" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DBui69mx9t86G-LjJont-25" value="1. 扫描 folder_operation&lt;div&gt;2. 扫描 file_operation&lt;/div&gt;&lt;div&gt;3. 扫描 rsync_operation&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="3280" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DBui69mx9t86G-LjJont-33" value="扫描 pending operation" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="3400" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DBui69mx9t86G-LjJont-34" value="扫描 running operation&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="3280" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DBui69mx9t86G-LjJont-35" value="扫描 failed operation&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="3520" width="160" height="60" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
