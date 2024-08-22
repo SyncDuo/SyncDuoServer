@@ -495,8 +495,8 @@
         <mxCell id="DBui69mx9t86G-LjJont-16" value="修改文件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="3160" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="DBui69mx9t86G-LjJont-19" value="触发 rsync" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="440" y="2970" width="120" height="60" as="geometry" />
+        <mxCell id="DBui69mx9t86G-LjJont-19" value="rsync_operation 表增加一行" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="2970" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="DBui69mx9t86G-LjJont-20" value="" style="group" vertex="1" connectable="0" parent="1">
           <mxGeometry x="1480" y="1920" width="200" height="190" as="geometry" />
