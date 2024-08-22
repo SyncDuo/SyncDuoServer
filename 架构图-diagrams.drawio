@@ -560,8 +560,14 @@
         <mxCell id="sbHoZh1LaJMdw1J6sQwc-11" value="扫描 incremental folder 的文件，&lt;div&gt;获取 checksum&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="3640" width="200" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="sbHoZh1LaJMdw1J6sQwc-16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="sbHoZh1LaJMdw1J6sQwc-13" target="sbHoZh1LaJMdw1J6sQwc-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="sbHoZh1LaJMdw1J6sQwc-13" value="扫描 deleted_file 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="520" y="3640" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="sbHoZh1LaJMdw1J6sQwc-15" value="1. 检查是否有相同的文件名&lt;div&gt;2. 扫描是否有同样的 root_folder_id&lt;/div&gt;&lt;div&gt;3. 扫描是否有同样的 checksum&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3640" width="240" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
