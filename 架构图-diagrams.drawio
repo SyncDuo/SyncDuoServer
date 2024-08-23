@@ -610,6 +610,54 @@
         <mxCell id="h0nb07W-7xQutG81ko0o-1" value="扫描 incremental folder 的文件，&lt;div&gt;获取 checksum&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="3080" width="200" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-30" value="文件原地重命名" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="1">
+          <mxGeometry x="40" y="3200" width="200" height="200" as="geometry">
+            <mxRectangle x="40" y="3200" width="140" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-34" value="1. parent_folder_id 一样&lt;div&gt;2. checksum 一样&lt;/div&gt;&lt;div&gt;3. 原文件标为 deleted&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="h0nb07W-7xQutG81ko0o-30">
+          <mxGeometry y="20" width="200" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-31" value="文件移动" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="3200" width="200" height="200" as="geometry">
+            <mxRectangle x="40" y="3200" width="140" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-35" value="1. file_name 一样&lt;div&gt;2. checksum 一样&lt;/div&gt;&lt;div&gt;3. 原文件标为 deleted&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="h0nb07W-7xQutG81ko0o-31">
+          <mxGeometry y="20" width="200" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-32" value="文件重命名+移动" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="3200" width="200" height="200" as="geometry">
+            <mxRectangle x="40" y="3200" width="140" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-36" value="&lt;div&gt;1. checksum 一样&lt;/div&gt;&lt;div&gt;2. 原文件标为 deleted&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="h0nb07W-7xQutG81ko0o-32">
+          <mxGeometry y="20" width="200" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-37" value="文件夹原地重命名" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="1">
+          <mxGeometry x="40" y="3440" width="200" height="200" as="geometry">
+            <mxRectangle x="40" y="3200" width="140" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-38" value="1. parent_folder_id 一样&lt;div&gt;2. checksum 一样&lt;/div&gt;&lt;div&gt;3. 原文件夹标为 deleted&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="h0nb07W-7xQutG81ko0o-37">
+          <mxGeometry y="20" width="200" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-39" value="文件夹移动" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="3440" width="200" height="200" as="geometry">
+            <mxRectangle x="40" y="3200" width="140" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-40" value="1. file_name 一样&lt;div&gt;2. checksum 一样&lt;/div&gt;&lt;div&gt;3. 原文件标为 deleted&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="h0nb07W-7xQutG81ko0o-39">
+          <mxGeometry y="20" width="200" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-41" value="文件夹重命名+移动" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="3440" width="200" height="200" as="geometry">
+            <mxRectangle x="40" y="3200" width="140" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="h0nb07W-7xQutG81ko0o-42" value="&lt;div&gt;1. checksum 一样&lt;/div&gt;&lt;div&gt;2. 原文件标为 deleted&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="h0nb07W-7xQutG81ko0o-41">
+          <mxGeometry y="20" width="200" height="180" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
