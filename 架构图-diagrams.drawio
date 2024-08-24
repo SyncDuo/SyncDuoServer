@@ -4,11 +4,20 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <mxCell id="x67vflKaK5cRHlGB_w2U-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="x67vflKaK5cRHlGB_w2U-6" target="x67vflKaK5cRHlGB_w2U-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x67vflKaK5cRHlGB_w2U-6" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="230" y="2430" width="140" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="x67vflKaK5cRHlGB_w2U-7" value="更新folder, file 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="2840" width="120" height="60" as="geometry" />
+        </mxCell>
         <mxCell id="sbHoZh1LaJMdw1J6sQwc-29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="sbHoZh1LaJMdw1J6sQwc-26" target="sbHoZh1LaJMdw1J6sQwc-28" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="sbHoZh1LaJMdw1J6sQwc-26" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
-          <mxGeometry x="870" y="2590" width="140" height="160" as="geometry" />
+          <mxGeometry x="870" y="2430" width="140" height="320" as="geometry" />
         </mxCell>
         <mxCell id="FV4cB3aGJ8yGmwrdIlaF-99" value="" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="120" y="320" width="280" height="400" as="geometry" />
@@ -595,17 +604,11 @@
         <mxCell id="sbHoZh1LaJMdw1J6sQwc-17" value="有则记录在 duplicate_file 表" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1080" y="2960" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="sbHoZh1LaJMdw1J6sQwc-28" value="更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="sbHoZh1LaJMdw1J6sQwc-28" value="更新folder, file 表" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="880" y="2780" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="sbHoZh1LaJMdw1J6sQwc-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="sbHoZh1LaJMdw1J6sQwc-30" target="sbHoZh1LaJMdw1J6sQwc-32" edge="1">
-          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="sbHoZh1LaJMdw1J6sQwc-30" value="删除文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="240" y="2740" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="sbHoZh1LaJMdw1J6sQwc-32" value="更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="440" y="2740" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="h0nb07W-7xQutG81ko0o-1" value="扫描 incremental folder 的文件，&lt;div&gt;获取 checksum&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="240" y="3080" width="200" height="60" as="geometry" />
