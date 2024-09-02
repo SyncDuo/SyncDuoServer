@@ -223,7 +223,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;trigger by watcher on syncthing folder, monitoring folder/file create/updated, fire work thread to hard link file/create folder. full scan after syncthing folder doesn&#39;t changed for 5 min&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;trigger by watcher on syncthing folder, monitoring folder/file create/updated, fire work thread to hard link file/create folder. full scan after syncthing folder doesn&#39;t changed for 5 min&lt;/li&gt;&lt;li&gt;flatten store file in one folder name as &amp;lt;syncthing-folder-name&amp;gt;-incr. record file hash,filesystem attr and &#39;relative&#39; path into database&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1390" width="560" height="110" as="geometry" />
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-7" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
@@ -232,7 +232,7 @@
         <mxCell id="ECWo1m8Fi9RXr4LYJiaZ-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ec7xJqQuYl15cwVy1hZ_-8" target="_8dwR4073q-e48-UyYh1-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-8" value="&lt;ul&gt;&lt;li&gt;trigger by watcher on incremental folder, fire work thread to filter copy file that are add/update.full scan after incremental folder doesn&#39;t changed for 5 min&lt;/li&gt;&lt;li&gt;file sync from incremental folder will plus reference count in database, delete reverse&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-8" value="&lt;ul&gt;&lt;li&gt;trigger by watcher on incremental folder, fire work thread to filter copy file that are add/update.full scan after incremental folder doesn&#39;t changed for 5 min&lt;/li&gt;&lt;li&gt;file sync from incremental folder will plus reference count in database, delete reverse&lt;br&gt;&lt;/li&gt;&lt;li&gt;flatten and no filter by default, optional for reserve folder structure&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1590" width="560" height="110" as="geometry" />
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-9" value="SyncDuo-Content" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
