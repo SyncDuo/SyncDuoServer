@@ -387,7 +387,10 @@
         <mxCell id="wrEZppvQPQj9igWy5DTG-19" value="新增文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="240" y="2440" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-46" value="1." style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-46" target="Mj2PGNzUyfuV8QlpmbsF-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wrEZppvQPQj9igWy5DTG-46" value="folder_sync_flow 查找下一跳" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="2440" width="180" height="60" as="geometry" />
         </mxCell>
         <mxCell id="2OahrU1iOWOdpbc31MzJ-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wrEZppvQPQj9igWy5DTG-64" target="2OahrU1iOWOdpbc31MzJ-3" edge="1">
@@ -417,7 +420,7 @@
         <mxCell id="2OahrU1iOWOdpbc31MzJ-10" value="file" style="rounded=0;whiteSpace=wrap;html=1;" parent="2OahrU1iOWOdpbc31MzJ-9" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="2OahrU1iOWOdpbc31MzJ-11" value="&lt;div&gt;long: &lt;b&gt;file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;checksum&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;last_modified_date&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; root_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;relative_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="2OahrU1iOWOdpbc31MzJ-9" vertex="1">
+        <mxCell id="2OahrU1iOWOdpbc31MzJ-11" value="&lt;div&gt;long: &lt;b&gt;file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;checksum&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_created_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;last_modified_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; root_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;relative_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="2OahrU1iOWOdpbc31MzJ-9" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="2OahrU1iOWOdpbc31MzJ-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="2OahrU1iOWOdpbc31MzJ-10" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
@@ -539,6 +542,9 @@
         </mxCell>
         <mxCell id="Mj2PGNzUyfuV8QlpmbsF-2" value="扫描&lt;div&gt;folder sync flow 表&lt;/div&gt;&lt;div&gt;建立 watcher&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="880" y="2200" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-5" value="file 表查找同级目录是否有 checksum 一致的文件" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="700" y="2440" width="180" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
