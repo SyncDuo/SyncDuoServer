@@ -325,7 +325,7 @@
         <mxCell id="IcKSqmq6yABAYZnoPidn-7" value="folder_sync_flow" style="rounded=0;whiteSpace=wrap;html=1;" parent="IcKSqmq6yABAYZnoPidn-6" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IcKSqmq6yABAYZnoPidn-8" value="&lt;div&gt;long: &lt;b&gt;folder_sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; flow_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;sync_status&lt;/b&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;timestamp:&lt;b&gt;&amp;nbsp;last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;require_full_scan&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IcKSqmq6yABAYZnoPidn-6" vertex="1">
+        <mxCell id="IcKSqmq6yABAYZnoPidn-8" value="&lt;div&gt;long: &lt;b&gt;folder_sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; flow_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;sync_status&lt;/b&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;timestamp:&lt;b&gt;&amp;nbsp;last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IcKSqmq6yABAYZnoPidn-6" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="IcKSqmq6yABAYZnoPidn-7" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
@@ -341,38 +341,42 @@
         <mxCell id="wrEZppvQPQj9igWy5DTG-4" value="&lt;ul style=&quot;text-align: left;&quot;&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;every operation is record to database before taking operation(Write-Ahead Logging) and mark success after&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
           <mxGeometry x="1360" y="1590" width="360" height="110" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wrEZppvQPQj9igWy5DTG-5" target="wrEZppvQPQj9igWy5DTG-6" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-5" value="系统启动" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="2200" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wrEZppvQPQj9igWy5DTG-6" target="wrEZppvQPQj9igWy5DTG-8" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="wrEZppvQPQj9igWy5DTG-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" target="wrEZppvQPQj9igWy5DTG-8" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="160" y="2230" as="sourcePoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="wrEZppvQPQj9igWy5DTG-6" target="wrEZppvQPQj9igWy5DTG-10" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-6" value="扫描&lt;div&gt;folder sync flow 表&lt;/div&gt;&lt;div&gt;建立 watcher&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="240" y="2200" width="120" height="60" as="geometry" />
+        <mxCell id="wrEZppvQPQj9igWy5DTG-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="wrEZppvQPQj9igWy5DTG-10" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="160" y="2230" as="sourcePoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wrEZppvQPQj9igWy5DTG-8" target="wrEZppvQPQj9igWy5DTG-12" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-8" value="检查 folder operation log&lt;div&gt;重放没有完成的操作&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="440" y="2200" width="200" height="60" as="geometry" />
+          <mxGeometry x="240" y="2200" width="200" height="60" as="geometry" />
         </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wrEZppvQPQj9igWy5DTG-10" target="wrEZppvQPQj9igWy5DTG-14" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-10" value="检查 file operation log&lt;div&gt;重放没有完成的操作&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="440" y="2320" width="200" height="60" as="geometry" />
+          <mxGeometry x="240" y="2320" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-12" target="Mj2PGNzUyfuV8QlpmbsF-2">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-12" value="更新 folder_opeartion 表的 operation_status" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="720" y="2200" width="240" height="60" as="geometry" />
+          <mxGeometry x="520" y="2200" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-14" target="Mj2PGNzUyfuV8QlpmbsF-2">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="wrEZppvQPQj9igWy5DTG-14" value="&lt;span&gt;更新 file_operation 表的 operation_status&lt;/span&gt;" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" parent="1" vertex="1">
-          <mxGeometry x="720" y="2320" width="240" height="60" as="geometry" />
+          <mxGeometry x="520" y="2320" width="240" height="60" as="geometry" />
         </mxCell>
         <mxCell id="sbHoZh1LaJMdw1J6sQwc-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="wrEZppvQPQj9igWy5DTG-16" target="sbHoZh1LaJMdw1J6sQwc-30" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -515,22 +519,6 @@
         <mxCell id="DBui69mx9t86G-LjJont-19" value="rsync_operation 表增加一行" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1080" y="2562.5" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="DBui69mx9t86G-LjJont-20" value="" style="group" parent="1" vertex="1" connectable="0">
-          <mxGeometry x="1480" y="1920" width="200" height="190" as="geometry" />
-        </mxCell>
-        <mxCell id="DBui69mx9t86G-LjJont-21" value="rsync_operation" style="rounded=0;whiteSpace=wrap;html=1;" parent="DBui69mx9t86G-LjJont-20" vertex="1">
-          <mxGeometry width="200" height="29.23076923076923" as="geometry" />
-        </mxCell>
-        <mxCell id="DBui69mx9t86G-LjJont-22" value="&lt;div&gt;long: &lt;b&gt;rsync_operation_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;operation_condition&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; operation_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;error_message&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="DBui69mx9t86G-LjJont-20" vertex="1">
-          <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
-        </mxCell>
-        <mxCell id="DBui69mx9t86G-LjJont-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="DBui69mx9t86G-LjJont-21" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1580" y="1855" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
         <mxCell id="DBui69mx9t86G-LjJont-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="DBui69mx9t86G-LjJont-24" target="DBui69mx9t86G-LjJont-25" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -650,6 +638,9 @@
         </mxCell>
         <mxCell id="h0nb07W-7xQutG81ko0o-42" value="1. 文件夹内的 文件/子文件夹 一样&lt;div&gt;2. 原文件夹标为 deleted&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="h0nb07W-7xQutG81ko0o-41" vertex="1">
           <mxGeometry y="20" width="200" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-2" value="扫描&lt;div&gt;folder sync flow 表&lt;/div&gt;&lt;div&gt;建立 watcher&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="2200" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
