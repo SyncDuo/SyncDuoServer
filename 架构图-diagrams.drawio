@@ -584,10 +584,10 @@
         <mxCell id="Mj2PGNzUyfuV8QlpmbsF-10" value="file 表查找同一 root folder 下是否有checksum, file_created_time 一致的文件" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="960" y="2470" width="230" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-13" value="file 表查找同一 root folder 下是否有checksum, file_created_time 一致的文件" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-13" value="说明是文件移动，更新 file_name 和 relative_path" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="1270" y="2430" width="230" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-15" value="file 表查找同一 root folder 下是否有checksum, file_created_time 一致的文件" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-15" value="file 表新增，incr 目录内新增" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="1270" y="2470" width="230" height="40" as="geometry" />
         </mxCell>
       </root>
