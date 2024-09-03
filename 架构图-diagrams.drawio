@@ -458,7 +458,7 @@
         <mxCell id="0pXfldIxa9z52349PdiN-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Mj2PGNzUyfuV8QlpmbsF-15" target="0pXfldIxa9z52349PdiN-27">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-15" value="file_operation 新增，operation_type = hardlink" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-15" value="file_operation 新增，operation_type = hardlink, operation_status = pending" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
           <mxGeometry x="1270" y="2350" width="230" height="40" as="geometry" />
         </mxCell>
         <mxCell id="Mj2PGNzUyfuV8QlpmbsF-24" value="incremental folder watcher" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -547,7 +547,7 @@
         <mxCell id="0pXfldIxa9z52349PdiN-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="0pXfldIxa9z52349PdiN-12" target="0pXfldIxa9z52349PdiN-31">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="0pXfldIxa9z52349PdiN-12" value="file_operation 新增，operation_type 填写 copy" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+        <mxCell id="0pXfldIxa9z52349PdiN-12" value="file_operation 新增，operation_type 填写 copy, operation_status = pending" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
           <mxGeometry x="960" y="2660" width="230" height="40" as="geometry" />
         </mxCell>
         <mxCell id="0pXfldIxa9z52349PdiN-13" value="打印日志，说明为什么排除" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
@@ -559,7 +559,7 @@
         <mxCell id="0pXfldIxa9z52349PdiN-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="0pXfldIxa9z52349PdiN-23" target="0pXfldIxa9z52349PdiN-29">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="0pXfldIxa9z52349PdiN-23" value="file_operation 新增，operation_type 填写 copy" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+        <mxCell id="0pXfldIxa9z52349PdiN-23" value="file_operation 新增，operation_type 填写 copy, operation_status = pending" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
           <mxGeometry x="960" y="2560" width="230" height="40" as="geometry" />
         </mxCell>
         <mxCell id="0pXfldIxa9z52349PdiN-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="0pXfldIxa9z52349PdiN-24" target="0pXfldIxa9z52349PdiN-25">
