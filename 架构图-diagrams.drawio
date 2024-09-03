@@ -598,7 +598,7 @@
         <mxCell id="0pXfldIxa9z52349PdiN-40" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="0pXfldIxa9z52349PdiN-37" target="0pXfldIxa9z52349PdiN-39">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="0pXfldIxa9z52349PdiN-37" value="更新 file_operation 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="0pXfldIxa9z52349PdiN-37" value="更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="890" y="2855" width="110" height="50" as="geometry" />
         </mxCell>
         <mxCell id="0pXfldIxa9z52349PdiN-39" value="更新 folder_sync_flow 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
