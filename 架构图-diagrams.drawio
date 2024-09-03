@@ -568,6 +568,9 @@
         <mxCell id="0pXfldIxa9z52349PdiN-24" value="sync process" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="2850" width="120" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="0pXfldIxa9z52349PdiN-34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="0pXfldIxa9z52349PdiN-25" target="0pXfldIxa9z52349PdiN-33">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="0pXfldIxa9z52349PdiN-25" value="扫描 file operation 表，获取 operation_status = pending 的操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="2840" width="190" height="80" as="geometry" />
         </mxCell>
@@ -579,6 +582,27 @@
         </mxCell>
         <mxCell id="0pXfldIxa9z52349PdiN-31" value="folder_sync_flow 表更新 sync_status 为 not_sync" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
           <mxGeometry x="1270" y="2660" width="230" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="0pXfldIxa9z52349PdiN-36" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="0pXfldIxa9z52349PdiN-33" target="0pXfldIxa9z52349PdiN-35">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="0pXfldIxa9z52349PdiN-33" value="执行操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="2855" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="0pXfldIxa9z52349PdiN-38" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="0pXfldIxa9z52349PdiN-35" target="0pXfldIxa9z52349PdiN-37">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="0pXfldIxa9z52349PdiN-35" value="更新 file_operation 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="2855" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="0pXfldIxa9z52349PdiN-40" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="0pXfldIxa9z52349PdiN-37" target="0pXfldIxa9z52349PdiN-39">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="0pXfldIxa9z52349PdiN-37" value="更新 file_operation 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="890" y="2855" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="0pXfldIxa9z52349PdiN-39" value="更新 folder_sync_flow 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="2855" width="140" height="50" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
