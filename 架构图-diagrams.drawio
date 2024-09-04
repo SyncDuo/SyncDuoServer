@@ -601,8 +601,8 @@
         <mxCell id="0pXfldIxa9z52349PdiN-37" value="更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1060" y="2855" width="110" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="0pXfldIxa9z52349PdiN-39" value="folder_sync_flow 表 sync_operation_count -1" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1250" y="2855" width="250" height="50" as="geometry" />
+        <mxCell id="0pXfldIxa9z52349PdiN-39" value="folder_sync_flow 表 sync_operation_count -1,sync_operation_count == 0 则 sync_status = sync，last_sync_time 更新为当前时间" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1250" y="2840" width="250" height="80" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-3" target="0pXfldIxa9z52349PdiN-33">
           <mxGeometry relative="1" as="geometry" />
@@ -653,7 +653,7 @@
             <mxPoint x="990" y="3070" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-14" value="folder_sync_flow 表新增，" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="uasykzirsSdUwL9WkVUC-14" value="folder_sync_flow 表新增，sync_status = not_sync" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="3040" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-25">
@@ -691,7 +691,7 @@
             <mxPoint x="990" y="3230" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-33" value="folder_sync_flow 表新增" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="uasykzirsSdUwL9WkVUC-33" value="folder_sync_flow 表新增，sync_status = not_sync" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="3200" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-66" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-37" target="uasykzirsSdUwL9WkVUC-65">
