@@ -387,7 +387,7 @@
         <mxCell id="2OahrU1iOWOdpbc31MzJ-10" value="file" style="rounded=0;whiteSpace=wrap;html=1;" parent="2OahrU1iOWOdpbc31MzJ-9" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="2OahrU1iOWOdpbc31MzJ-11" value="&lt;div&gt;long: &lt;b&gt;file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_uuid4&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_checksum&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_created_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_last_modified_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; root_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;relative_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="2OahrU1iOWOdpbc31MzJ-9" vertex="1">
+        <mxCell id="2OahrU1iOWOdpbc31MzJ-11" value="&lt;div&gt;long: &lt;b&gt;file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_uuid4&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_checksum&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_created_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_last_modified_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; root_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;relative_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long：&lt;b&gt;reference_count&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="2OahrU1iOWOdpbc31MzJ-9" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="2OahrU1iOWOdpbc31MzJ-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="2OahrU1iOWOdpbc31MzJ-10" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
@@ -565,13 +565,16 @@
         <mxCell id="0pXfldIxa9z52349PdiN-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="0pXfldIxa9z52349PdiN-24" target="0pXfldIxa9z52349PdiN-25" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="0pXfldIxa9z52349PdiN-24" target="uasykzirsSdUwL9WkVUC-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="0pXfldIxa9z52349PdiN-24" value="sync process" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="2850" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="0pXfldIxa9z52349PdiN-34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="0pXfldIxa9z52349PdiN-25" target="0pXfldIxa9z52349PdiN-33" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="0pXfldIxa9z52349PdiN-25" value="扫描 file operation 表，获取 operation_status = pending 的操作" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="0pXfldIxa9z52349PdiN-25" value="扫描 file operation 表，获取 operation_status = pending 的操作,按创建时间先后排序，limit 1" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="240" y="2840" width="190" height="80" as="geometry" />
         </mxCell>
         <mxCell id="0pXfldIxa9z52349PdiN-27" value="folder_sync_flow 表更新 sync_status 为 not_sync" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
@@ -603,6 +606,9 @@
         </mxCell>
         <mxCell id="0pXfldIxa9z52349PdiN-39" value="更新 folder_sync_flow 表" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1080" y="2855" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-1" value="扫描 file operation 表，获取 operation_status = pending 的操作,按创建时间先后排序" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="2960" width="190" height="80" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
