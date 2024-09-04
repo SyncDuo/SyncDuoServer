@@ -375,7 +375,7 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-27" value="content_sync_setting" style="rounded=0;whiteSpace=wrap;html=1;" parent="IIC6WvYA1fez5i_vmn7t-26" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-28" value="&lt;div&gt;long: &lt;b&gt;sync_setting_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;filter_&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;b&gt;criteria&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;str:&lt;b&gt; sync_patten&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-26" vertex="1">
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-28" value="&lt;div&gt;long: &lt;b&gt;sync_setting_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;filter_&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;b&gt;criteria&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;str:&lt;b&gt; sync_patten&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;boolean:&lt;b&gt; keep_file_name&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-26" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="2OahrU1iOWOdpbc31MzJ-3" value="更新 file 表的 file_checksum,&lt;div&gt;file_last_modified_time&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -458,7 +458,7 @@
         <mxCell id="0pXfldIxa9z52349PdiN-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="Mj2PGNzUyfuV8QlpmbsF-15" target="0pXfldIxa9z52349PdiN-27" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-15" value="file_operation 新增，operation_type = hardlink, operation_status = pending" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-15" value="file_operation 新增，operation_type = hardlink, operation_status = pending,文件名称 = uuid" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
           <mxGeometry x="1270" y="2350" width="230" height="40" as="geometry" />
         </mxCell>
         <mxCell id="Mj2PGNzUyfuV8QlpmbsF-24" value="incremental folder watcher" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -617,6 +617,17 @@
           <mxGeometry x="0.5515" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="240" y="3070" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-9" value="add folder sync flow" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="3040" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-11" value="add folder sync flow" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="3040" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
