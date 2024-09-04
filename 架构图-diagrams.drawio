@@ -322,7 +322,7 @@
         <mxCell id="wrEZppvQPQj9igWy5DTG-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wrEZppvQPQj9igWy5DTG-10" target="wrEZppvQPQj9igWy5DTG-14" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-10" value="检查 file operation&lt;div&gt;重放没有完成的操作&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="wrEZppvQPQj9igWy5DTG-10" value="file_operation 表 operation_status in running，pending 都置为 shutdown interrupt" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="240" y="2200" width="200" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-88" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-14" target="uasykzirsSdUwL9WkVUC-89">
@@ -343,7 +343,7 @@
             <mxPoint x="-1" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-14" value="查询 folder_sync_flow，执行 compare，判断是否 sync" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" parent="1" vertex="1">
+        <mxCell id="wrEZppvQPQj9igWy5DTG-14" value="查询 folder_sync_flow，执行 full scan， compare，判断是否 sync" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" parent="1" vertex="1">
           <mxGeometry x="520" y="2200" width="240" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-98" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wrEZppvQPQj9igWy5DTG-16" target="uasykzirsSdUwL9WkVUC-97">
