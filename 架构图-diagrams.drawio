@@ -638,36 +638,23 @@
         <mxCell id="uasykzirsSdUwL9WkVUC-12" value="sync_root_folder 表新增" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="510" y="3040" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-14" target="uasykzirsSdUwL9WkVUC-16">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="uasykzirsSdUwL9WkVUC-17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-14">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="990" y="3070" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-14" target="uasykzirsSdUwL9WkVUC-16">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="uasykzirsSdUwL9WkVUC-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-14">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="990" y="3070" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-14" target="uasykzirsSdUwL9WkVUC-16">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="uasykzirsSdUwL9WkVUC-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-14">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="990" y="3070" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-14" value="folder_sync_flow 表新增" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="3040" width="160" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-36" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-16" target="uasykzirsSdUwL9WkVUC-35">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-40" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="uasykzirsSdUwL9WkVUC-36">
-          <mxGeometry x="0.4966" y="1" relative="1" as="geometry">
-            <mxPoint x="1" as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-16" target="uasykzirsSdUwL9WkVUC-37">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-39" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="uasykzirsSdUwL9WkVUC-38">
-          <mxGeometry x="0.496" y="-2" relative="1" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-16" value="syncthing 目录检查是否有 watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="990" y="3040" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-25">
           <mxGeometry relative="1" as="geometry">
@@ -707,36 +694,11 @@
         <mxCell id="uasykzirsSdUwL9WkVUC-33" value="folder_sync_flow 表新增" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="3200" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-35" value="完成" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="1230" y="3040" width="170" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-37" value="添加 watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="1230" y="3070" width="170" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-41" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-45" target="uasykzirsSdUwL9WkVUC-46">
+        <mxCell id="uasykzirsSdUwL9WkVUC-66" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-37" target="uasykzirsSdUwL9WkVUC-65">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-42" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="uasykzirsSdUwL9WkVUC-41">
-          <mxGeometry x="0.4966" y="1" relative="1" as="geometry">
-            <mxPoint x="1" as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-45" target="uasykzirsSdUwL9WkVUC-47">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-44" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="uasykzirsSdUwL9WkVUC-43">
-          <mxGeometry x="0.496" y="-2" relative="1" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-45" value="incr 目录检查是否有 watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="990" y="3200" width="160" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-46" value="完成" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="1230" y="3200" width="170" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-47" value="添加 watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="1230" y="3230" width="170" height="30" as="geometry" />
+        <mxCell id="uasykzirsSdUwL9WkVUC-37" value="syncthing,incr 目录执行full scan，更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="990" y="3040" width="170" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-49">
           <mxGeometry relative="1" as="geometry">
@@ -800,6 +762,30 @@
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-64" value="添加 watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1230" y="3387" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-68" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-65" target="uasykzirsSdUwL9WkVUC-67">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-65" value="syncthing,incr 目录执行 compare" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1239" y="3040" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-67" value="syncthing 目录添加 watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1489" y="3040" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-69" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-70" target="uasykzirsSdUwL9WkVUC-72">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-70" value="incr，content 目录执行full scan，更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="990" y="3200" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-71" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-72" target="uasykzirsSdUwL9WkVUC-73">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-72" value="syncthing,incr 目录执行 compare" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1239" y="3200" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-73" value="syncthing 目录添加 watcher" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1489" y="3200" width="170" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
