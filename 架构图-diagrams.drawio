@@ -875,7 +875,7 @@
             <mxPoint x="440" y="3962.5" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="cf86srCdNygjhOp1ZflU-2" value="folder watcher" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+        <mxCell id="cf86srCdNygjhOp1ZflU-2" value="syncthing folder watcher" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
           <mxGeometry x="80" y="3920" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="cf86srCdNygjhOp1ZflU-11" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
