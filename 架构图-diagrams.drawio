@@ -875,6 +875,31 @@
         <mxCell id="N8TZfUtTnZYkTw5RphFN-65" value="file rename（not flatten folder）/&amp;nbsp; nothing + file 表更新" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="3255" width="180" height="80" as="geometry" />
         </mxCell>
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-1" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="1239" y="1920" width="200" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-2" value="file_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="t_K3pcmBi-geYfmrzG9U-1">
+          <mxGeometry width="200" height="29.23076923076923" as="geometry" />
+        </mxCell>
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-3" value="&lt;div&gt;long: &lt;b&gt;file_event_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; parent_file_event_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_event_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="t_K3pcmBi-geYfmrzG9U-1">
+          <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
+        </mxCell>
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="t_K3pcmBi-geYfmrzG9U-2" target="IIC6WvYA1fez5i_vmn7t-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1340" y="1855" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-5" value="SyncThing Folder" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="4260" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-6" value="Incremental Folder" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="4257.5" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-7" value="Content Folder" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1560" y="4260" width="160" height="30" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
