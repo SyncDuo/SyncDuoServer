@@ -863,6 +863,9 @@
         <mxCell id="N8TZfUtTnZYkTw5RphFN-56" value="修改文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="240" y="3055" width="120" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-38" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="N8TZfUtTnZYkTw5RphFN-57" target="t_K3pcmBi-geYfmrzG9U-37">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-57" value="file copy + rename (not flatten folder) / file copy + file 表更新" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="2950" width="180" height="70" as="geometry" />
         </mxCell>
@@ -946,6 +949,9 @@
         </mxCell>
         <mxCell id="t_K3pcmBi-geYfmrzG9U-33" value="扫描 syncthing folder，某个checksum 不存在，则 file 表更行为 deleted" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="3500" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-37" value="reference_count + 1" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="700" y="2950" width="180" height="70" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
