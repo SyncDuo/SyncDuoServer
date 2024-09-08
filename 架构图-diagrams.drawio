@@ -935,41 +935,17 @@
         <mxCell id="t_K3pcmBi-geYfmrzG9U-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="t_K3pcmBi-geYfmrzG9U-27" target="t_K3pcmBi-geYfmrzG9U-29">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-27" value="输入两个 folder_id" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-27" value="查询 folder_sync_flow 表，获取 syncthing folder id" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="3500" width="190" height="60" as="geometry" />
         </mxCell>
         <mxCell id="t_K3pcmBi-geYfmrzG9U-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="t_K3pcmBi-geYfmrzG9U-29" target="t_K3pcmBi-geYfmrzG9U-33">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-29" value="读取两个目录的 file 表，排除 file_status = deleted" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-29" value="查询 file 表，获取 syncthing folder 下所有文件的 checksum" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="510" y="3500" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="t_K3pcmBi-geYfmrzG9U-33">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="990" y="3530" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="t_K3pcmBi-geYfmrzG9U-33">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="990" y="3530" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="t_K3pcmBi-geYfmrzG9U-33">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="990" y="3530" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-33" value="left outer join 找到缺失的文件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-33" value="扫描 syncthing folder，某个checksum 不存在，则 file 表更行为 deleted" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="3500" width="160" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="t_K3pcmBi-geYfmrzG9U-35" target="t_K3pcmBi-geYfmrzG9U-36">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-35" value="file_operation 表新增" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="990" y="3500" width="160" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-36" value="folder_sync_flow 表 sync_operation_count +1" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="1230" y="3500" width="160" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
