@@ -867,10 +867,10 @@
         <mxCell id="N8TZfUtTnZYkTw5RphFN-57" value="file copy + rename (not flatten folder) / file copy" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="2950" width="180" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="N8TZfUtTnZYkTw5RphFN-58" target="t_K3pcmBi-geYfmrzG9U-49" edge="1">
+        <mxCell id="v4gMrZOpVzTQrCrVvwzV-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="N8TZfUtTnZYkTw5RphFN-58" target="v4gMrZOpVzTQrCrVvwzV-10">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="N8TZfUtTnZYkTw5RphFN-58" value="file moving（not flatten folder）/&amp;nbsp; nothing + file 表更新" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+        <mxCell id="N8TZfUtTnZYkTw5RphFN-58" value="file moving（not flatten folder）/&amp;nbsp; nothing" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="3155" width="180" height="80" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-64" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="N8TZfUtTnZYkTw5RphFN-60" target="N8TZfUtTnZYkTw5RphFN-58" edge="1">
@@ -885,10 +885,10 @@
         <mxCell id="N8TZfUtTnZYkTw5RphFN-62" value="重命名文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="240" y="3265" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-53" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="N8TZfUtTnZYkTw5RphFN-65" target="t_K3pcmBi-geYfmrzG9U-49" edge="1">
+        <mxCell id="v4gMrZOpVzTQrCrVvwzV-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="N8TZfUtTnZYkTw5RphFN-65" target="v4gMrZOpVzTQrCrVvwzV-10">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="N8TZfUtTnZYkTw5RphFN-65" value="file rename（not flatten folder）/&amp;nbsp; nothing + file 表更新" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+        <mxCell id="N8TZfUtTnZYkTw5RphFN-65" value="file rename（not flatten folder）/&amp;nbsp; nothing" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="3255" width="180" height="80" as="geometry" />
         </mxCell>
         <mxCell id="t_K3pcmBi-geYfmrzG9U-1" value="" style="group" parent="1" vertex="1" connectable="0">
@@ -968,6 +968,9 @@
         </mxCell>
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-5" value="2. file modified" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1385" y="4417.25" width="100" height="30.5" as="geometry" />
+        </mxCell>
+        <mxCell id="v4gMrZOpVzTQrCrVvwzV-10" value="file 表更新" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="700" y="3195" width="180" height="70" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
