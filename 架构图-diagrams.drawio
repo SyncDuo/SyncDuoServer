@@ -1,17 +1,17 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" version="24.7.12">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="888" dy="481" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="N8TZfUtTnZYkTw5RphFN-41" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
-          <mxGeometry x="1563" y="4020" width="580" height="520" as="geometry" />
+          <mxGeometry x="1563" y="4191" width="580" height="520" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-40" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="1083" y="4017.5" width="430" height="522.5" as="geometry" />
+          <mxGeometry x="1083" y="4188.5" width="430" height="522.5" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-39" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
-          <mxGeometry x="63" y="4020" width="1000" height="350" as="geometry" />
+          <mxGeometry x="63" y="4191" width="1000" height="350" as="geometry" />
         </mxCell>
         <mxCell id="FV4cB3aGJ8yGmwrdIlaF-99" value="" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="120" y="320" width="280" height="400" as="geometry" />
@@ -669,7 +669,13 @@
         <mxCell id="uasykzirsSdUwL9WkVUC-80" value="输入一个 folder_id" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="240" y="3881" width="190" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-84" value="深搜全部文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="l7eNGel5dyDRpsLgd5ZE-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-84" target="l7eNGel5dyDRpsLgd5ZE-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l7eNGel5dyDRpsLgd5ZE-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-84" target="l7eNGel5dyDRpsLgd5ZE-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="uasykzirsSdUwL9WkVUC-84" value="深搜全部文件，根据checksum 与 file 表比较" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="510" y="3881" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-89" value="syncthing folder 建立 watcher" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" parent="1" vertex="1">
@@ -689,15 +695,15 @@
         </mxCell>
         <mxCell id="cf86srCdNygjhOp1ZflU-1" value="" style="endArrow=none;html=1;rounded=0;fontStyle=0;strokeWidth=4;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="2" y="3990" as="sourcePoint" />
-            <mxPoint x="2470" y="3990" as="targetPoint" />
+            <mxPoint x="2" y="4161" as="sourcePoint" />
+            <mxPoint x="2470" y="4161" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="cf86srCdNygjhOp1ZflU-2" target="N8TZfUtTnZYkTw5RphFN-18" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="cf86srCdNygjhOp1ZflU-2" value="syncthing folder watcher" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="83" y="4150" width="90" height="90" as="geometry" />
+          <mxGeometry x="83" y="4321" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="cf86srCdNygjhOp1ZflU-27" target="N8TZfUtTnZYkTw5RphFN-10" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -706,31 +712,31 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="cf86srCdNygjhOp1ZflU-14" value="renamed or moving detect" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="603" y="4147.5" width="90" height="90" as="geometry" />
+          <mxGeometry x="603" y="4318.5" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="cf86srCdNygjhOp1ZflU-14" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="523" y="4192.5" as="sourcePoint" />
+            <mxPoint x="523" y="4363.5" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-10" value="file 表更新" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="963" y="4030" width="90" height="90" as="geometry" />
+          <mxGeometry x="963" y="4201" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-18" value="syncthing folder handler" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="443" y="4150" width="90" height="90" as="geometry" />
+          <mxGeometry x="443" y="4321" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="cf86srCdNygjhOp1ZflU-14" target="cf86srCdNygjhOp1ZflU-27" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="693" y="4193" as="sourcePoint" />
-            <mxPoint x="964" y="4190" as="targetPoint" />
+            <mxPoint x="693" y="4364" as="sourcePoint" />
+            <mxPoint x="964" y="4361" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="cf86srCdNygjhOp1ZflU-27" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;&lt;div&gt;3. file rename&lt;/div&gt;&lt;div&gt;4. file moved&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="763" y="4150" width="120" height="85" as="geometry" />
+          <mxGeometry x="763" y="4321" width="120" height="85" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="N8TZfUtTnZYkTw5RphFN-20" target="N8TZfUtTnZYkTw5RphFN-28" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1393" y="4192.5" as="targetPoint" />
+            <mxPoint x="1393" y="4363.5" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="N8TZfUtTnZYkTw5RphFN-20" target="N8TZfUtTnZYkTw5RphFN-29" edge="1">
@@ -740,36 +746,36 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-20" value="incremental folder handler" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="1083" y="4148" width="90" height="90" as="geometry" />
+          <mxGeometry x="1083" y="4319" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-25" value="1. file created" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1246.02" y="4100" width="100" height="30.5" as="geometry" />
+          <mxGeometry x="1246.02" y="4271" width="100" height="30.5" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="N8TZfUtTnZYkTw5RphFN-28" target="N8TZfUtTnZYkTw5RphFN-33" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-28" value="hardlink + file 表更新" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="1402" y="4030" width="90" height="90" as="geometry" />
+          <mxGeometry x="1402" y="4201" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="N8TZfUtTnZYkTw5RphFN-29" target="N8TZfUtTnZYkTw5RphFN-33" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-29" value="file 表更新" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="1242" y="4270" width="90" height="90" as="geometry" />
+          <mxGeometry x="1242" y="4441" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-30" value="&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;3. file rename&lt;/span&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;4. file moved&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1226.02" y="4203" width="120" height="45" as="geometry" />
+          <mxGeometry x="1226.02" y="4374" width="120" height="45" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-37" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="N8TZfUtTnZYkTw5RphFN-33" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1783" y="4193.5" as="targetPoint" />
+            <mxPoint x="1783" y="4364.5" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-33" value="content folder handler" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="1613" y="4148.5" width="90" height="90" as="geometry" />
+          <mxGeometry x="1613" y="4319.5" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-38" value="1. file copy + file 表更新&lt;div&gt;2. file copy + file 表更新&lt;/div&gt;&lt;div&gt;3. file rename（not flatten folder）/&amp;nbsp; nothing + file 表更新&lt;/div&gt;&lt;div&gt;4. file moving(not flatten folder) / nothing + file 表更新&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1783" y="4138" width="330" height="110" as="geometry" />
+          <mxGeometry x="1783" y="4309" width="330" height="110" as="geometry" />
         </mxCell>
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="N8TZfUtTnZYkTw5RphFN-42" target="0pXfldIxa9z52349PdiN-6" edge="1">
           <mxGeometry relative="1" as="geometry">
@@ -865,13 +871,13 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="t_K3pcmBi-geYfmrzG9U-5" value="SyncThing Folder" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="63" y="4020" width="160" height="30" as="geometry" />
+          <mxGeometry x="63" y="4191" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t_K3pcmBi-geYfmrzG9U-6" value="Incremental Folder" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="1083" y="4017.5" width="160" height="30" as="geometry" />
+          <mxGeometry x="1083" y="4188.5" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t_K3pcmBi-geYfmrzG9U-7" value="Content Folder" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="1563" y="4020" width="160" height="30" as="geometry" />
+          <mxGeometry x="1563" y="4191" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t_K3pcmBi-geYfmrzG9U-9" value="发送 file event" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" parent="1" vertex="1">
           <mxGeometry x="1160" y="2200" width="240" height="60" as="geometry" />
@@ -921,7 +927,7 @@
           <mxGeometry x="960" y="2950" width="120" height="390" as="geometry" />
         </mxCell>
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-5" value="2. file modified" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1388" y="4177.25" width="100" height="30.5" as="geometry" />
+          <mxGeometry x="1388" y="4348.25" width="100" height="30.5" as="geometry" />
         </mxCell>
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="v4gMrZOpVzTQrCrVvwzV-10" target="t_K3pcmBi-geYfmrzG9U-49" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -989,10 +995,10 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-1" value="check syncthing folder deleted" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="438" y="4024" width="100" height="100" as="geometry" />
+          <mxGeometry x="438" y="4195" width="100" height="100" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-3" value="1. file deleted" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="673" y="4031.75" width="120" height="85" as="geometry" />
+          <mxGeometry x="673" y="4202.75" width="120" height="85" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-5" target="N8TZfUtTnZYkTw5RphFN-20" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -1001,84 +1007,102 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-5" value="check folder in sync&lt;div&gt;/&lt;/div&gt;&lt;div&gt;系统启动&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="1492" y="4430" width="100" height="100" as="geometry" />
+          <mxGeometry x="1492" y="4601" width="100" height="100" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-8" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;&lt;div&gt;3. file rename&lt;/div&gt;&lt;div&gt;4. file moved&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1090" y="4430" width="120" height="85" as="geometry" />
+          <mxGeometry x="1090" y="4601" width="120" height="85" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-9" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;&lt;div&gt;3. file rename&lt;/div&gt;&lt;div&gt;4. file moved&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1598" y="4340" width="120" height="85" as="geometry" />
+          <mxGeometry x="1598" y="4511" width="120" height="85" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-10" value="" style="endArrow=none;html=1;rounded=0;fontStyle=0;strokeWidth=4;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="2" y="4640" as="sourcePoint" />
-            <mxPoint x="2470" y="4640" as="targetPoint" />
+            <mxPoint x="2" y="4811" as="sourcePoint" />
+            <mxPoint x="2470" y="4811" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-11" target="KA9MhgIcNHi_ZDQb_dAg-25" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-11" value="系统启动" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="20" y="4690" width="120" height="60" as="geometry" />
+          <mxGeometry x="20" y="4861" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-12" value="syncthing folder handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="20" y="4780" width="120" height="60" as="geometry" />
+          <mxGeometry x="20" y="4951" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-13" value="incremental folder handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="20" y="4870" width="120" height="60" as="geometry" />
+          <mxGeometry x="20" y="5041" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-14" value="add folder sync flow&lt;div&gt;(syncthing -&amp;gt; incr)&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="20" y="5250" width="120" height="60" as="geometry" />
+          <mxGeometry x="20" y="5421" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-15" value="add folder sync flow&lt;div&gt;(incr -&amp;gt; content)&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="20" y="5340" width="120" height="60" as="geometry" />
+          <mxGeometry x="20" y="5511" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-20" target="N8TZfUtTnZYkTw5RphFN-18" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-16" value="content folder handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="20" y="4960" width="120" height="60" as="geometry" />
+          <mxGeometry x="20" y="5131" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-17" value="&lt;div&gt;check syncthing folder deleted&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="20" y="5055" width="120" height="60" as="geometry" />
+          <mxGeometry x="20" y="5226" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-18" value="&lt;div&gt;check folder in sync&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="20" y="5155" width="120" height="60" as="geometry" />
+          <mxGeometry x="20" y="5326" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-20" value="系统启动" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="83" y="4270" width="90" height="90" as="geometry" />
+          <mxGeometry x="83" y="4441" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="cf86srCdNygjhOp1ZflU-11" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="233" y="4152.5" width="120" height="85" as="geometry" />
+          <mxGeometry x="233" y="4323.5" width="120" height="85" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-25" target="KA9MhgIcNHi_ZDQb_dAg-27" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-25" value="FileOperation.batchSetStatus(oldStatus,newStatus)" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="220" y="4690" width="300" height="60" as="geometry" />
+          <mxGeometry x="220" y="4861" width="300" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-27" target="KA9MhgIcNHi_ZDQb_dAg-29" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-27" value="FolderSyncFlow.getAllFlow()" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="600" y="4690" width="180" height="60" as="geometry" />
+          <mxGeometry x="600" y="4861" width="180" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-33" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-29" target="KA9MhgIcNHi_ZDQb_dAg-32" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-29" value="SyncRootFolder.getByFolderId(folderId)" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="860" y="4690" width="240" height="60" as="geometry" />
+          <mxGeometry x="860" y="4861" width="240" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-32" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1440" y="4720" as="targetPoint" />
+            <mxPoint x="1440" y="4891" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-32" value="FileUtil.fullScan(folderPath)" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="1180" y="4690" width="180" height="60" as="geometry" />
+          <mxGeometry x="1180" y="4861" width="180" height="60" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-36" value="File.saveOrUpdateByFileChecksumAndRootFolderId" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="1441" y="4690" width="330" height="60" as="geometry" />
+          <mxGeometry x="1441" y="4861" width="330" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="l7eNGel5dyDRpsLgd5ZE-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="l7eNGel5dyDRpsLgd5ZE-1" target="l7eNGel5dyDRpsLgd5ZE-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l7eNGel5dyDRpsLgd5ZE-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="l7eNGel5dyDRpsLgd5ZE-1" target="l7eNGel5dyDRpsLgd5ZE-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l7eNGel5dyDRpsLgd5ZE-1" value="checksum 存在" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="3881" width="160" height="59" as="geometry" />
+        </mxCell>
+        <mxCell id="l7eNGel5dyDRpsLgd5ZE-6" value="checksum 不存在" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="4000" width="160" height="59" as="geometry" />
+        </mxCell>
+        <mxCell id="l7eNGel5dyDRpsLgd5ZE-8" value="checksum 唯一" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="990" y="3881" width="160" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="l7eNGel5dyDRpsLgd5ZE-10" value="checksum 不唯一" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="990" y="3910" width="160" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
