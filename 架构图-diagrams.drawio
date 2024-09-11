@@ -4,9 +4,6 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-20" target="N8TZfUtTnZYkTw5RphFN-18">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-41" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
           <mxGeometry x="1563" y="4020" width="580" height="520" as="geometry" />
         </mxCell>
@@ -696,16 +693,11 @@
             <mxPoint x="2470" y="3990" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="N8TZfUtTnZYkTw5RphFN-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="cf86srCdNygjhOp1ZflU-2" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="443" y="4192.5" as="targetPoint" />
-          </mxGeometry>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cf86srCdNygjhOp1ZflU-2" target="N8TZfUtTnZYkTw5RphFN-18">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="cf86srCdNygjhOp1ZflU-2" value="syncthing folder watcher" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
           <mxGeometry x="83" y="4150" width="90" height="90" as="geometry" />
-        </mxCell>
-        <mxCell id="cf86srCdNygjhOp1ZflU-11" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="233" y="4152.5" width="120" height="85" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="cf86srCdNygjhOp1ZflU-27" target="N8TZfUtTnZYkTw5RphFN-10" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -1038,6 +1030,9 @@
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-15" value="add folder sync flow&lt;div&gt;(incr -&amp;gt; content)&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="20" y="5340" width="120" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-20" target="N8TZfUtTnZYkTw5RphFN-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-16" value="content folder handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="20" y="4960" width="120" height="60" as="geometry" />
         </mxCell>
@@ -1049,6 +1044,9 @@
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-20" value="系统启动" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
           <mxGeometry x="83" y="4270" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cf86srCdNygjhOp1ZflU-11" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="233" y="4152.5" width="120" height="85" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
