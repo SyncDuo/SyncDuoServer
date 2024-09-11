@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" version="24.7.12">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="3553" dy="1923" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1777" dy="962" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -878,8 +878,8 @@
         <mxCell id="t_K3pcmBi-geYfmrzG9U-7" value="Content Folder" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="1563" y="4020" width="160" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-9" value="file operation handler" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" parent="1" vertex="1">
-          <mxGeometry x="1160" y="2230" width="240" height="30" as="geometry" />
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-9" value="发送 file event" style="whiteSpace=wrap;html=1;rounded=0;fontStyle=0" parent="1" vertex="1">
+          <mxGeometry x="1160" y="2200" width="240" height="60" as="geometry" />
         </mxCell>
         <mxCell id="t_K3pcmBi-geYfmrzG9U-11" value="查询 fodler_sync_flow ，发送 file event 到下一跳" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="1320" y="2310" width="230" height="170" as="geometry" />
@@ -1005,7 +1005,7 @@
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-5" target="N8TZfUtTnZYkTw5RphFN-33">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-5" value="check folder in sync" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-5" value="check folder in sync&lt;div&gt;/&lt;/div&gt;&lt;div&gt;系统启动&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
           <mxGeometry x="1492" y="4430" width="100" height="100" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-8" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;&lt;div&gt;3. file rename&lt;/div&gt;&lt;div&gt;4. file moved&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
@@ -1019,6 +1019,30 @@
             <mxPoint x="2" y="4640" as="sourcePoint" />
             <mxPoint x="2470" y="4640" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-11" value="系统启动" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="4690" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-12" value="syncthing folder handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="4780" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-13" value="incremental folder handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="4870" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-14" value="add folder sync flow&lt;div&gt;(syncthing -&amp;gt; incr)&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="5250" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-15" value="add folder sync flow&lt;div&gt;(incr -&amp;gt; content)&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="5340" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-16" value="content folder handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="4960" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-17" value="&lt;div&gt;check syncthing folder deleted&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="5055" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-18" value="&lt;div&gt;check folder in sync&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="5155" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
