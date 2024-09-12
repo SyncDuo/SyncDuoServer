@@ -1062,11 +1062,17 @@
         <mxCell id="qLuFwNLdeMUi7d4qXwZQ-17" value="syncthing folder 执行fullscan" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="3860" width="130" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=12 12;" edge="1" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-19" target="qLuFwNLdeMUi7d4qXwZQ-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="qLuFwNLdeMUi7d4qXwZQ-19" value="checksum 不存在，发送 file create event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="960" y="3860" width="130" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-21" value="checksum 存在，" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="960" y="3960" width="130" height="60" as="geometry" />
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-21" value="checksum 存在，但是 file_name,file_extension,file_relative_path 有一个不一致" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="935" y="3960" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-23" value="1. 真有新文件&lt;div&gt;2. 文件重命名+修改&lt;/div&gt;&lt;div&gt;3. 文件移动+修改&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1175" y="3860" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
