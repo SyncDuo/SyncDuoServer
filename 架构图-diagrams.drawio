@@ -864,7 +864,7 @@
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-29" value="执行 full scan" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="510" y="3600" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="v4gMrZOpVzTQrCrVvwzV-30" value="有更新则发送 file event" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="v4gMrZOpVzTQrCrVvwzV-30" value="有发送 file event 则结束" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="750" y="3600" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-36" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="v4gMrZOpVzTQrCrVvwzV-33" target="v4gMrZOpVzTQrCrVvwzV-35" edge="1">
