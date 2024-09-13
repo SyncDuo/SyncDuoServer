@@ -395,11 +395,16 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="Mj2PGNzUyfuV8QlpmbsF-5" target="Mj2PGNzUyfuV8QlpmbsF-10" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="dszB30aNWZz1cVPagebx-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.006;entryY=0.351;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="Mj2PGNzUyfuV8QlpmbsF-5" target="t_K3pcmBi-geYfmrzG9U-11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="660" y="2240" />
+              <mxPoint x="660" y="2260" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-12" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="Mj2PGNzUyfuV8QlpmbsF-11" vertex="1" connectable="0">
-          <mxGeometry x="0.2061" relative="1" as="geometry">
+        <mxCell id="dszB30aNWZz1cVPagebx-4" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="dszB30aNWZz1cVPagebx-3">
+          <mxGeometry x="-0.8379" y="1" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
@@ -408,23 +413,6 @@
         </mxCell>
         <mxCell id="Mj2PGNzUyfuV8QlpmbsF-7" value="说明是文件重命名，更新 file_name" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="700" y="2200" width="230" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="Mj2PGNzUyfuV8QlpmbsF-10" target="Mj2PGNzUyfuV8QlpmbsF-13" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-19" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="Mj2PGNzUyfuV8QlpmbsF-14" vertex="1" connectable="0">
-          <mxGeometry x="0.595" y="2" relative="1" as="geometry">
-            <mxPoint x="-24" y="2" as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-10" value="file 表查找同一 root folder 下是否有checksum, file_created_time 一致的文件" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="700" y="2240" width="230" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="Mj2PGNzUyfuV8QlpmbsF-13" target="t_K3pcmBi-geYfmrzG9U-11" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-13" value="说明是文件移动，更新 file_name 和 relative_path" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="1010" y="2240" width="230" height="40" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="Mj2PGNzUyfuV8QlpmbsF-24" target="N8TZfUtTnZYkTw5RphFN-42" edge="1">
           <mxGeometry relative="1" as="geometry" />
