@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" version="24.7.13">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="1015" dy="550" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -403,7 +403,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-5" value="file 表查找同级目录是否有 checksum, file_created_time 一致的文件" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-5" value="file 表查找同级目录是否有 file_name+file_extension不一致， checksum, file_created_time 一致的文件" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="2200" width="180" height="80" as="geometry" />
         </mxCell>
         <mxCell id="Mj2PGNzUyfuV8QlpmbsF-7" value="说明是文件重命名，更新 file_name" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
@@ -882,7 +882,7 @@
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-10" value="file 表更新" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="700" y="3085" width="180" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="v4gMrZOpVzTQrCrVvwzV-14" target="uasykzirsSdUwL9WkVUC-67">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="v4gMrZOpVzTQrCrVvwzV-14" target="uasykzirsSdUwL9WkVUC-67" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-14" value="hardlink opeartion" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
@@ -938,15 +938,6 @@
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-42" value="读取文件，获取 checksum 和 file_last_modified_time" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
           <mxGeometry x="440" y="2515" width="180" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-1" target="N8TZfUtTnZYkTw5RphFN-10" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-1" value="check syncthing folder deleted" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="438" y="4195" width="100" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="KA9MhgIcNHi_ZDQb_dAg-3" value="1. file deleted" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="673" y="4202.75" width="120" height="85" as="geometry" />
-        </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-5" target="N8TZfUtTnZYkTw5RphFN-20" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -1001,7 +992,7 @@
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-20" value="系统启动" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
           <mxGeometry x="83" y="4441" width="90" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="cf86srCdNygjhOp1ZflU-11" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="cf86srCdNygjhOp1ZflU-11" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;&lt;div&gt;3. file deleted&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="233" y="4323.5" width="120" height="85" as="geometry" />
         </mxCell>
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="KA9MhgIcNHi_ZDQb_dAg-25" target="KA9MhgIcNHi_ZDQb_dAg-27" edge="1">
@@ -1033,45 +1024,45 @@
         <mxCell id="KA9MhgIcNHi_ZDQb_dAg-36" value="File.saveOrUpdateByFileChecksumAndRootFolderId" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="1441" y="4861" width="330" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-3">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-3" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="240" y="3890" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-3" value="&lt;div&gt;系统启动&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-3" value="&lt;div&gt;系统启动&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="40" y="3860" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-5" target="qLuFwNLdeMUi7d4qXwZQ-7">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-5" target="qLuFwNLdeMUi7d4qXwZQ-7" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-5" value="file operation running 和 pending 置为 shutdown" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-5" value="file operation running 和 pending 置为 shutdown" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="240" y="3860" width="190" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-7" target="qLuFwNLdeMUi7d4qXwZQ-17">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-7" target="qLuFwNLdeMUi7d4qXwZQ-17" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-7" value="查询 folder_sync_flow 表，获取全部流向" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-7" value="查询 folder_sync_flow 表，获取全部流向" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="510" y="3860" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-17" target="qLuFwNLdeMUi7d4qXwZQ-19">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-17" target="qLuFwNLdeMUi7d4qXwZQ-19" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-17" target="qLuFwNLdeMUi7d4qXwZQ-21">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-17" target="qLuFwNLdeMUi7d4qXwZQ-21" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-17" value="syncthing folder 执行fullscan" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-17" value="syncthing folder 执行fullscan" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="750" y="3860" width="130" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=12 12;" edge="1" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-19" target="qLuFwNLdeMUi7d4qXwZQ-23">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=12 12;" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-19" target="qLuFwNLdeMUi7d4qXwZQ-23" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-19" value="checksum 不存在，发送 file create event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-19" value="checksum 不存在，发送 file create event" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="960" y="3860" width="130" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-21" value="checksum 存在，但是 file_name,file_extension,file_relative_path 有一个不一致" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-21" value="checksum 存在，但是 file_name,file_extension,file_relative_path 有一个不一致" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="935" y="3960" width="180" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-23" value="1. 真有新文件&lt;div&gt;2. 文件重命名+修改&lt;/div&gt;&lt;div&gt;3. 文件移动+修改&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-23" value="1. 真有新文件&lt;div&gt;2. 文件重命名+修改&lt;/div&gt;&lt;div&gt;3. 文件移动+修改&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="1175" y="3860" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
