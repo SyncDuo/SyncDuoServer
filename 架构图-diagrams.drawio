@@ -929,10 +929,16 @@
         <mxCell id="qLuFwNLdeMUi7d4qXwZQ-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-7" target="qLuFwNLdeMUi7d4qXwZQ-17" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-7" target="a6IGXpcCbCOWXj8QhYQD-42">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="qLuFwNLdeMUi7d4qXwZQ-7" value="查询 sync_flow 表，获取全部流向" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="510" y="4130" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-17" value="syncthing folder 执行fullscan" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-45" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="qLuFwNLdeMUi7d4qXwZQ-17" target="a6IGXpcCbCOWXj8QhYQD-44">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qLuFwNLdeMUi7d4qXwZQ-17" value="syncthing -&amp;gt; incr" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="750" y="4130" width="130" height="60" as="geometry" />
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="aN30_3U5B30aKfKLvlwn-1" target="uasykzirsSdUwL9WkVUC-101">
@@ -1022,6 +1028,18 @@
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-36" value="发送 file_modified_event" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="1230" y="3750" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-47" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-42" target="a6IGXpcCbCOWXj8QhYQD-46">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-42" value="incr -&amp;gt; content" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="4240" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-44" value="syncthing folder 执行 full scan" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="4130" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-46" value="incr folder 执行 full scan" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="4240" width="130" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
