@@ -1004,7 +1004,7 @@
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-30" value="checksum是否一致以及meta data 是否一致" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="990" y="3720" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="a6IGXpcCbCOWXj8QhYQD-32" value="发送 file_created event" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-32" value="发送 file_created_event" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="990" y="3830" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-34" value="无" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
