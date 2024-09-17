@@ -622,28 +622,14 @@
         <mxCell id="N8TZfUtTnZYkTw5RphFN-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="cf86srCdNygjhOp1ZflU-27" target="N8TZfUtTnZYkTw5RphFN-10" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="N8TZfUtTnZYkTw5RphFN-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="cf86srCdNygjhOp1ZflU-14" target="N8TZfUtTnZYkTw5RphFN-20" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="cf86srCdNygjhOp1ZflU-14" value="renamed detect" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-          <mxGeometry x="603" y="4528.5" width="90" height="90" as="geometry" />
-        </mxCell>
-        <mxCell id="N8TZfUtTnZYkTw5RphFN-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="cf86srCdNygjhOp1ZflU-14" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="523" y="4573.5" as="sourcePoint" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-10" value="file 表更新" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
           <mxGeometry x="963" y="4411" width="90" height="90" as="geometry" />
         </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="N8TZfUtTnZYkTw5RphFN-18" target="N8TZfUtTnZYkTw5RphFN-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-18" value="syncthing folder handler" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
           <mxGeometry x="443" y="4531" width="90" height="90" as="geometry" />
-        </mxCell>
-        <mxCell id="N8TZfUtTnZYkTw5RphFN-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="cf86srCdNygjhOp1ZflU-14" target="cf86srCdNygjhOp1ZflU-27" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="693" y="4574" as="sourcePoint" />
-            <mxPoint x="964" y="4571" as="targetPoint" />
-          </mxGeometry>
         </mxCell>
         <mxCell id="cf86srCdNygjhOp1ZflU-27" value="1. file created&lt;div&gt;2. file modified&lt;/div&gt;&lt;div&gt;3. file rename&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="763" y="4531" width="120" height="85" as="geometry" />
