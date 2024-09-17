@@ -414,7 +414,7 @@
         <mxCell id="Mj2PGNzUyfuV8QlpmbsF-5" value="file 表查找同级目录是否有 file_name+file_extension不一致， checksum, file_created_time 一致的文件" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="2200" width="180" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-7" value="说明是文件重命名，更新 file_name" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+        <mxCell id="Mj2PGNzUyfuV8QlpmbsF-7" value="说明是文件重命名，更新 file_name, file_last_modified_time" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="700" y="2200" width="230" height="40" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-45" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="Mj2PGNzUyfuV8QlpmbsF-24" target="N8TZfUtTnZYkTw5RphFN-43" edge="1">
@@ -723,7 +723,7 @@
         <mxCell id="N8TZfUtTnZYkTw5RphFN-38" value="1. file copy + file 表更新&lt;div&gt;2. file copy + file 表更新&lt;/div&gt;&lt;div&gt;3. file rename（not flatten folder）/&amp;nbsp; nothing + file 表更新&lt;/div&gt;&lt;div&gt;4. file moving(not flatten folder) / nothing + file 表更新&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1783" y="4519" width="330" height="110" as="geometry" />
         </mxCell>
-        <mxCell id="v4gMrZOpVzTQrCrVvwzV-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="N8TZfUtTnZYkTw5RphFN-43" target="0pXfldIxa9z52349PdiN-6" edge="1">
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="N8TZfUtTnZYkTw5RphFN-43" target="a6IGXpcCbCOWXj8QhYQD-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-43" value="syncthing folder&amp;nbsp;重命名文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -1101,6 +1101,12 @@
         </mxCell>
         <mxCell id="aN30_3U5B30aKfKLvlwn-35" value="发送 file_create event" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1520" y="3850" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-1" target="0pXfldIxa9z52349PdiN-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-1" value="读取文件，获取&amp;nbsp; file_last_modified_time" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="440" y="2825" width="180" height="70" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
