@@ -1024,22 +1024,20 @@
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-42" value="incr -&amp;gt; content" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="4240" width="130" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="a6IGXpcCbCOWXj8QhYQD-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-44" target="a6IGXpcCbCOWXj8QhYQD-48">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1150" y="4220" as="targetPoint" />
-          </mxGeometry>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-59" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-44" target="a6IGXpcCbCOWXj8QhYQD-58">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-44" value="syncthing folder 执行 full scan" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="960" y="4130" width="130" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="a6IGXpcCbCOWXj8QhYQD-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-46" target="a6IGXpcCbCOWXj8QhYQD-48">
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-61" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-46" target="a6IGXpcCbCOWXj8QhYQD-60">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-46" value="incr folder 执行 full scan" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="960" y="4240" width="130" height="60" as="geometry" />
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-48" value="syncthing folder 的 full scan 全部执行完，才到 incr folder" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="1160" y="4190" width="130" height="60" as="geometry" />
+          <mxGeometry x="1358" y="4190" width="130" height="60" as="geometry" />
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-56" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-53" target="a6IGXpcCbCOWXj8QhYQD-55">
           <mxGeometry relative="1" as="geometry" />
@@ -1049,6 +1047,18 @@
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-55" value="发送 file_deleted_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="993" y="3820" width="157" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-62" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-58" target="a6IGXpcCbCOWXj8QhYQD-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-58" value="syncthing folder, incr folder 执行 compare" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="4130" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-63" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-60" target="a6IGXpcCbCOWXj8QhYQD-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-60" value="incr folder， content folder 执行 compare" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="4240" width="130" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
