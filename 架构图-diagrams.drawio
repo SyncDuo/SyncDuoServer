@@ -367,7 +367,7 @@
         <mxCell id="2OahrU1iOWOdpbc31MzJ-10" value="file" style="rounded=0;whiteSpace=wrap;html=1;" parent="2OahrU1iOWOdpbc31MzJ-9" vertex="1">
           <mxGeometry width="200" height="33.84615384615385" as="geometry" />
         </mxCell>
-        <mxCell id="2OahrU1iOWOdpbc31MzJ-11" value="&lt;div&gt;long: &lt;b&gt;file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_extension&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_checksum&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_created_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_last_modified_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&amp;nbsp;&lt;b&gt;file_uuid4_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; root_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt;&amp;nbsp;derived_file_id&lt;/b&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;relative_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; file_deleted&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="2OahrU1iOWOdpbc31MzJ-9" vertex="1">
+        <mxCell id="2OahrU1iOWOdpbc31MzJ-11" value="&lt;div&gt;long: &lt;b&gt;file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_extension&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_checksum&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; file_created_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_last_modified_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&amp;nbsp;&lt;b&gt;file_uuid4&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; root_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt;&amp;nbsp;derived_file_id&lt;/b&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;relative_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; file_deleted&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="2OahrU1iOWOdpbc31MzJ-9" vertex="1">
           <mxGeometry y="33.84615384615385" width="200" height="186.1538461538462" as="geometry" />
         </mxCell>
         <mxCell id="2OahrU1iOWOdpbc31MzJ-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="2OahrU1iOWOdpbc31MzJ-10" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
@@ -554,7 +554,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-57" value="根据 file_checksum left outer join 找到缺失的文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="uasykzirsSdUwL9WkVUC-57" value="根据 uuid4 左关联找到缺失的文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="750" y="4010" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-62" value="返回缺失的文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -992,7 +992,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="a6IGXpcCbCOWXj8QhYQD-29" value="file_name + file_ extension/uuid4+relative_path 判断文件是否在 file 表中" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-29" value="获取 uuid4 判断文件是否在 file 表中" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="740" y="3720" width="180" height="60" as="geometry" />
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-30" target="a6IGXpcCbCOWXj8QhYQD-34">
