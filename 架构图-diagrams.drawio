@@ -1035,11 +1035,22 @@
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-42" value="incr -&amp;gt; content" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="4240" width="130" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-44" target="a6IGXpcCbCOWXj8QhYQD-48">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1150" y="4220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-44" value="syncthing folder 执行 full scan" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="960" y="4130" width="130" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-46" target="a6IGXpcCbCOWXj8QhYQD-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-46" value="incr folder 执行 full scan" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="960" y="4240" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-48" value="syncthing folder 的 full scan 全部执行完，才到 incr folder" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="4190" width="130" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
