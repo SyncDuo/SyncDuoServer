@@ -984,7 +984,7 @@
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-39" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="a6IGXpcCbCOWXj8QhYQD-33">
           <mxGeometry x="0.6887" y="1" relative="1" as="geometry">
-            <mxPoint as="offset" />
+            <mxPoint x="-17" y="1" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-29" value="获取 uuid4 判断文件是否在 file 表中" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
@@ -995,7 +995,7 @@
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-40" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="a6IGXpcCbCOWXj8QhYQD-35">
           <mxGeometry x="0.4233" y="4" relative="1" as="geometry">
-            <mxPoint as="offset" />
+            <mxPoint x="-7" y="4" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-30" target="a6IGXpcCbCOWXj8QhYQD-36">
