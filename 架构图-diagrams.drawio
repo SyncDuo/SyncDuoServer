@@ -998,8 +998,18 @@
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-30" target="a6IGXpcCbCOWXj8QhYQD-34">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-40" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="a6IGXpcCbCOWXj8QhYQD-35">
+          <mxGeometry x="0.4233" y="4" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a6IGXpcCbCOWXj8QhYQD-30" target="a6IGXpcCbCOWXj8QhYQD-36">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6IGXpcCbCOWXj8QhYQD-41" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="a6IGXpcCbCOWXj8QhYQD-37">
+          <mxGeometry x="0.4233" y="3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-30" value="checksum是否一致以及meta data 是否一致" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="990" y="3720" width="160" height="60" as="geometry" />
