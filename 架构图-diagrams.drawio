@@ -531,6 +531,9 @@
         <mxCell id="uasykzirsSdUwL9WkVUC-53" value="读取两个目录的 file 表，排除 file_deleted == 1" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="510" y="3920" width="160" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="uasykzirsSdUwL9WkVUC-62" target="iLLUCtNKBEfGMFKWvBqe-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-62" value="incr -&amp;gt; content" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="750" y="4030" width="160" height="60" as="geometry" />
         </mxCell>
@@ -1093,6 +1096,9 @@
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-8" value="发送 file_create event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1230" y="3950" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-12" value="incr 的 file_id 是否出现在 content 的 derived_id 中" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="990" y="4030" width="160" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
