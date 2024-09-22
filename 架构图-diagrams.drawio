@@ -1099,7 +1099,7 @@
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-20" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="iLLUCtNKBEfGMFKWvBqe-16">
           <mxGeometry x="0.4899" y="1" relative="1" as="geometry">
-            <mxPoint as="offset" />
+            <mxPoint x="4" y="1" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-6" target="iLLUCtNKBEfGMFKWvBqe-17">
