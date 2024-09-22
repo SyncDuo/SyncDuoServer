@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" version="24.7.16">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="1254" dy="679" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1230,23 +1230,35 @@
             <mxPoint x="240" y="4630" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-57" value="incr/content handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-57" value="sync/incr/content handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="40" y="4600" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-58" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-59" target="iLLUCtNKBEfGMFKWvBqe-61">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-59" value="输入一个 folder id" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-59" value="接收 file_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="4600" width="190" height="60" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-60" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-61" target="iLLUCtNKBEfGMFKWvBqe-62">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-61" value="深搜获得所有文件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-61" value="按照 file 颗粒度控制并发" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="510" y="4600" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-62" value="更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-64" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-62" target="iLLUCtNKBEfGMFKWvBqe-63">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-62" value="执行文件操作" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="750" y="4600" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-66" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-63" target="iLLUCtNKBEfGMFKWvBqe-65">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-63" value="incr/content handler 判断某一个 root folder 是否没有 event 待处理" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="4600" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-65" value="sync_flow 表的 sync_status, last_sync_time 更新" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="4600" width="130" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
