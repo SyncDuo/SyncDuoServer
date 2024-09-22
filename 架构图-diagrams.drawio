@@ -1162,10 +1162,10 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-35" value="md5 checksum 是否一致" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-35" value="checksum 是否一致" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="980" y="4030" width="160" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-36" value="发送 file_create_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-36" value="是否满足 filter 条件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="980" y="4060" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-37" value="发送 file_modified_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
