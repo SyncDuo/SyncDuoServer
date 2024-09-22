@@ -315,12 +315,6 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-3" value="&lt;ul style=&quot;text-align: left;&quot;&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;every operation is record to database before taking operation(Write-Ahead Logging) and mark success after&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
-          <mxGeometry x="1360" y="1390" width="360" height="110" as="geometry" />
-        </mxCell>
-        <mxCell id="wrEZppvQPQj9igWy5DTG-4" value="&lt;ul style=&quot;text-align: left;&quot;&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;every operation is record to database before taking operation(Write-Ahead Logging) and mark success after&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
-          <mxGeometry x="1360" y="1590" width="360" height="110" as="geometry" />
-        </mxCell>
         <mxCell id="aN30_3U5B30aKfKLvlwn-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="wrEZppvQPQj9igWy5DTG-16" target="aN30_3U5B30aKfKLvlwn-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
