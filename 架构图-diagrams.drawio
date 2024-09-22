@@ -975,7 +975,7 @@
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-40" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="a6IGXpcCbCOWXj8QhYQD-35" vertex="1" connectable="0">
           <mxGeometry x="0.4233" y="4" relative="1" as="geometry">
-            <mxPoint x="-7" y="4" as="offset" />
+            <mxPoint x="-11" y="4" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="a6IGXpcCbCOWXj8QhYQD-30" target="a6IGXpcCbCOWXj8QhYQD-36" edge="1">
@@ -1094,7 +1094,7 @@
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-6" value="结束" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1230" y="3920" width="160" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-8" value="发送 file_create event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-8" value="发送 file_create_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1230" y="3950" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-12" value="incr 的 file_id 是否出现在 content 的 derived_id 中" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
