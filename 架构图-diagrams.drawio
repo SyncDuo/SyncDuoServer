@@ -1137,11 +1137,11 @@
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-28" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="iLLUCtNKBEfGMFKWvBqe-27">
           <mxGeometry x="0.29" y="2" relative="1" as="geometry">
-            <mxPoint as="offset" />
+            <mxPoint x="9" y="21" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-29" value="incr 的 file_id 是否出现在 content 的 derived_id 中" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="740" y="4030" width="160" height="60" as="geometry" />
+          <mxGeometry x="973" y="4030" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-35" target="iLLUCtNKBEfGMFKWvBqe-37">
           <mxGeometry relative="1" as="geometry" />
@@ -1151,7 +1151,7 @@
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-32" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="iLLUCtNKBEfGMFKWvBqe-31">
           <mxGeometry x="0.4899" y="1" relative="1" as="geometry">
-            <mxPoint x="4" y="1" as="offset" />
+            <mxPoint x="-5" y="1" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-35" target="iLLUCtNKBEfGMFKWvBqe-38">
@@ -1163,16 +1163,31 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-35" value="checksum 是否一致" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="980" y="4030" width="160" height="30" as="geometry" />
+          <mxGeometry x="1213" y="4030" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-40" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-36" target="iLLUCtNKBEfGMFKWvBqe-39">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-36" target="iLLUCtNKBEfGMFKWvBqe-41">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-36" value="是否满足 filter 条件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="980" y="4060" width="160" height="30" as="geometry" />
+          <mxGeometry x="1213" y="4120" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-37" value="发送 file_modified_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="1220" y="4060" width="160" height="30" as="geometry" />
+          <mxGeometry x="1453" y="4060" width="160" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-38" value="无" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="1220" y="4030" width="160" height="30" as="geometry" />
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-38" value="content 的 file 是否已删除" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1453" y="4030" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-39" value="是否满足 filter 条件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1453" y="4120" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-41" value="是否满足 filter 条件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1453" y="4150" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-43" value="读取两个目录的 file 表，排除 incr 的 file_deleted == 1" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="740" y="4030" width="160" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
