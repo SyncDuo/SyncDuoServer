@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" version="24.7.16">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="1841" dy="550" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1015" dy="550" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1091,7 +1091,26 @@
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-3" value="sync 的 file_id 是否出现在 incr 的 derived_id 中" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="990" y="3920" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-6" value="结束" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-6" target="iLLUCtNKBEfGMFKWvBqe-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-6" target="iLLUCtNKBEfGMFKWvBqe-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-20" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="iLLUCtNKBEfGMFKWvBqe-16">
+          <mxGeometry x="0.4899" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-6" target="iLLUCtNKBEfGMFKWvBqe-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-19" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="iLLUCtNKBEfGMFKWvBqe-18">
+          <mxGeometry x="0.313" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-6" value="md5 checksum 是否一致" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1230" y="3920" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-8" value="发送 file_create_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
@@ -1099,6 +1118,12 @@
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-12" value="incr 的 file_id 是否出现在 content 的 derived_id 中" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="990" y="4030" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-14" value="发送 file_modified_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="3950" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-17" value="无" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="3920" width="160" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
