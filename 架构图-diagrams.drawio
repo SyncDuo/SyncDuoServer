@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" version="24.7.16">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="1841" dy="550" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1015" dy="550" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1174,7 +1174,23 @@
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-36" value="是否满足 filter 条件" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1213" y="4120" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-37" value="content 的 file 是否已删除" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-37" target="iLLUCtNKBEfGMFKWvBqe-46">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-49" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="iLLUCtNKBEfGMFKWvBqe-47">
+          <mxGeometry x="0.5005" y="2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-37" target="iLLUCtNKBEfGMFKWvBqe-45">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-50" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="iLLUCtNKBEfGMFKWvBqe-48">
+          <mxGeometry x="0.2991" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-37" value="file 是否 desync" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1453" y="4060" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-38" value="无" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
@@ -1189,8 +1205,14 @@
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-43" target="iLLUCtNKBEfGMFKWvBqe-29">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-43" value="读取两个目录的 file 表，排除 file_deleted == 1" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-43" value="读取两个目录的 file 表，排除 file_deleted == 1，desync == 1" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="740" y="4030" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-45" value="发送 file_modified_event" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="4060" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-46" value="标记 desync = 1，更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="4030" width="160" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
