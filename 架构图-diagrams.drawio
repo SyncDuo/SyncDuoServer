@@ -720,7 +720,7 @@
         <mxCell id="t_K3pcmBi-geYfmrzG9U-11" value="查询 fodler_sync_flow ，发送 file event 到下一跳" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="960" y="2255" width="230" height="170" as="geometry" />
         </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-16" value="查询 folder_sync_flow ，发送 file event 到下一跳" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-16" value="查询 folder_sync_flow ，发送 file event 到下一跳。 查询是否还有待处理任务，无则更新 sync_flow 为 sync 且刷新 last_sync_time" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="960" y="2620" width="230" height="270" as="geometry" />
         </mxCell>
         <mxCell id="t_K3pcmBi-geYfmrzG9U-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="t_K3pcmBi-geYfmrzG9U-37" target="t_K3pcmBi-geYfmrzG9U-49" edge="1">
@@ -735,7 +735,7 @@
         <mxCell id="t_K3pcmBi-geYfmrzG9U-44" value="sync -&amp;gt; incr" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="520" y="3920" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="t_K3pcmBi-geYfmrzG9U-49" value="执行 compare，判断是否 sync" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
+        <mxCell id="t_K3pcmBi-geYfmrzG9U-49" value="执行 compare，判断是否 sync，是则更新 sync_flow 为 sync 且刷新 last_sync_time" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
           <mxGeometry x="960" y="3050" width="230" height="280" as="geometry" />
         </mxCell>
         <mxCell id="v4gMrZOpVzTQrCrVvwzV-5" value="2. file modified" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -1047,9 +1047,6 @@
         <mxCell id="a6IGXpcCbCOWXj8QhYQD-60" value="incr folder， content folder 执行 compare" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1170" y="4450" width="130" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="96lROc5eO-O38EUIlkGv-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="96lROc5eO-O38EUIlkGv-1" target="96lROc5eO-O38EUIlkGv-4" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="96lROc5eO-O38EUIlkGv-1" value="&lt;div&gt;compare&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="20" y="6318" width="120" height="60" as="geometry" />
         </mxCell>
@@ -1058,15 +1055,6 @@
         </mxCell>
         <mxCell id="96lROc5eO-O38EUIlkGv-3" value="initial scan" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="20" y="6408" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="96lROc5eO-O38EUIlkGv-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="96lROc5eO-O38EUIlkGv-4" target="96lROc5eO-O38EUIlkGv-6" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="96lROc5eO-O38EUIlkGv-4" value="File.getByRootFolderId(folderId，ignoreDeleted)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="220" y="6318" width="290" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="96lROc5eO-O38EUIlkGv-6" value="FileUtil." style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="600" y="6318" width="220" height="60" as="geometry" />
         </mxCell>
         <mxCell id="5-2yNEJEyyKx5gXZWqsK-1" value="file 表更新" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1439" y="3720" width="120" height="170" as="geometry" />
@@ -1230,7 +1218,7 @@
             <mxPoint x="240" y="4630" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-57" value="sync/incr/content handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-57" value="sync/incr/content handler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="40" y="4600" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-58" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-59" target="iLLUCtNKBEfGMFKWvBqe-61">
