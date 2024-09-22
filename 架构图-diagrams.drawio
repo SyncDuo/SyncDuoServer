@@ -217,7 +217,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;trigger by file event sended, hard link file/create folder. full scan after syncthing folder doesn&#39;t changed for 5 min&lt;/li&gt;&lt;li&gt;flatten store file in one folder name as &amp;lt;syncthing-folder-name&amp;gt;-incr. record file hash,filesystem attr and &#39;relative&#39; path into database&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+        <mxCell id="ec7xJqQuYl15cwVy1hZ_-6" value="&lt;ul&gt;&lt;li&gt;trigger by file event sended, hard link file/create folder&lt;/li&gt;&lt;li&gt;flatten store file in one folder name as &amp;lt;syncthing-folder-name&amp;gt;-incr. record file hash,filesystem attr and &#39;relative&#39; path into database&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
           <mxGeometry x="800" y="1390" width="560" height="110" as="geometry" />
         </mxCell>
         <mxCell id="ec7xJqQuYl15cwVy1hZ_-7" value="SyncDuo-Incremental" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
