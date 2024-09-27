@@ -1242,7 +1242,7 @@
         <mxCell id="IXfRReW6GYPqaPBf3olO-13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IXfRReW6GYPqaPBf3olO-10" target="IXfRReW6GYPqaPBf3olO-12">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="IXfRReW6GYPqaPBf3olO-10" value="FileUtils.scanFiles(folderId,isRecursive,File -&amp;gt; {consumer})" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="IXfRReW6GYPqaPBf3olO-10" value="FileUtils.scanFile(folderId,isRecursive,File -&amp;gt; {consumer})" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="510" y="6530" width="390" height="60" as="geometry" />
         </mxCell>
         <mxCell id="IXfRReW6GYPqaPBf3olO-12" value="consumer = FileService.addFile(File)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
