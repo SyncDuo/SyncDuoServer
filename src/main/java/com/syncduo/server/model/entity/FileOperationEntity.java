@@ -1,5 +1,6 @@
 package com.syncduo.server.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -10,7 +11,7 @@ import lombok.EqualsAndHashCode;
 @TableName("file_operation")
 public class FileOperationEntity extends BaseEntity {
 
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Long fileOperationId;
 
     private String operationType;
