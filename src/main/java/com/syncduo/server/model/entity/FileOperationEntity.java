@@ -1,8 +1,6 @@
 package com.syncduo.server.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -26,5 +24,6 @@ public class FileOperationEntity extends BaseEntity {
 
     private String errorMessage;
 
-    private Long executeCount;
+    @TableField(fill = FieldFill.INSERT)
+    private Integer executeCount;
 }
