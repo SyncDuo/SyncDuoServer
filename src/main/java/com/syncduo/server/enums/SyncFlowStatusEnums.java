@@ -4,5 +4,5 @@ public enum SyncFlowStatusEnums {
 
     NOT_SYNC,
 
-    SYNC;
+    SYNC
 }
