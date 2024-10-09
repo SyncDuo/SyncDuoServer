@@ -2,24 +2,68 @@ package com.syncduo.server.util;
 
 import com.syncduo.server.exception.SyncDuoException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 
 @Slf4j
 public class FileOperationUtils {
 
+    public static String getMD5Checksum(Path file) throws SyncDuoException {
+        log.info("正在读取文件:%s 的 MD5 checkum".formatted(file.toAbsolutePath()));
+
+        if (!Files.exists(file) && Files.isRegularFile(file)) {
+            throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
+        }
+
+        try (InputStream is = Files.newInputStream(file)) {
+            return DigestUtils.md5Hex(is);
+        } catch (IOException e) {
+            throw new SyncDuoException("无法读取文件:%s 的 MD5 checksum".formatted(file.toAbsolutePath()));
+        }
+    }
+
+    public static BasicFileAttributes getFileBasicAttributes(Path file) throws SyncDuoException {
+        log.info("正在读取文件:%s 的元数据".formatted(file.toAbsolutePath()));
+
+        if (!Files.exists(file) && Files.isRegularFile(file)) {
+            throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
+        }
+
+        try {
+            return Files.readAttributes(file, BasicFileAttributes.class);
+        } catch (IOException e) {
+            throw new SyncDuoException("无法读取文件:%s 的元数据", e);
+        }
+    }
+
+    public static void scanFileRecursive(String folderPath, SimpleFileVisitor<Path> fileVisitor)
+            throws SyncDuoException {
+        log.info("正在遍历文件夹: %s".formatted(folderPath));
+
+        Path folder = isFolderPathValid(folderPath);
+        try {
+            Files.walkFileTree(folder, fileVisitor);
+        } catch (IOException e) {
+            throw new SyncDuoException("遍历文件出错", e);
+        }
+    }
+
+
     public static void copyFile(String sourcePath, String destPath) throws SyncDuoException {
         log.info("执行文件复制操作. 源文件 %s, 目的文件 %s".formatted(sourcePath, destPath));
 
-        Path sourceFilePath = isFileValid(sourcePath);
-        Path destFilePath = isDestPathValid(destPath);
-
+        ImmutablePair<Path, Path> pathPair = isFilePathValid(sourcePath, destPath);
+        Path sourceFile = pathPair.getLeft();
+        Path destFile = pathPair.getRight();
         try {
-            Files.copy(sourceFilePath, destFilePath);
+            Files.copy(sourceFile, destFile);
         } catch (IOException e) {
             throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s", e);
         }
@@ -28,38 +72,51 @@ public class FileOperationUtils {
     public static void hardlinkFile(String sourcePath, String destPath) throws SyncDuoException {
         log.info("执行文件hardlink操作. 源文件 %s, 目的文件 %s".formatted(sourcePath, destPath));
 
-        Path sourceFilePath = isFileValid(sourcePath);
-        Path destFilePath = isDestPathValid(destPath);
+        ImmutablePair<Path, Path> pathPair = isFilePathValid(sourcePath, destPath);
+        Path sourceFile = pathPair.getLeft();
+        Path destFile = pathPair.getRight();
+
+        if (!sourceFile.getRoot().equals(destFile.getRoot())) {
+            throw new SyncDuoException("源文件路径:%s 和目标文件路径:%s 不在一个磁盘上".formatted(sourcePath, destPath));
+        }
 
         try {
-            Files.createLink(sourceFilePath, destFilePath);
+            Files.createLink(sourceFile, destFile);
         } catch (IOException e) {
             throw new SyncDuoException("文件hardlink失败. 源文件 %s, 目的文件 %s", e);
         }
     }
 
-    private static Path isFileValid(String path) throws SyncDuoException {
-        if (StringUtils.isBlank(path)) {
-            throw new SyncDuoException("路径为空");
+    private static ImmutablePair<Path, Path> isFilePathValid(String sourcePath, String destPath)
+            throws SyncDuoException {
+        if (StringUtils.isAnyBlank(sourcePath, destPath)) {
+            throw new SyncDuoException("源文件路径:%s 或目标文件路径:%s 为空.".formatted(sourcePath, destPath));
         }
-        Path filePath = Paths.get(path);
-        if (Files.exists(filePath) && Files.isRegularFile(filePath) && Files.isReadable(filePath)) {
-            return filePath;
-        } else {
-            throw new SyncDuoException("文件不存在 或 文件不是常规文件 或 文件不可读 %s".formatted(path));
+
+        Path sourceFile = Paths.get(sourcePath);
+        Path destFile = Paths.get(destPath);
+
+        if (!Files.exists(sourceFile)) {
+            throw new SyncDuoException("源文件路径:%s 不存在".formatted(sourcePath));
         }
+
+        Path parentFolder = destFile.getParent();
+        if (ObjectUtils.isNotEmpty(parentFolder) && !Files.exists(parentFolder)) {
+            throw new SyncDuoException("目标路径:%s 不存在".formatted(destPath));
+        }
+
+        return new ImmutablePair<>(sourceFile, destFile);
     }
 
-    private static Path isDestPathValid(String path) throws SyncDuoException {
+    public static Path isFolderPathValid(String path) throws SyncDuoException {
         if (StringUtils.isBlank(path)) {
-            throw new SyncDuoException("路径为空");
+            throw new SyncDuoException("文件夹路径为空");
         }
-        Path filePath = Paths.get(path);
-        Path fileParentPath = filePath.getParent();
-        if (Files.exists(fileParentPath)) {
-            return filePath;
+        Path folderPath = Paths.get(path);
+        if (Files.exists(folderPath) && Files.isDirectory(folderPath)) {
+            return folderPath;
         } else {
-            throw new SyncDuoException("路径不存在 %s".formatted(path));
+            throw new SyncDuoException("文件夹路径:%s 不存在或不是文件夹".formatted(path));
         }
     }
 }
