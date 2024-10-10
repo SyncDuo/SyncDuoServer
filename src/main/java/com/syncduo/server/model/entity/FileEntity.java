@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.sql.Timestamp;
+
 @EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("file")
@@ -18,7 +20,9 @@ public class FileEntity extends BaseEntity {
 
     private String fileMd5Checksum;
 
-    private String fileLastModifiedTime;
+    private Timestamp fileCreatedTime;
+
+    private Timestamp fileLastModifiedTime;
 
     private String fileUuid4;
 

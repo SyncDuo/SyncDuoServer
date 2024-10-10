@@ -25,6 +25,8 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         // file entity autofill
         this.strictInsertFill(metaObject, "fileDeleted", Integer.class, 0);
         this.strictInsertFill(metaObject, "fileDesync", Integer.class, 0);
+        this.strictInsertFill(metaObject, "fileExtension", String.class, "");
+        this.strictInsertFill(metaObject, "derivedFileId", Long.class, 0L);
 
         // file operation entity autofill
         this.strictInsertFill(metaObject, "executeCount", Integer.class, 0);

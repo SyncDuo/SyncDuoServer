@@ -15,6 +15,8 @@ public class FileEventDto {
 
     private Long folderId;
 
+    private String relativePath;
+
     private Long fileId;
 
     private Path file;
@@ -22,6 +24,8 @@ public class FileEventDto {
     private BasicFileAttributes basicFileAttributes;
 
     private String fileMd5Checksum;
+
+    private String uuid4;
 
     private FileEventTypeEnum fileEventType;
 }
