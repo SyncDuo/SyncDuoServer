@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.syncduo.server.mapper.FileMapper;
 import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.service.IFileService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class FileService extends ServiceImpl<FileMapper, FileEntity> implements IFileService {
 }

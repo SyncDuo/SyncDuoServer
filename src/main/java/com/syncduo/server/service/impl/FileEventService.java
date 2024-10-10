@@ -7,7 +7,9 @@ import com.syncduo.server.model.entity.FileEventEntity;
 import com.syncduo.server.model.entity.FileOperationEntity;
 import com.syncduo.server.service.IFileEventService;
 import com.syncduo.server.service.IFileOperationService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class FileEventService
         extends ServiceImpl<FileEventMapper, FileEventEntity>
         implements IFileEventService {

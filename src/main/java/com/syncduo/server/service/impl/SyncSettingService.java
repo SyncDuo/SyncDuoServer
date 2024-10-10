@@ -7,7 +7,9 @@ import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SyncSettingEntity;
 import com.syncduo.server.service.ISyncFlowService;
 import com.syncduo.server.service.ISyncSettingService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class SyncSettingService
         extends ServiceImpl<SyncSettingMapper, SyncSettingEntity>
         implements ISyncSettingService {

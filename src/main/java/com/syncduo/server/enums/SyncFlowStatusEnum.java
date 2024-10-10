@@ -1,6 +1,6 @@
 package com.syncduo.server.enums;
 
-public enum SyncFlowStatusEnums {
+public enum SyncFlowStatusEnum {
 
     NOT_SYNC,
 

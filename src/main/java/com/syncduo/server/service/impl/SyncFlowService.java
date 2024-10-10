@@ -7,7 +7,9 @@ import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.service.IRootFolderService;
 import com.syncduo.server.service.ISyncFlowService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class SyncFlowService
         extends ServiceImpl<SyncFlowMapper, SyncFlowEntity>
         implements ISyncFlowService {

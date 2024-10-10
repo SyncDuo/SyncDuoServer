@@ -1,7 +1,7 @@
 package com.syncduo.server.configuration;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-import com.syncduo.server.enums.SyncFlowStatusEnums;
+import com.syncduo.server.enums.SyncFlowStatusEnum;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
@@ -30,7 +30,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         this.strictInsertFill(metaObject, "executeCount", Integer.class, 0);
 
         // sync flow entity autofill
-        this.strictInsertFill(metaObject, "syncStatus", String.class, SyncFlowStatusEnums.NOT_SYNC.name());
+        this.strictInsertFill(metaObject, "syncStatus", String.class, SyncFlowStatusEnum.NOT_SYNC.name());
 
         // sync setting entity autofill
         this.strictInsertFill(metaObject, "filterCriteria", String.class, "*");

@@ -9,7 +9,7 @@ import com.syncduo.server.service.IFileOperationService;
 import com.syncduo.server.service.IFileService;
 import org.springframework.stereotype.Service;
 
-@Service("FileOperationService")
+@Service
 public class FileOperationService
         extends ServiceImpl<FileOperationMapper, FileOperationEntity>
         implements IFileOperationService {

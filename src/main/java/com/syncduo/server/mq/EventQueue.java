@@ -1,7 +1,6 @@
 package com.syncduo.server.mq;
 
 import com.syncduo.server.model.dto.event.FileEventDto;
-import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -14,15 +13,15 @@ public class EventQueue {
 
     private final ConcurrentLinkedQueue<FileEventDto> contentFolderEventQueue = new ConcurrentLinkedQueue<>();
 
-    public FileEventDto getSourceFolderEvent() {
+    public FileEventDto pollSourceFolderEvent() {
         return this.sourceFolderEventQueue.poll();
     }
 
-    public FileEventDto getInternalFolderEvent() {
+    public FileEventDto pollInternalFolderEvent() {
         return this.internalFolderEventQueue.poll();
     }
 
-    public FileEventDto getContentFolderEvent() {
+    public FileEventDto pollContentFolderEvent() {
         return this.contentFolderEventQueue.poll();
     }
 
