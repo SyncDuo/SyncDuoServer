@@ -4,7 +4,6 @@ import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.mq.EventQueue;
-import com.syncduo.server.service.impl.FileService;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 
 @Slf4j
 @Service
@@ -34,7 +32,10 @@ public class SourceFolderWatcher {
         this.eventQueue = eventQueue;
     }
 
-    public void addWatcher(String folderPath) throws SyncDuoException {
+    public void addWatcher(String folderPath, Long folderId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(folderId)) {
+            throw new SyncDuoException("创建 watcher 失败, folderId 为空");
+        }
 
         Path folder = FileOperationUtils.isFolderPathValid(folderPath);
         long pollingInterval = interval;
@@ -44,19 +45,21 @@ public class SourceFolderWatcher {
         FileAlterationMonitor monitor = new FileAlterationMonitor(pollingInterval);
 
         observer.addListener(new FileAlterationListenerAdaptor() {
+            private final Long id = folderId;
+
             @Override
             public void onFileCreate(File file) {
-                sourceEventCommon(file, eventQueue, FileEventTypeEnum.SOURCE_FOLDER_FILE_CREATED);
+                sourceEventSend(file, eventQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_CREATED);
             }
 
             @Override
             public void onFileDelete(File file) {
-                sourceEventCommon(file, eventQueue, FileEventTypeEnum.SOURCE_FOLDER_FILE_DELETED);
+                sourceEventSend(file, eventQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_DELETED);
             }
 
             @Override
             public void onFileChange(File file) {
-                sourceEventCommon(file, eventQueue, FileEventTypeEnum.SOURCE_FOLDER_FILE_CHANGED);
+                sourceEventSend(file, eventQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_CHANGED);
             }
         });
         monitor.addObserver(observer);
@@ -66,28 +69,17 @@ public class SourceFolderWatcher {
         } catch (Exception e) {
             throw new SyncDuoException("启动源文件夹 monitor 失败", e);
         }
-
     }
 
-    private static void sourceEventCommon(File file, EventQueue eventQueue, FileEventTypeEnum fileEventType) {
+    private static void sourceEventSend(
+            File file, EventQueue eventQueue, Long folderId, FileEventTypeEnum fileEventType) {
         Path nioFile = file.toPath();
 
         FileEventDto fileEvent = new FileEventDto();
         fileEvent.setFile(nioFile);
+        fileEvent.setRootFolderId(folderId);
         fileEvent.setFileEventType(fileEventType);
 
         eventQueue.pushSourceEvent(fileEvent);
-    }
-
-    private void popularFileEventFromFile(Path file, FileEventDto fileEventDto) throws SyncDuoException {
-        if (ObjectUtils.anyNull(file, fileEventDto)) {
-            throw new SyncDuoException("填充 FileEventDto 失败,源文件:%s 或 FileEventDto 为空".formatted(file));
-        }
-
-        BasicFileAttributes fileBasicAttributes = FileOperationUtils.getFileBasicAttributes(file);
-        fileEventDto.setBasicFileAttributes(fileBasicAttributes);
-
-        String fileMd5Checksum = FileOperationUtils.getMD5Checksum(file);
-        fileEventDto.setFileMd5Checksum(fileMd5Checksum);
     }
 }

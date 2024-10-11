@@ -10,6 +10,7 @@ import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.service.IFileEventService;
 import com.syncduo.server.service.IRootFolderService;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -21,15 +22,12 @@ public class RootFolderService
         extends ServiceImpl<RootFolderMapper, RootFolderEntity>
         implements IRootFolderService {
 
-    public RootFolderEntity getByFolderFullPath(String folderPath) throws SyncDuoException {
-        if (StringUtils.isBlank(folderPath)) {
-            throw new SyncDuoException("获取 Root Folder 失败,文件夹路径为空");
+    public RootFolderEntity getByFolderId(Long folderId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(folderId)) {
+            throw new SyncDuoException("获取 Root Folder 失败,folderId 为空");
         }
 
-        LambdaQueryWrapper<RootFolderEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(RootFolderEntity::getFolderFullPath, folderPath);
-        List<RootFolderEntity> dbResult = this.baseMapper.selectList(queryWrapper);
-
-        return CollectionUtils.isEmpty(dbResult) ? new RootFolderEntity() : dbResult.get(0);
+        RootFolderEntity dbResult = this.getById(folderId);
+        return ObjectUtils.isEmpty(dbResult) ? new RootFolderEntity() : dbResult;
     }
 }

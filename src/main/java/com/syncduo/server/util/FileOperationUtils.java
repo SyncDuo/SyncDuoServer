@@ -6,14 +6,70 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.Timestamp;
+import java.util.UUID;
 
 @Slf4j
 public class FileOperationUtils {
+
+    public static String getUuid4(
+            String rootFolderPath, String relativePath, String fileFullName) throws SyncDuoException {
+        if (StringUtils.isAnyBlank(rootFolderPath, fileFullName, relativePath)) {
+            throw new SyncDuoException("生成 uuid4 失败, rootFolderPath 或 fileFullName 或 relativePath 为空");
+        }
+        return UUID.fromString(rootFolderPath + relativePath + fileFullName).toString();
+    }
+
+    public static Pair<Timestamp, Timestamp> getFileCrTimeAndMTime(Path file) throws SyncDuoException {
+        log.info("正在读取文件:%s 的元数据".formatted(file.toAbsolutePath()));
+
+        if (!Files.exists(file) && Files.isRegularFile(file)) {
+            throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
+        }
+
+        BasicFileAttributes basicFileAttributes;
+        try {
+            basicFileAttributes = Files.readAttributes(file, BasicFileAttributes.class);
+        } catch (IOException e) {
+            throw new SyncDuoException("无法读取文件:%s 的元数据", e);
+        }
+        long createTimeStamp = basicFileAttributes.creationTime().toMillis();
+        long lastModifiedTimeStamp = basicFileAttributes.lastModifiedTime().toMillis();
+
+        return new ImmutablePair<>(new Timestamp(createTimeStamp), new Timestamp(lastModifiedTimeStamp));
+    }
+
+    public static String getFileParentFolderRelativePath(String rootFolderPath, Path file) throws SyncDuoException {
+        if (StringUtils.isEmpty(rootFolderPath)) {
+            throw new SyncDuoException("无法计算文件的相对路径, rootFolderPath 为空");
+        }
+
+        Path rootFolder = Paths.get(rootFolderPath);
+        return rootFolder.relativize(file.getParent()).toString();
+    }
+
+    public static Pair<String, String> getFileNameAndExtension(Path file) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(file)) {
+            throw new SyncDuoException("无法获取文件名, file 为空");
+        }
+
+        // 获取文件名和文件格式
+        String fileName = file.getFileName().toString();
+        String fileExtension = "";
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+            fileExtension = fileName.substring(dotIndex + 1);
+            fileName = fileName.substring(0, dotIndex); // Update fileName to exclude the extension
+        }
+        // 如果文件没有文件格式, 则 fileExtension 为 ""
+        return new ImmutablePair<>(fileName, fileExtension);
+    }
 
     public static String getMD5Checksum(Path file) throws SyncDuoException {
         log.info("正在读取文件:%s 的 MD5 checkum".formatted(file.toAbsolutePath()));
