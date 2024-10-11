@@ -5,8 +5,8 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.dto.mq.FileMessageDto;
 import com.syncduo.server.model.entity.FileEntity;
+import com.syncduo.server.model.entity.FileEventEntity;
 import com.syncduo.server.model.entity.RootFolderEntity;
-import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.mq.EventQueue;
 import com.syncduo.server.service.impl.*;
 import com.syncduo.server.util.FileOperationUtils;
@@ -15,16 +15,15 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
-import java.util.UUID;
 
 @Service
 @Slf4j
-public class SourceHandler {
+public class SourceFolderHandler {
 
     @Value("${syncduo.server.event.polling.num:10}")
     private Integer pollingNum;
@@ -33,36 +32,28 @@ public class SourceHandler {
 
     private final FileService fileService;
 
-    private final FileOperationService fileOperationService;
-
     private final RootFolderService rootFolderService;
-
-    private final SyncFlowService syncFlowService;
 
     private final FileEventService fileEventService;
 
     @Autowired
-    public SourceHandler(EventQueue eventQueue,
-                         FileService fileService,
-                         FileOperationService fileOperationService,
-                         RootFolderService rootFolderService,
-                         SyncFlowService syncFlowService,
-                         FileEventService fileEventService) {
+    public SourceFolderHandler(EventQueue eventQueue,
+                               FileService fileService,
+                               RootFolderService rootFolderService,
+                               FileEventService fileEventService) {
         this.eventQueue = eventQueue;
         this.fileService = fileService;
-        this.fileOperationService = fileOperationService;
         this.rootFolderService = rootFolderService;
-        this.syncFlowService = syncFlowService;
         this.fileEventService = fileEventService;
     }
 
+    @Scheduled(fixedDelayString = "${syncduo.server.message.polling.interval:5000}")
     private void handle() {
         for (int i = 0; i < pollingNum; i++) {
             FileEventDto fileEvent = eventQueue.pollSourceFolderEvent();
             if (ObjectUtils.isEmpty(fileEvent)) {
                 break;
             }
-
             try {
                 switch (fileEvent.getFileEventType()) {
                     case SOURCE_FOLDER_FILE_CREATED -> this.onFileChange(fileEvent);
@@ -76,59 +67,56 @@ public class SourceHandler {
         }
     }
 
-    private void onFileCreate(FileEventDto fileEvent) {
-        FileEntity fileEntity;
-        try {
-            // 根据 fileEvent 填充 fileEntity
-            fileEntity = this.fillFileEntityForCreate(fileEvent);
-            // 更新 file 表
-            this.fileService.createFileRecord(fileEntity);
-        } catch (SyncDuoException e) {
-            log.warn("处理 source folder 文件新建失败", e);
-            return;
-        }
-
+    private void onFileCreate(FileEventDto fileEvent) throws SyncDuoException {
+        // 根据 fileEvent 填充 fileEntity
+        FileEntity fileEntity = this.fillFileEntityForCreate(fileEvent);
+        // 更新 file 表
+        this.fileService.createFileRecord(fileEntity);
+        // 记录 file event, parentFileEventId=0, 表示 source folder 发生的文件事件
+        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, fileEntity);
+        this.fileEventService.save(fileEventEntity);
         // 发送 event 到 internal 队列
-        this.eventQueue.pushInternalEvent(new FileMessageDto(fileEvent, fileEntity));
+        this.eventQueue.pushInternalEvent(new FileMessageDto(fileEvent, fileEntity, fileEventEntity));
     }
 
-    private void onFileChange(FileEventDto fileEvent) {
+    private void onFileChange(FileEventDto fileEvent) throws SyncDuoException {
         Path file = fileEvent.getFile();
-
-        FileEntity fileEntity;
-        try {
-            // 根据 fileEvent 查数据库获取 fileEntity
-            fileEntity = this.getFileEntityFromFileEvent(fileEvent);
-            // 更新  md5checksum,last_modified_time
-            Pair<Timestamp, Timestamp> fileCrTimeAndMTime = FileOperationUtils.getFileCrTimeAndMTime(file);
-            fileEntity.setLastUpdatedTime(fileCrTimeAndMTime.getRight());
-            String md5Checksum = FileOperationUtils.getMD5Checksum(file);
-            fileEntity.setFileMd5Checksum(md5Checksum);
-        } catch (SyncDuoException e) {
-            log.warn("处理 source folder 文件修改失败", e);
-            return;
-        }
-
+        // 根据 fileEvent 查数据库获取 fileEntity
+        FileEntity fileEntity = this.getFileEntityFromFileEvent(fileEvent);
+        // 更新  md5checksum,last_modified_time
+        Pair<Timestamp, Timestamp> fileCrTimeAndMTime = FileOperationUtils.getFileCrTimeAndMTime(file);
+        fileEntity.setLastUpdatedTime(fileCrTimeAndMTime.getRight());
+        String md5Checksum = FileOperationUtils.getMD5Checksum(file);
+        fileEntity.setFileMd5Checksum(md5Checksum);
         // 更新数据库
         this.fileService.updateById(fileEntity);
+        // 记录 file event, parentFileEventId=0, 表示 source folder 发生的文件事件
+        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, fileEntity);
+        this.fileEventService.save(fileEventEntity);
         // 发送 event 到 internal 队列
-        this.eventQueue.pushInternalEvent(new FileMessageDto(fileEvent, fileEntity));
+        this.eventQueue.pushInternalEvent(new FileMessageDto(fileEvent, fileEntity, fileEventEntity));
     }
 
     private void onFileDelete(FileEventDto fileEvent) throws SyncDuoException {
-        FileEntity fileEntity;
-        try {
-            // 根据 fileEvent 查数据库获取 fileEntity
-            fileEntity = this.getFileEntityFromFileEvent(fileEvent);
-            // 更新 file_deleted=1
-            fileEntity.setFileDeleted(FileDeletedEnum.FILE_DELETED.getCode());
-        } catch (SyncDuoException e) {
-            log.warn("处理 source folder 文件修改失败", e);
-            return;
-        }
-
+        // 根据 fileEvent 查数据库获取 fileEntity
+        FileEntity fileEntity = this.getFileEntityFromFileEvent(fileEvent);
+        // 更新 file_deleted=1
+        fileEntity.setFileDeleted(FileDeletedEnum.FILE_DELETED.getCode());
         // 更新数据库
         this.fileService.updateById(fileEntity);
+    }
+
+    private FileEventEntity fillFileEventEntityFromFileEvent(
+            FileEventDto fileEvent, FileEntity fileEntity) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(fileEvent)) {
+            throw new SyncDuoException("创建文件事件记录失败, fileEventDto 为空");
+        }
+        FileEventEntity fileEventEntity = new FileEventEntity();
+        fileEventEntity.setParentFileEventId(0L);
+        fileEventEntity.setRootFolderId(fileEvent.getRootFolderId());
+        fileEventEntity.setFileId(fileEntity.getFileId());
+        fileEventEntity.setFileEventType(fileEvent.getFileEventType().toString());
+        return fileEventEntity;
     }
 
     private FileEntity getFileEntityFromFileEvent(FileEventDto fileEvent) throws SyncDuoException {

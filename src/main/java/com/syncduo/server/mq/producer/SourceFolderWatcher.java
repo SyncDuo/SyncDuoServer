@@ -45,8 +45,6 @@ public class SourceFolderWatcher {
         FileAlterationMonitor monitor = new FileAlterationMonitor(pollingInterval);
 
         observer.addListener(new FileAlterationListenerAdaptor() {
-            private final Long id = folderId;
-
             @Override
             public void onFileCreate(File file) {
                 sourceEventSend(file, eventQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_CREATED);
