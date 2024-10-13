@@ -1,4 +1,4 @@
 package com.syncduo.server.mq.consumer;
 
-public class InternalFolderHandler {
+public class ContentFileMsgHandler {
 }

@@ -2,6 +2,7 @@ package com.syncduo.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.RootFolderMapper;
 import com.syncduo.server.mapper.SyncFlowMapper;
@@ -19,6 +20,37 @@ import java.util.List;
 public class SyncFlowService
         extends ServiceImpl<SyncFlowMapper, SyncFlowEntity>
         implements ISyncFlowService {
+
+    public SyncFlowEntity createSyncFlow(
+            Long sourceFolderId, Long destFolderId, SyncFlowTypeEnum syncFlowType) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(syncFlowType)) {
+            throw new SyncDuoException("创建 Sync Flow 失败, syncFlowType 为空");
+        }
+        SyncFlowEntity dbResult = this.getBySourceFolderIdAndDest(sourceFolderId, destFolderId);
+        if (ObjectUtils.isEmpty(dbResult)) {
+            // 创建 sync flow
+            dbResult = new SyncFlowEntity();
+            dbResult.setSourceFolderId(sourceFolderId);
+            dbResult.setDestFolderId(destFolderId);
+            dbResult.setSyncFlowType(syncFlowType.name());
+            boolean saved = this.save(dbResult);
+            if (!saved) {
+                throw new SyncDuoException("创建 Sync Flow 失败, 无法保存到数据库");
+            }
+        }
+        return dbResult;
+    }
+
+    public SyncFlowEntity getBySourceFolderIdAndDest(Long sourceFolderId, Long destFolderId) throws SyncDuoException {
+        if (ObjectUtils.anyNull(sourceFolderId, destFolderId)) {
+            throw new SyncDuoException("查找 Sync Flow 失败, sourceFolderId 或 destFolderId 为空");
+        }
+        LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SyncFlowEntity::getSourceFolderId, sourceFolderId);
+        queryWrapper.eq(SyncFlowEntity::getDestFolderId, destFolderId);
+        List<SyncFlowEntity> dbResult = this.list(queryWrapper);
+        return CollectionUtils.isEmpty(dbResult) ? new SyncFlowEntity() : dbResult.get(0);
+    }
 
     public SyncFlowEntity getBySourceFolderId(Long folderId) throws SyncDuoException {
         if (ObjectUtils.isEmpty(folderId)) {

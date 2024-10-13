@@ -3,11 +3,11 @@ package com.syncduo.server.mq.consumer;
 import com.syncduo.server.enums.FileDeletedEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
-import com.syncduo.server.model.dto.mq.FileMessageDto;
+import com.syncduo.server.model.dto.mq.FileMsgDto;
 import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.model.entity.FileEventEntity;
 import com.syncduo.server.model.entity.RootFolderEntity;
-import com.syncduo.server.mq.EventQueue;
+import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.service.impl.*;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +23,12 @@ import java.sql.Timestamp;
 
 @Service
 @Slf4j
-public class SourceFolderHandler {
+public class SourceFolderEventHandler {
 
     @Value("${syncduo.server.event.polling.num:10}")
     private Integer pollingNum;
 
-    private final EventQueue eventQueue;
+    private final SystemQueue systemQueue;
 
     private final FileService fileService;
 
@@ -37,11 +37,11 @@ public class SourceFolderHandler {
     private final FileEventService fileEventService;
 
     @Autowired
-    public SourceFolderHandler(EventQueue eventQueue,
-                               FileService fileService,
-                               RootFolderService rootFolderService,
-                               FileEventService fileEventService) {
-        this.eventQueue = eventQueue;
+    public SourceFolderEventHandler(SystemQueue systemQueue,
+                                    FileService fileService,
+                                    RootFolderService rootFolderService,
+                                    FileEventService fileEventService) {
+        this.systemQueue = systemQueue;
         this.fileService = fileService;
         this.rootFolderService = rootFolderService;
         this.fileEventService = fileEventService;
@@ -50,7 +50,7 @@ public class SourceFolderHandler {
     @Scheduled(fixedDelayString = "${syncduo.server.message.polling.interval:5000}")
     private void handle() {
         for (int i = 0; i < pollingNum; i++) {
-            FileEventDto fileEvent = eventQueue.pollSourceFolderEvent();
+            FileEventDto fileEvent = systemQueue.pollSourceFolderEvent();
             if (ObjectUtils.isEmpty(fileEvent)) {
                 break;
             }
@@ -76,7 +76,7 @@ public class SourceFolderHandler {
         FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, fileEntity);
         this.fileEventService.save(fileEventEntity);
         // 发送 event 到 internal 队列
-        this.eventQueue.pushInternalEvent(new FileMessageDto(fileEvent, fileEntity, fileEventEntity));
+        this.systemQueue.pushInternalFileMsg(new FileMsgDto(fileEvent, fileEntity, fileEventEntity));
     }
 
     private void onFileChange(FileEventDto fileEvent) throws SyncDuoException {
@@ -94,7 +94,7 @@ public class SourceFolderHandler {
         FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, fileEntity);
         this.fileEventService.save(fileEventEntity);
         // 发送 event 到 internal 队列
-        this.eventQueue.pushInternalEvent(new FileMessageDto(fileEvent, fileEntity, fileEventEntity));
+        this.systemQueue.pushInternalFileMsg(new FileMsgDto(fileEvent, fileEntity, fileEventEntity));
     }
 
     private void onFileDelete(FileEventDto fileEvent) throws SyncDuoException {

@@ -18,7 +18,7 @@ public class SyncFlowEntity extends BaseEntity {
 
     private Long destFolderId;
 
-    private String flowType;
+    private String syncFlowType;
 
     @TableField(fill = FieldFill.INSERT)
     private String syncStatus;

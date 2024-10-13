@@ -4,4 +4,8 @@ import lombok.Data;
 
 @Data
 public class SyncFlowRequest {
+
+    private String sourceFolderFullPath;
+
+    private String destFolderFullPath;
 }

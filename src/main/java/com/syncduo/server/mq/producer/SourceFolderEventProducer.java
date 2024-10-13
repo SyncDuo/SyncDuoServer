@@ -3,7 +3,7 @@ package com.syncduo.server.mq.producer;
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
-import com.syncduo.server.mq.EventQueue;
+import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -20,16 +20,16 @@ import java.nio.file.Path;
 
 @Slf4j
 @Service
-public class SourceFolderWatcher {
+public class SourceFolderEventProducer {
 
     @Value("${syncduo.server.event.polling.interval:10000}")
     private Integer interval;
 
-    private final EventQueue eventQueue;
+    private final SystemQueue systemQueue;
 
     @Autowired
-    public SourceFolderWatcher(EventQueue eventQueue) {
-        this.eventQueue = eventQueue;
+    public SourceFolderEventProducer(SystemQueue systemQueue) {
+        this.systemQueue = systemQueue;
     }
 
     public void addWatcher(String folderPath, Long folderId) throws SyncDuoException {
@@ -47,17 +47,17 @@ public class SourceFolderWatcher {
         observer.addListener(new FileAlterationListenerAdaptor() {
             @Override
             public void onFileCreate(File file) {
-                sourceEventSend(file, eventQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_CREATED);
+                sourceEventSend(file, systemQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_CREATED);
             }
 
             @Override
             public void onFileDelete(File file) {
-                sourceEventSend(file, eventQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_DELETED);
+                sourceEventSend(file, systemQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_DELETED);
             }
 
             @Override
             public void onFileChange(File file) {
-                sourceEventSend(file, eventQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_CHANGED);
+                sourceEventSend(file, systemQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_CHANGED);
             }
         });
         monitor.addObserver(observer);
@@ -70,7 +70,7 @@ public class SourceFolderWatcher {
     }
 
     private static void sourceEventSend(
-            File file, EventQueue eventQueue, Long folderId, FileEventTypeEnum fileEventType) {
+            File file, SystemQueue systemQueue, Long folderId, FileEventTypeEnum fileEventType) {
         Path nioFile = file.toPath();
 
         FileEventDto fileEvent = new FileEventDto();
@@ -78,6 +78,6 @@ public class SourceFolderWatcher {
         fileEvent.setRootFolderId(folderId);
         fileEvent.setFileEventType(fileEventType);
 
-        eventQueue.pushSourceEvent(fileEvent);
+        systemQueue.pushSourceEvent(fileEvent);
     }
 }

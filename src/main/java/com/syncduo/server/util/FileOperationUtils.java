@@ -17,6 +17,14 @@ import java.util.UUID;
 
 @Slf4j
 public class FileOperationUtils {
+    public static String getFolderNameFromFullPath(String folderFullPath) {
+        Path path = Paths.get(folderFullPath);
+        return path.getFileName().toString();
+    }
+
+    public static String getSeparator() {
+        return FileSystems.getDefault().getSeparator();
+    }
 
     public static String getUuid4(
             String rootFolderPath, String relativePath, String fileFullName) throws SyncDuoException {
