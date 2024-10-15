@@ -2,7 +2,6 @@ package com.syncduo.server.mq;
 
 import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.dto.mq.FileMsgDto;
-import com.syncduo.server.model.dto.mq.filetask.FileOpTaskDto;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
