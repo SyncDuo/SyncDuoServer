@@ -14,9 +14,22 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @Slf4j
 public class FileOperationUtils {
+    public static void walkFilesTree(
+            String folderFullPath,
+            SimpleFileVisitor<Path> simpleFileVisitor) throws SyncDuoException {
+        Path folder = isFolderPathValid(folderFullPath);
+
+        try {
+            Files.walkFileTree(folder, simpleFileVisitor);
+        } catch (IOException e) {
+            throw new SyncDuoException("遍历文件失败", e);
+        }
+    }
+
     public static String getFolderNameFromFullPath(String folderFullPath) {
         Path path = Paths.get(folderFullPath);
         return path.getFileName().toString();

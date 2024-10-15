@@ -76,7 +76,7 @@ public class SourceFolderEventHandler {
         FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, fileEntity);
         this.fileEventService.save(fileEventEntity);
         // 发送 event 到 internal 队列
-        this.systemQueue.pushInternalFileMsg(new FileMsgDto(fileEvent, fileEntity, fileEventEntity));
+        this.systemQueue.pushInternalFileMsg(new FileMsgDto(fileEntity, fileEventEntity));
     }
 
     private void onFileChange(FileEventDto fileEvent) throws SyncDuoException {
@@ -94,7 +94,7 @@ public class SourceFolderEventHandler {
         FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, fileEntity);
         this.fileEventService.save(fileEventEntity);
         // 发送 event 到 internal 队列
-        this.systemQueue.pushInternalFileMsg(new FileMsgDto(fileEvent, fileEntity, fileEventEntity));
+        this.systemQueue.pushInternalFileMsg(new FileMsgDto(fileEntity, fileEventEntity));
     }
 
     private void onFileDelete(FileEventDto fileEvent) throws SyncDuoException {
@@ -115,7 +115,7 @@ public class SourceFolderEventHandler {
         fileEventEntity.setParentFileEventId(0L);
         fileEventEntity.setRootFolderId(fileEvent.getRootFolderId());
         fileEventEntity.setFileId(fileEntity.getFileId());
-        fileEventEntity.setFileEventType(fileEvent.getFileEventType().toString());
+        fileEventEntity.setFileEventType(fileEvent.getFileEventType().name());
         return fileEventEntity;
     }
 
@@ -135,39 +135,13 @@ public class SourceFolderEventHandler {
     }
 
     private FileEntity fillFileEntityForCreate(FileEventDto fileEvent) throws SyncDuoException {
-        FileEntity fileEntity = new FileEntity();
-
         Path file = fileEvent.getFile();
-
-        // 获取 created_time and last_modified_time
-        Pair<Timestamp, Timestamp> fileCrTimeAndMTime = FileOperationUtils.getFileCrTimeAndMTime(file);
-        fileEntity.setFileCreatedTime(fileCrTimeAndMTime.getLeft());
-        fileEntity.setFileLastModifiedTime(fileCrTimeAndMTime.getRight());
-
-        // 获取 md5 checksum
-        String md5Checksum = FileOperationUtils.getMD5Checksum(file);
-        fileEntity.setFileMd5Checksum(md5Checksum);
-
-        // 根据 root folder id 获取 root folder path, 从而计算 relative path
         Long rootFolderId = fileEvent.getRootFolderId();
-        fileEntity.setRootFolderId(rootFolderId);
         RootFolderEntity rootFolder = this.rootFolderService.getByFolderId(rootFolderId);
-        String folderFullPath = rootFolder.getFolderFullPath();
-        String relativePath = FileOperationUtils.getFileParentFolderRelativePath(folderFullPath, file);
-        fileEntity.setRelativePath(relativePath);
-
-        // 获取 file name 和 file extension
-        Pair<String, String> fileNameAndExtension = FileOperationUtils.getFileNameAndExtension(file);
-        fileEntity.setFileName(fileNameAndExtension.getLeft());
-        fileEntity.setFileExtension(fileNameAndExtension.getRight());
-
+        FileEntity fileEntity = this.fileService.fillFileEntityForCreate(
+                file, rootFolderId, rootFolder.getFolderFullPath());
         // source folder 的文件表, derived_file_id 为 0
         fileEntity.setDerivedFileId(0L);
-
-        // 获取 uuid4
-        String uuid4 = FileOperationUtils.getUuid4(folderFullPath, relativePath, file.getFileName().toString());
-        fileEntity.setFileUuid4(uuid4);
-
         return fileEntity;
     }
 }

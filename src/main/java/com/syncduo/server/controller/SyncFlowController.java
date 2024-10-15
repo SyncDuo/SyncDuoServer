@@ -7,6 +7,7 @@ import com.syncduo.server.model.dto.http.SyncFlowResponse;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.mq.producer.SourceFolderEventProducer;
+import com.syncduo.server.service.impl.AdvancedFileOpService;
 import com.syncduo.server.service.impl.RootFolderService;
 import com.syncduo.server.service.impl.SyncFlowService;
 import org.apache.commons.lang3.ObjectUtils;
@@ -19,19 +20,23 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController("/sync-flow")
 public class SyncFlowController {
-    private RootFolderService rootFolderService;
+    private final RootFolderService rootFolderService;
 
-    private SyncFlowService syncFlowService;
+    private final SyncFlowService syncFlowService;
 
-    private SourceFolderEventProducer sourceFolderEventProducer;
+    private final AdvancedFileOpService fileOpService;
+
+    private final SourceFolderEventProducer sourceFolderEventProducer;
 
     @Autowired
     public SyncFlowController(
             RootFolderService rootFolderService,
             SyncFlowService syncFlowService,
+            AdvancedFileOpService fileOpService,
             SourceFolderEventProducer sourceFolderEventProducer) {
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
+        this.fileOpService = fileOpService;
         this.sourceFolderEventProducer = sourceFolderEventProducer;
     }
 
@@ -42,22 +47,28 @@ public class SyncFlowController {
             // 创建 source folder 和 internal folder
             Pair<RootFolderEntity, RootFolderEntity> sourceAndInternalFolderEntity =
                     this.rootFolderService.createSourceFolder(syncFlowRequest.getSourceFolderFullPath());
+            RootFolderEntity sourceFolderEntity = sourceAndInternalFolderEntity.getLeft();
+            RootFolderEntity internalFolderEntity = sourceAndInternalFolderEntity.getRight();
             // 创建 content folder
             RootFolderEntity contentFolderEntity =
                     this.rootFolderService.createContentFolder(syncFlowRequest.getDestFolderFullPath());
             // 创建 source to internal sync flow
             SyncFlowEntity source2InternalSyncFlow = this.syncFlowService.createSyncFlow(
-                    sourceAndInternalFolderEntity.getLeft().getFolderId(),
-                    sourceAndInternalFolderEntity.getRight().getFolderId(),
+                    sourceFolderEntity.getFolderId(),
+                    internalFolderEntity.getFolderId(),
                     SyncFlowTypeEnum.SOURCE_TO_INTERNAL);
             // 创建 internal to content sync flow
             SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.createSyncFlow(
-                    sourceAndInternalFolderEntity.getLeft().getFolderId(),
+                    sourceFolderEntity.getFolderId(),
                     contentFolderEntity.getFolderId(),
                     SyncFlowTypeEnum.INTERNAL_TO_CONTENT
             );
-            // 发送 full scan, compare 任务
-
+            // 执行 init scan 任务
+            this.fileOpService.initialScan(sourceFolderEntity);
+            // 执行 addWatcher
+            this.sourceFolderEventProducer.addWatcher(
+                    sourceFolderEntity.getFolderFullPath(),
+                    sourceFolderEntity.getFolderId());
         } catch (SyncDuoException e) {
             return SyncFlowResponse.onError(e.getMessage());
         }

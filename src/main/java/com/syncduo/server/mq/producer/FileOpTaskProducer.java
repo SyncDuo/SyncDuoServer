@@ -1,7 +1,6 @@
 package com.syncduo.server.mq.producer;
 
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.dto.mq.FileOpTaskDto;
 import com.syncduo.server.mq.SystemQueue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,4 @@ public class FileOpTaskProducer {
         this.systemQueue = systemQueue;
     }
 
-    public void addFileOpTask(FileOpTaskDto fileOpTask) throws SyncDuoException {
-
-    }
 }

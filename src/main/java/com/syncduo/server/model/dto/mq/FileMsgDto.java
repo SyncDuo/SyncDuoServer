@@ -9,9 +9,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class FileMsgDto {
-
-    private FileEventDto fileEventDto;
-
     private FileEntity fileEntity;
 
     private FileEventEntity fileEventEntity;

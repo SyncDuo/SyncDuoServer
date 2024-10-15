@@ -2,6 +2,8 @@ package com.syncduo.server.enums;
 
 public enum FileEventTypeEnum {
 
+    SOURCE_FOLDER_INITIAL_SCAN,
+
     SOURCE_FOLDER_FILE_CREATED,
 
     SOURCE_FOLDER_FILE_CHANGED,
