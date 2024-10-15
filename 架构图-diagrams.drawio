@@ -502,10 +502,12 @@
         <mxCell id="uasykzirsSdUwL9WkVUC-33" value="sync_flow 表新增，sync_status = not_sync" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="750" y="3478" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-66" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="uasykzirsSdUwL9WkVUC-37" target="uasykzirsSdUwL9WkVUC-65" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="uasykzirsSdUwL9WkVUC-66" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="uasykzirsSdUwL9WkVUC-37" target="uasykzirsSdUwL9WkVUC-67" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1239" y="3410" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-37" value="syncthing,incr 目录执行initial scan" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="uasykzirsSdUwL9WkVUC-37" value="syncthing 目录执行initial scan" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="990" y="3380" width="170" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="uasykzirsSdUwL9WkVUC-49" edge="1">
@@ -538,12 +540,6 @@
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-62" value="incr -&amp;gt; content" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="520" y="4030" width="160" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-55" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="uasykzirsSdUwL9WkVUC-65" target="uasykzirsSdUwL9WkVUC-67" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="uasykzirsSdUwL9WkVUC-65" value="syncthing,incr 目录执行 compare" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1239" y="3380" width="170" height="60" as="geometry" />
         </mxCell>
         <mxCell id="uasykzirsSdUwL9WkVUC-67" value="syncthing 目录添加 watcher" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1497.5" y="3430" width="170" height="60" as="geometry" />
