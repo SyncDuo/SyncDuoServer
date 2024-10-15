@@ -15,8 +15,6 @@ public class SystemQueue {
 
     private final ConcurrentLinkedQueue<FileMsgDto> contentFileMsgQueue = new ConcurrentLinkedQueue<>();
 
-    private final ConcurrentLinkedQueue<FileOpTaskDto> fileOpTaskQueue = new ConcurrentLinkedQueue<>();
-
     public FileEventDto pollSourceFolderEvent() {
         return this.sourceFolderEventQueue.poll();
     }
@@ -29,10 +27,6 @@ public class SystemQueue {
         return this.contentFileMsgQueue.poll();
     }
 
-    public FileOpTaskDto pollFileOpTask() {
-        return this.fileOpTaskQueue.poll();
-    }
-
     public void pushSourceEvent(FileEventDto fileEventDto) {
         this.sourceFolderEventQueue.offer(fileEventDto);
     }
@@ -43,9 +37,5 @@ public class SystemQueue {
 
     public void pushContentFileMsg(FileMsgDto fileMsgDto) {
         this.contentFileMsgQueue.offer(fileMsgDto);
-    }
-
-    public void pushFileOpTask(FileOpTaskDto fileOperationMsg) {
-        this.fileOpTaskQueue.offer(fileOperationMsg);
     }
 }
