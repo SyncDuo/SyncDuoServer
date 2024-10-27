@@ -54,21 +54,21 @@ public class SyncFlowController {
                     this.rootFolderService.createContentFolder(syncFlowRequest.getDestFolderFullPath());
             // 创建 source to internal sync flow
             SyncFlowEntity source2InternalSyncFlow = this.syncFlowService.createSyncFlow(
-                    sourceFolderEntity.getFolderId(),
-                    internalFolderEntity.getFolderId(),
+                    sourceFolderEntity.getRootFolderId(),
+                    internalFolderEntity.getRootFolderId(),
                     SyncFlowTypeEnum.SOURCE_TO_INTERNAL);
             // 创建 internal to content sync flow
             SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.createSyncFlow(
-                    sourceFolderEntity.getFolderId(),
-                    contentFolderEntity.getFolderId(),
+                    sourceFolderEntity.getRootFolderId(),
+                    contentFolderEntity.getRootFolderId(),
                     SyncFlowTypeEnum.INTERNAL_TO_CONTENT
             );
             // 执行 init scan 任务
             this.fileOpService.initialScan(sourceFolderEntity);
             // 执行 addWatcher
             this.sourceFolderEventProducer.addWatcher(
-                    sourceFolderEntity.getFolderFullPath(),
-                    sourceFolderEntity.getFolderId());
+                    sourceFolderEntity.getRootFolderFullPath(),
+                    sourceFolderEntity.getRootFolderId());
         } catch (SyncDuoException e) {
             return SyncFlowResponse.onError(e.getMessage());
         }

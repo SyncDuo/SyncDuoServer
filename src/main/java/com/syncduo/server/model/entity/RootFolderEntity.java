@@ -12,11 +12,11 @@ import lombok.EqualsAndHashCode;
 public class RootFolderEntity extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
-    private Long folderId;
+    private Long rootFolderId;
 
-    private String folderName;
+    private String rootFolderName;
 
-    private String folderFullPath;
+    private String rootFolderFullPath;
 
-    private String folderType;
+    private String rootFolderType;
 }

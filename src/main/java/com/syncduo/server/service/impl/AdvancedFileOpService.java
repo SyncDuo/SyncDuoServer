@@ -8,7 +8,6 @@ import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.util.FileOperationUtils;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -23,12 +22,12 @@ public class AdvancedFileOpService {
     }
 
     public void initialScan(RootFolderEntity rootFolder) throws SyncDuoException {
-        FileOperationUtils.walkFilesTree(rootFolder.getFolderFullPath(), new SimpleFileVisitor<>(){
+        FileOperationUtils.walkFilesTree(rootFolder.getRootFolderFullPath(), new SimpleFileVisitor<>(){
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 FileEventDto fileEvent = new FileEventDto();
                 fileEvent.setFile(file);
-                fileEvent.setRootFolderId(rootFolder.getFolderId());
+                fileEvent.setRootFolderId(rootFolder.getRootFolderId());
                 fileEvent.setFileEventType(FileEventTypeEnum.SOURCE_FOLDER_INITIAL_SCAN);
                 systemQueue.pushSourceEvent(fileEvent);
                 return FileVisitResult.CONTINUE;

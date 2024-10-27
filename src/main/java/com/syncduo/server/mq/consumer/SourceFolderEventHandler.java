@@ -123,7 +123,7 @@ public class SourceFolderEventHandler {
         Path file = fileEvent.getFile();
         Long rootFolderId = fileEvent.getRootFolderId();
         RootFolderEntity rootFolder = this.rootFolderService.getByFolderId(rootFolderId);
-        String folderFullPath = rootFolder.getFolderFullPath();
+        String folderFullPath = rootFolder.getRootFolderFullPath();
         String relativePath = FileOperationUtils.getFileParentFolderRelativePath(folderFullPath, file);
 
         String uuid4 = FileOperationUtils.getUuid4(folderFullPath, relativePath, file.getFileName().toString());
@@ -139,7 +139,7 @@ public class SourceFolderEventHandler {
         Long rootFolderId = fileEvent.getRootFolderId();
         RootFolderEntity rootFolder = this.rootFolderService.getByFolderId(rootFolderId);
         FileEntity fileEntity = this.fileService.fillFileEntityForCreate(
-                file, rootFolderId, rootFolder.getFolderFullPath());
+                file, rootFolderId, rootFolder.getRootFolderFullPath());
         // source folder 的文件表, derived_file_id 为 0
         fileEntity.setDerivedFileId(0L);
         return fileEntity;

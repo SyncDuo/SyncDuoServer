@@ -7,17 +7,27 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
 import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.concurrent.locks.LockSupport;
 
 @Slf4j
 public class FileOperationUtils {
+
+    @Value("${syncduo.server.filelock.retry.count:3}")
+    private static int fileLockRetryCount;
+
+    @Value("${syncduo.server.filelock.retry.interval:3000L}")
+    private static long fileLockWaitInterval;
+
     public static void walkFilesTree(
             String folderFullPath,
             SimpleFileVisitor<Path> simpleFileVisitor) throws SyncDuoException {
@@ -55,7 +65,7 @@ public class FileOperationUtils {
         }
 
         BasicFileAttributes basicFileAttributes;
-        try {
+        try (FileLock ignored = tryLockWithRetries(FileChannel.open(file, StandardOpenOption.READ), true)) {
             basicFileAttributes = Files.readAttributes(file, BasicFileAttributes.class);
         } catch (IOException e) {
             throw new SyncDuoException("无法读取文件:%s 的元数据", e);
@@ -99,7 +109,8 @@ public class FileOperationUtils {
             throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
         }
 
-        try (InputStream is = Files.newInputStream(file)) {
+        try (FileLock ignored = tryLockWithRetries(FileChannel.open(file, StandardOpenOption.READ), true);
+             InputStream is = Files.newInputStream(file)) {
             return DigestUtils.md5Hex(is);
         } catch (IOException e) {
             throw new SyncDuoException("无法读取文件:%s 的 MD5 checksum".formatted(file.toAbsolutePath()));
@@ -113,7 +124,7 @@ public class FileOperationUtils {
             throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
         }
 
-        try {
+        try (FileLock ignored = tryLockWithRetries(FileChannel.open(file, StandardOpenOption.READ), true)) {
             return Files.readAttributes(file, BasicFileAttributes.class);
         } catch (IOException e) {
             throw new SyncDuoException("无法读取文件:%s 的元数据", e);
@@ -139,9 +150,13 @@ public class FileOperationUtils {
         ImmutablePair<Path, Path> pathPair = isFilePathValid(sourcePath, destPath);
         Path sourceFile = pathPair.getLeft();
         Path destFile = pathPair.getRight();
-        try {
+
+        try (FileLock ignore =
+                     tryLockWithRetries(FileChannel.open(sourceFile, StandardOpenOption.READ), true);
+             FileLock ignored =
+                     tryLockWithRetries(FileChannel.open(destFile, StandardOpenOption.CREATE), false)) {
             Files.copy(sourceFile, destFile);
-        } catch (IOException e) {
+        } catch (IOException | SyncDuoException e) {
             throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s", e);
         }
     }
@@ -157,9 +172,11 @@ public class FileOperationUtils {
             throw new SyncDuoException("源文件路径:%s 和目标文件路径:%s 不在一个磁盘上".formatted(sourcePath, destPath));
         }
 
-        try {
+        try (FileLock ignored =
+                     tryLockWithRetries(FileChannel.open(sourceFile, StandardOpenOption.READ), true)) {
+            // 执行文件 hardlink
             Files.createLink(sourceFile, destFile);
-        } catch (IOException e) {
+        } catch (IOException | SyncDuoException e) {
             throw new SyncDuoException("文件hardlink失败. 源文件 %s, 目的文件 %s", e);
         }
     }
@@ -195,5 +212,25 @@ public class FileOperationUtils {
         } else {
             throw new SyncDuoException("文件夹路径:%s 不存在或不是文件夹".formatted(path));
         }
+    }
+
+    private static FileLock tryLockWithRetries(FileChannel fileChannel, boolean shared) throws SyncDuoException {
+        FileLock lock = null;
+        for (int i = 0; i < fileLockRetryCount; i++) {
+            try {
+                lock = fileChannel.tryLock(0, Long.MAX_VALUE, shared);
+            } catch (IOException e) {
+                throw new SyncDuoException("无法获取锁,文件是 %s".formatted(fileChannel));
+            }
+            if (ObjectUtils.isNotEmpty(lock)) {
+                break;
+            }
+            log.info("正在重试获取文件锁.文件是 %s, 次数是 %s".formatted(fileChannel, i+1));
+            LockSupport.parkNanos(fileLockWaitInterval * 1_000_000);
+        }
+        if (ObjectUtils.isEmpty(lock)) {
+            throw new SyncDuoException("获取锁失败 %s".formatted(fileChannel));
+        }
+        return lock;
     }
 }

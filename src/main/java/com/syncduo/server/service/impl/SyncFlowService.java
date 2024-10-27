@@ -26,8 +26,11 @@ public class SyncFlowService
         if (ObjectUtils.isEmpty(syncFlowType)) {
             throw new SyncDuoException("创建 Sync Flow 失败, syncFlowType 为空");
         }
-        SyncFlowEntity dbResult = this.getBySourceFolderIdAndDest(sourceFolderId, destFolderId);
-        if (ObjectUtils.isEmpty(dbResult)) {
+        SyncFlowEntity dbResult;
+        try {
+            dbResult = this.getBySourceFolderIdAndDest(sourceFolderId, destFolderId);
+            return dbResult;
+        } catch (SyncDuoException e) {
             // 创建 sync flow
             dbResult = new SyncFlowEntity();
             dbResult.setSourceFolderId(sourceFolderId);
