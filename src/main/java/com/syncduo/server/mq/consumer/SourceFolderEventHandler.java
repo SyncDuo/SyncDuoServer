@@ -56,13 +56,13 @@ public class SourceFolderEventHandler {
             }
             try {
                 switch (fileEvent.getFileEventType()) {
-                    case SOURCE_FOLDER_FILE_CREATED -> this.onFileChange(fileEvent);
-                    case SOURCE_FOLDER_FILE_CHANGED -> this.onFileCreate(fileEvent);
+                    case SOURCE_FOLDER_INITIAL_SCAN, SOURCE_FOLDER_FILE_CREATED -> this.onFileCreate(fileEvent);
+                    case SOURCE_FOLDER_FILE_CHANGED -> this.onFileChange(fileEvent);
                     case SOURCE_FOLDER_FILE_DELETED -> this.onFileDelete(fileEvent);
                     default -> throw new SyncDuoException("源文件夹的文件事件:%s 不识别".formatted(fileEvent));
                 }
             } catch (SyncDuoException e) {
-                log.error("源文件夹的文件事件:%s 处理失败".formatted(fileEvent));
+                log.error("源文件夹的文件事件:%s 处理失败".formatted(fileEvent), e);
             }
         }
     }
@@ -121,12 +121,7 @@ public class SourceFolderEventHandler {
 
     private FileEntity getFileEntityFromFileEvent(FileEventDto fileEvent) throws SyncDuoException {
         Path file = fileEvent.getFile();
-        Long rootFolderId = fileEvent.getRootFolderId();
-        RootFolderEntity rootFolder = this.rootFolderService.getByFolderId(rootFolderId);
-        String folderFullPath = rootFolder.getRootFolderFullPath();
-        String relativePath = FileOperationUtils.getFileParentFolderRelativePath(folderFullPath, file);
-
-        String uuid4 = FileOperationUtils.getUuid4(folderFullPath, relativePath, file.getFileName().toString());
+        String uuid4 = FileOperationUtils.getUuid4(file);
         FileEntity dbResult = this.fileService.getByUuid4(uuid4);
         if (ObjectUtils.isEmpty(dbResult)) {
             throw new SyncDuoException("被修改的文件没有记录在数据库, fileEvent 是 %s".formatted(fileEvent));
@@ -139,7 +134,9 @@ public class SourceFolderEventHandler {
         Long rootFolderId = fileEvent.getRootFolderId();
         RootFolderEntity rootFolder = this.rootFolderService.getByFolderId(rootFolderId);
         FileEntity fileEntity = this.fileService.fillFileEntityForCreate(
-                file, rootFolderId, rootFolder.getRootFolderFullPath());
+                file,
+                rootFolderId,
+                rootFolder.getRootFolderFullPath());
         // source folder 的文件表, derived_file_id 为 0
         fileEntity.setDerivedFileId(0L);
         return fileEntity;
