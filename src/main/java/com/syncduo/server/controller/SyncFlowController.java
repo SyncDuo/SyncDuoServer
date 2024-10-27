@@ -72,8 +72,7 @@ public class SyncFlowController {
         } catch (SyncDuoException e) {
             return SyncFlowResponse.onError(e.getMessage());
         }
-
-        return null;
+        return SyncFlowResponse.onSuccess("成功创建同步关系");
     }
 
     private void isSyncFlowRequestValid(SyncFlowRequest syncFlowRequest) throws SyncDuoException {

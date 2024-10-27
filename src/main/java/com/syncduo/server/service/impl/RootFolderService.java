@@ -14,6 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -57,6 +59,7 @@ public class RootFolderService
         return contentFolderEntity;
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Pair<RootFolderEntity, RootFolderEntity> createSourceFolder(
             String sourceFolderFullPath) throws SyncDuoException  {
         RootFolderEntity sourceFolderEntity = this.getByFolderFullPath(sourceFolderFullPath);
@@ -72,14 +75,15 @@ public class RootFolderService
                 throw new SyncDuoException("创建 sourceFolder 记录失败,无法保存到数据库");
             }
         }
-
+        // 文件夹名称 = <sourceFolder>-internal
         String internalFolderPath = this.internalFolderPath +
                 FileOperationUtils.getSeparator() +
-                FileOperationUtils.getFolderNameFromFullPath(sourceFolderFullPath);
+                FileOperationUtils.getFolderNameFromFullPath(sourceFolderFullPath) +
+                "-internal";
         RootFolderEntity internalFolderEntity = this.getByFolderFullPath(internalFolderPath);
         if (ObjectUtils.isEmpty(internalFolderEntity)) {
             // 创建 internal folder
-            Path internalFolder = FileOperationUtils.isFolderPathValid(internalFolderPath);
+            Path internalFolder = FileOperationUtils.createFolder(internalFolderPath);
             internalFolderEntity = new RootFolderEntity();
             internalFolderEntity.setRootFolderName(internalFolder.getFileName().toString());
             internalFolderEntity.setRootFolderFullPath(internalFolder.toAbsolutePath().toString());
@@ -102,7 +106,7 @@ public class RootFolderService
         List<RootFolderEntity> dbResult = this.list(queryWrapper);
 
         if (CollectionUtils.isEmpty(dbResult)) {
-            return new RootFolderEntity();
+            return null;
         }
         if (dbResult.size() > 1) {
             throw new SyncDuoException("RootFolder 存在多对一的情况, %s".formatted(dbResult));

@@ -26,11 +26,8 @@ public class SyncFlowService
         if (ObjectUtils.isEmpty(syncFlowType)) {
             throw new SyncDuoException("创建 Sync Flow 失败, syncFlowType 为空");
         }
-        SyncFlowEntity dbResult;
-        try {
-            dbResult = this.getBySourceFolderIdAndDest(sourceFolderId, destFolderId);
-            return dbResult;
-        } catch (SyncDuoException e) {
+        SyncFlowEntity dbResult = this.getBySourceFolderIdAndDest(sourceFolderId, destFolderId);
+        if (ObjectUtils.isEmpty(dbResult)) {
             // 创建 sync flow
             dbResult = new SyncFlowEntity();
             dbResult.setSourceFolderId(sourceFolderId);
@@ -52,7 +49,7 @@ public class SyncFlowService
         queryWrapper.eq(SyncFlowEntity::getSourceFolderId, sourceFolderId);
         queryWrapper.eq(SyncFlowEntity::getDestFolderId, destFolderId);
         List<SyncFlowEntity> dbResult = this.list(queryWrapper);
-        return CollectionUtils.isEmpty(dbResult) ? new SyncFlowEntity() : dbResult.get(0);
+        return CollectionUtils.isEmpty(dbResult) ? null : dbResult.get(0);
     }
 
     public SyncFlowEntity getBySourceFolderId(Long folderId) throws SyncDuoException {

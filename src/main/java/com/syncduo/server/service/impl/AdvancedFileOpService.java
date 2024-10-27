@@ -6,6 +6,7 @@ import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.util.FileOperationUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.FileVisitResult;
@@ -17,6 +18,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class AdvancedFileOpService {
     private final SystemQueue systemQueue;
 
+    @Autowired
     public AdvancedFileOpService(SystemQueue systemQueue) {
         this.systemQueue = systemQueue;
     }

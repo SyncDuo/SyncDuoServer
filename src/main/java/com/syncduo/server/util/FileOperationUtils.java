@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,18 +16,30 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.util.UUID;
 import java.util.concurrent.locks.LockSupport;
 
 @Slf4j
+@Component
 public class FileOperationUtils {
 
     @Value("${syncduo.server.filelock.retry.count:3}")
-    private static int fileLockRetryCount;
+    private static int fileLockRetryCount = 3;
 
     @Value("${syncduo.server.filelock.retry.interval:3000L}")
-    private static long fileLockWaitInterval;
+    private static long fileLockWaitInterval = 5000L;
+
+    public static Path createFolder(String folderFullPath) throws SyncDuoException {
+        Path folder = Paths.get(folderFullPath);
+        try {
+            Files.createDirectories(folder);
+        } catch (IOException e) {
+            throw new SyncDuoException("创建文件夹失败 %s".formatted(folderFullPath), e);
+        }
+        return folder;
+    }
 
     public static void walkFilesTree(
             String folderFullPath,
@@ -49,12 +62,12 @@ public class FileOperationUtils {
         return FileSystems.getDefault().getSeparator();
     }
 
-    public static String getUuid4(
-            String rootFolderPath, String relativePath, String fileFullName) throws SyncDuoException {
-        if (StringUtils.isAnyBlank(rootFolderPath, fileFullName, relativePath)) {
-            throw new SyncDuoException("生成 uuid4 失败, rootFolderPath 或 fileFullName 或 relativePath 为空");
+    public static String getUuid4(Path file) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(file)) {
+            throw new SyncDuoException("获取 uuid4 失败, 文件为空");
         }
-        return UUID.fromString(rootFolderPath + relativePath + fileFullName).toString();
+        byte[] hash = DigestUtils.sha256(file.toAbsolutePath().toString());
+        return UUID.nameUUIDFromBytes(hash).toString();
     }
 
     public static Pair<Timestamp, Timestamp> getFileCrTimeAndMTime(Path file) throws SyncDuoException {
@@ -82,7 +95,8 @@ public class FileOperationUtils {
         }
 
         Path rootFolder = Paths.get(rootFolderPath);
-        return rootFolder.relativize(file.getParent()).toString();
+        Path relativizePath = rootFolder.relativize(file.getParent());
+        return relativizePath.toString();
     }
 
     public static Pair<String, String> getFileNameAndExtension(Path file) throws SyncDuoException {

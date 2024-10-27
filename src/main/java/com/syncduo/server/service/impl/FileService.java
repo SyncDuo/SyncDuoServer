@@ -67,7 +67,7 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         fileEntity.setFileExtension(fileNameAndExtension.getRight());
 
         // 获取 uuid4
-        String uuid4 = FileOperationUtils.getUuid4(folderFullPath, relativePath, file.getFileName().toString());
+        String uuid4 = FileOperationUtils.getUuid4(file);
         fileEntity.setFileUuid4(uuid4);
 
         return fileEntity;
