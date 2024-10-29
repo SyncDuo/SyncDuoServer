@@ -56,9 +56,9 @@ public class SourceFolderEventHandler {
             }
             try {
                 switch (fileEvent.getFileEventType()) {
-                    case SOURCE_FOLDER_INITIAL_SCAN, SOURCE_FOLDER_FILE_CREATED -> this.onFileCreate(fileEvent);
-                    case SOURCE_FOLDER_FILE_CHANGED -> this.onFileChange(fileEvent);
-                    case SOURCE_FOLDER_FILE_DELETED -> this.onFileDelete(fileEvent);
+                    case FILE_CREATED -> this.onFileCreate(fileEvent);
+                    case FILE_CHANGED -> this.onFileChange(fileEvent);
+                    case FILE_DELETED -> this.onFileDelete(fileEvent);
                     default -> throw new SyncDuoException("源文件夹的文件事件:%s 不识别".formatted(fileEvent));
                 }
             } catch (SyncDuoException e) {

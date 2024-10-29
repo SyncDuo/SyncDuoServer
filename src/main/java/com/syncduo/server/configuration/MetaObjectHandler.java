@@ -1,6 +1,6 @@
 package com.syncduo.server.configuration;
 
-import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.syncduo.server.enums.FileDeletedEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Component
-public class MyMetaObjectHandler implements MetaObjectHandler {
+public class MetaObjectHandler implements com.baomidou.mybatisplus.core.handlers.MetaObjectHandler {
 
     private static final ZoneId CHINA_ZONE_ID = ZoneId.of("Asia/Shanghai");
 
@@ -23,7 +23,11 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
                 metaObject, "lastUpdatedTime", LocalDateTime.class, LocalDateTime.now(CHINA_ZONE_ID));
 
         // file entity autofill
-        this.strictInsertFill(metaObject, "fileDeleted", Integer.class, 0);
+        this.strictInsertFill(
+                metaObject,
+                "fileDeleted",
+                Integer.class,
+                FileDeletedEnum.FILE_NOT_DELETED.getCode());
         this.strictInsertFill(metaObject, "fileDesync", Integer.class, 0);
 
         // file operation entity autofill

@@ -1,6 +1,7 @@
 package com.syncduo.server.model.dto.event;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
+import com.syncduo.server.enums.RootFolderTypeEnum;
 import lombok.Data;
 
 import java.nio.file.Path;
@@ -13,4 +14,6 @@ public class FileEventDto {
     private Long rootFolderId;
 
     private FileEventTypeEnum fileEventType;
+
+    private RootFolderTypeEnum rootFolderTypeEnum;
 }

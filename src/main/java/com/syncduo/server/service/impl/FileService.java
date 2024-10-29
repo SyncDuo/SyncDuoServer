@@ -1,14 +1,17 @@
 package com.syncduo.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.syncduo.server.enums.FileDeletedEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.FileMapper;
-import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.FileEntity;
-import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.service.IFileService;
 import com.syncduo.server.util.FileOperationUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +23,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 @Service
+@Slf4j
 public class FileService extends ServiceImpl<FileMapper, FileEntity> implements IFileService {
     public void createFileRecord(FileEntity fileEntity) throws SyncDuoException {
         if (ObjectUtils.isEmpty(fileEntity)) {
@@ -32,15 +36,46 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         }
     }
 
+    public void deleteBatchByUuid4s(List<String> uuid4s) throws SyncDuoException {
+        if (CollectionUtils.isEmpty(uuid4s)) {
+            throw new SyncDuoException("批量删除失败, uuid4 集合为空");
+        }
+        LambdaUpdateWrapper<FileEntity> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.set(FileEntity::getFileDeleted, FileDeletedEnum.FILE_DELETED.getCode());
+        updateWrapper.in(FileEntity::getFileUuid4, uuid4s);
+        boolean update = this.update(updateWrapper);
+        if (!update) {
+            throw new SyncDuoException("删除失败");
+        }
+    }
+
+
     public FileEntity getByUuid4(String uuid4) throws SyncDuoException {
         if (StringUtils.isEmpty(uuid4)) {
             throw new SyncDuoException("获取文件记录失败, uuid4 为空");
         }
         LambdaQueryWrapper<FileEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(FileEntity::getFileUuid4, uuid4);
+        queryWrapper.eq(FileEntity::getFileDeleted, FileDeletedEnum.FILE_NOT_DELETED.getCode());
         List<FileEntity> dbResult = this.list(queryWrapper);
 
-        return CollectionUtils.isEmpty(dbResult) ? new FileEntity() : dbResult.get(0);
+        return CollectionUtils.isEmpty(dbResult) ? null : dbResult.get(0);
+    }
+
+    public IPage<FileEntity> getByRootFolderIdPaged(Long rootFolderId, Long page, Long pageSize)
+            throws SyncDuoException {
+        if (ObjectUtils.anyNull(rootFolderId, page, pageSize)) {
+            throw new SyncDuoException(
+                    "获取文件记录失败, rootFolderId %s, Long page %s, Long pageSize %s 存在空值"
+                            .formatted(rootFolderId, page, pageSize));
+        }
+        if (page <= 0 || pageSize <= 0 || pageSize >= 1000) {
+            throw new SyncDuoException("page 或 pageSize 小于 0 或者 pageSize 大于 1000");
+        }
+        LambdaQueryWrapper<FileEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FileEntity::getRootFolderId, rootFolderId);
+        queryWrapper.eq(FileEntity::getFileDeleted, FileDeletedEnum.FILE_NOT_DELETED.getCode());
+        return this.page(new Page<>(page, pageSize), queryWrapper);
     }
 
     public FileEntity fillFileEntityForCreate(

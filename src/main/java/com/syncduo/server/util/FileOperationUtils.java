@@ -72,11 +72,9 @@ public class FileOperationUtils {
 
     public static Pair<Timestamp, Timestamp> getFileCrTimeAndMTime(Path file) throws SyncDuoException {
         log.info("正在读取文件:%s 的元数据".formatted(file.toAbsolutePath()));
-
         if (!Files.exists(file) && Files.isRegularFile(file)) {
             throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
         }
-
         BasicFileAttributes basicFileAttributes;
         try (FileLock ignored = tryLockWithRetries(FileChannel.open(file, StandardOpenOption.READ), true)) {
             basicFileAttributes = Files.readAttributes(file, BasicFileAttributes.class);

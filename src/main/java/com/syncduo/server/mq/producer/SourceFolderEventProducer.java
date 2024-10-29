@@ -1,8 +1,8 @@
 package com.syncduo.server.mq.producer;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
+import com.syncduo.server.enums.RootFolderTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +13,8 @@ import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -47,21 +49,44 @@ public class SourceFolderEventProducer {
         observer.addListener(new FileAlterationListenerAdaptor() {
             @Override
             public void onFileCreate(File file) {
-                sourceEventSend(file, systemQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_CREATED);
+                try {
+                    systemQueue.sendFileEvent(
+                            file.toPath(),
+                            folderId,
+                            FileEventTypeEnum.FILE_CREATED,
+                            RootFolderTypeEnum.SOURCE_FOLDER);
+                } catch (SyncDuoException e) {
+                    log.error("source 文件夹发送 file event 失败", e);
+                }
             }
 
             @Override
             public void onFileDelete(File file) {
-                sourceEventSend(file, systemQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_DELETED);
+                try {
+                    systemQueue.sendFileEvent(
+                            file.toPath(),
+                            folderId,
+                            FileEventTypeEnum.FILE_CHANGED,
+                            RootFolderTypeEnum.SOURCE_FOLDER);
+                } catch (SyncDuoException e) {
+                    log.error("source 文件夹发送 file event 失败", e);
+                }
             }
 
             @Override
             public void onFileChange(File file) {
-                sourceEventSend(file, systemQueue, folderId, FileEventTypeEnum.SOURCE_FOLDER_FILE_CHANGED);
+                try {
+                    systemQueue.sendFileEvent(
+                            file.toPath(),
+                            folderId,
+                            FileEventTypeEnum.FILE_DELETED,
+                            RootFolderTypeEnum.SOURCE_FOLDER);
+                } catch (SyncDuoException e) {
+                    log.error("source 文件夹发送 file event 失败", e);
+                }
             }
         });
         monitor.addObserver(observer);
-
         try {
             monitor.start();
         } catch (Exception e) {
@@ -69,15 +94,8 @@ public class SourceFolderEventProducer {
         }
     }
 
-    private static void sourceEventSend(
-            File file, SystemQueue systemQueue, Long folderId, FileEventTypeEnum fileEventType) {
-        Path nioFile = file.toPath();
+    @EventListener(ApplicationReadyEvent.class)
+    public void systemStartUp() throws SyncDuoException {
 
-        FileEventDto fileEvent = new FileEventDto();
-        fileEvent.setFile(nioFile);
-        fileEvent.setRootFolderId(folderId);
-        fileEvent.setFileEventType(fileEventType);
-
-        systemQueue.pushSourceEvent(fileEvent);
     }
 }
