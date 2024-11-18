@@ -1763,6 +1763,15 @@
         <mxCell id="KUoYnuUyg10wTdyV9XSM-7" value="1. file created" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1394" y="4858.75" width="100" height="30.5" as="geometry" />
         </mxCell>
+        <mxCell id="o01KaqjgELcdw4EYDk6V-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="o01KaqjgELcdw4EYDk6V-1" target="N8TZfUtTnZYkTw5RphFN-33">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="o01KaqjgELcdw4EYDk6V-1" value="file deleted watcher" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="1850" y="5064" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="o01KaqjgELcdw4EYDk6V-3" value="1. file desynced" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1730" y="5098.25" width="90" height="31" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
