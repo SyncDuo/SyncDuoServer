@@ -1201,7 +1201,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-37" value="file 是否 desync" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-37" value="content file 是否 desync" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1453" y="4060" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-38" value="无" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -1213,13 +1213,13 @@
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-43" target="iLLUCtNKBEfGMFKWvBqe-29" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-43" value="读取两个目录的 file 表，排除 file_deleted == 1，desync == 1" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-43" value="读取两个目录的 file 表，排除 file_deleted == 1" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="740" y="4030" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-45" value="发送 file_modified_event" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1680" y="4060" width="160" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-46" value="标记 desync = 1，更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-46" value="incr 标记 desync = 1，更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1680" y="4030" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="IXfRReW6GYPqaPBf3olO-11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="IXfRReW6GYPqaPBf3olO-8" target="IXfRReW6GYPqaPBf3olO-10" edge="1">
