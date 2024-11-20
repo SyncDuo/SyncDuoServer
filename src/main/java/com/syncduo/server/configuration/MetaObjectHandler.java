@@ -1,6 +1,7 @@
 package com.syncduo.server.configuration;
 
 import com.syncduo.server.enums.FileDeletedEnum;
+import com.syncduo.server.enums.FileDesyncEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
@@ -24,21 +25,14 @@ public class MetaObjectHandler implements com.baomidou.mybatisplus.core.handlers
 
         // file entity autofill
         this.strictInsertFill(
-                metaObject,
-                "fileDeleted",
-                Integer.class,
-                FileDeletedEnum.FILE_NOT_DELETED.getCode());
-        this.strictInsertFill(metaObject, "fileDesync", Integer.class, 0);
+                metaObject, "fileDeleted", Integer.class, FileDeletedEnum.FILE_NOT_DELETED.getCode());
+        this.strictInsertFill(metaObject, "fileDesync", Integer.class, FileDesyncEnum.FILE_SYNC.getCode());
 
         // file operation entity autofill
         this.strictInsertFill(metaObject, "executeCount", Integer.class, 0);
 
         // sync flow entity autofill
         this.strictInsertFill(metaObject, "syncStatus", String.class, SyncFlowStatusEnum.NOT_SYNC.name());
-
-        // sync setting entity autofill
-        this.strictInsertFill(metaObject, "filterCriteria", String.class, "*");
-        this.strictInsertFill(metaObject, "flattenFolder", Integer.class, 1);
     }
 
     @Override

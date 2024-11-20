@@ -28,8 +28,6 @@ public class FileEntity extends BaseEntity {
 
     private Long rootFolderId;
 
-    private Long derivedFileId;
-
     private String relativePath;
 
     @TableField(fill = FieldFill.INSERT)

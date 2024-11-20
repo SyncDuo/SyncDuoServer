@@ -12,6 +12,7 @@ import com.syncduo.server.service.IRootFolderService;
 import com.syncduo.server.service.ISyncFlowService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -62,5 +63,14 @@ public class SyncFlowService
         List<SyncFlowEntity> dbResult = this.baseMapper.selectList(queryWrapper);
 
         return CollectionUtils.isEmpty(dbResult) ? new SyncFlowEntity() : dbResult.get(0);
+    }
+
+    public List<SyncFlowEntity> getBySourceFolderIdBatch(Long folderId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(folderId)) {
+            throw new SyncDuoException("获取 Sync Flow 失败,文件夹 ID 为空");
+        }
+        LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SyncFlowEntity::getSourceFolderId, folderId);
+        return this.baseMapper.selectList(queryWrapper);
     }
 }

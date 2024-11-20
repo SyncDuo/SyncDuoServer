@@ -24,15 +24,6 @@ import java.util.List;
 public class RootFolderService
         extends ServiceImpl<RootFolderMapper, RootFolderEntity>
         implements IRootFolderService {
-    private final String internalFolderPath;
-
-    public RootFolderService() {
-//        ApplicationHome home = new ApplicationHome(this.getClass());
-//        File jarFile = home.getSource();
-//        String jarFolderFullPath = Paths.get(jarFile.getParent()).toAbsolutePath().normalize().toString();
-//        this.internalFolderPath = jarFolderFullPath + FileOperationUtils.getSeparator() + ".internalFolder";
-        this.internalFolderPath = "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/folder/internalFolder";
-    }
 
     public RootFolderEntity getByFolderId(Long folderId) throws SyncDuoException {
         if (ObjectUtils.isEmpty(folderId)) {
@@ -43,16 +34,23 @@ public class RootFolderService
         return ObjectUtils.isEmpty(dbResult) ? new RootFolderEntity() : dbResult;
     }
 
-    public RootFolderEntity createContentFolder(String contentFolderFullPath) throws SyncDuoException {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public RootFolderEntity createContentFolder(
+            String sourceFolderFullPath,
+            String contentFolderFullPath) throws SyncDuoException {
         RootFolderEntity contentFolderEntity = this.getByFolderFullPath(contentFolderFullPath);
         if (ObjectUtils.isEmpty(contentFolderEntity)) {
-            Path contentFolder = FileOperationUtils.isFolderPathValid(contentFolderFullPath);
+            Path contentFolder = FileOperationUtils.createContentFolder(
+                    sourceFolderFullPath,
+                    contentFolderFullPath
+            );
             contentFolderEntity = new RootFolderEntity();
             contentFolderEntity.setRootFolderName(contentFolder.getFileName().toString());
             contentFolderEntity.setRootFolderFullPath(contentFolder.toAbsolutePath().toString());
             contentFolderEntity.setRootFolderType(RootFolderTypeEnum.CONTENT_FOLDER.name());
             boolean saved = this.save(contentFolderEntity);
             if (!saved) {
+                FileOperationUtils.deleteFolder(contentFolder);
                 throw new SyncDuoException("创建 contentFolder 记录失败,无法保存到数据库");
             }
         }
@@ -62,6 +60,7 @@ public class RootFolderService
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Pair<RootFolderEntity, RootFolderEntity> createSourceFolder(
             String sourceFolderFullPath) throws SyncDuoException  {
+        // 幂等, 判断 source folder 是否已创建
         RootFolderEntity sourceFolderEntity = this.getByFolderFullPath(sourceFolderFullPath);
         if (ObjectUtils.isEmpty(sourceFolderEntity)) {
             // 创建 source folder
@@ -75,11 +74,9 @@ public class RootFolderService
                 throw new SyncDuoException("创建 sourceFolder 记录失败,无法保存到数据库");
             }
         }
-        // 文件夹名称 = <sourceFolder>-internal
-        String internalFolderPath = this.internalFolderPath +
-                FileOperationUtils.getSeparator() +
-                FileOperationUtils.getFolderNameFromFullPath(sourceFolderFullPath) +
-                "-internal";
+
+        // 文件夹名称 = .<sourceFolder>-internal, 与原文件夹为同一路径
+        String internalFolderPath = FileOperationUtils.getInternalFolderFullPath(sourceFolderFullPath);
         RootFolderEntity internalFolderEntity = this.getByFolderFullPath(internalFolderPath);
         if (ObjectUtils.isEmpty(internalFolderEntity)) {
             // 创建 internal folder
@@ -90,13 +87,15 @@ public class RootFolderService
             internalFolderEntity.setRootFolderType(RootFolderTypeEnum.INTERNAL_FOLDER.name());
             boolean saved = this.save(internalFolderEntity);
             if (!saved) {
+                // 没有保存成功, 则应该删除 internal folder
+                FileOperationUtils.deleteFolder(internalFolder);
                 throw new SyncDuoException("创建 internalFolder 记录失败,无法保存到数据库");
             }
         }
         return new ImmutablePair<>(sourceFolderEntity, internalFolderEntity);
     }
 
-    private RootFolderEntity getByFolderFullPath(String folderFullPath) throws SyncDuoException {
+    public RootFolderEntity getByFolderFullPath(String folderFullPath) throws SyncDuoException {
         if (StringUtils.isEmpty(folderFullPath)) {
             throw new SyncDuoException("参数检查失败, folderFullPath 为空");
         }

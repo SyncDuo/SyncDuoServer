@@ -14,9 +14,8 @@ public class SyncSettingEntity extends BaseEntity {
 
     private Long syncFlowId;
 
-    @TableField(fill = FieldFill.INSERT)
     private String filterCriteria;
 
-    @TableField(fill = FieldFill.INSERT)
+    @TableField(updateStrategy = FieldStrategy.NEVER)
     private Integer flattenFolder;
 }

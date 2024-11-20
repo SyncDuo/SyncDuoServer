@@ -5,7 +5,7 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.http.SyncFlowRequest;
 import com.syncduo.server.model.dto.http.SyncFlowResponse;
 import com.syncduo.server.model.entity.RootFolderEntity;
-import com.syncduo.server.mq.consumer.SourceFolderEventHandler;
+import com.syncduo.server.mq.consumer.SourceFolderHandler;
 import com.syncduo.server.service.impl.AdvancedFileOpService;
 import com.syncduo.server.service.impl.RootFolderService;
 import com.syncduo.server.util.FileOperationUtils;
@@ -25,7 +25,7 @@ class SyncDuoServerApplicationTests {
 
     private final SyncFlowController syncFlowController;
 
-    private final SourceFolderEventHandler sourceFolderEventHandler;
+    private final SourceFolderHandler sourceFolderHandler;
 
     private final AdvancedFileOpService advancedFileOpService;
 
@@ -34,10 +34,10 @@ class SyncDuoServerApplicationTests {
     @Autowired
     SyncDuoServerApplicationTests(
             SyncFlowController syncFlowController,
-            SourceFolderEventHandler sourceFolderEventHandler,
+            SourceFolderHandler sourceFolderHandler,
             AdvancedFileOpService advancedFileOpService, RootFolderService rootFolderService) {
         this.syncFlowController = syncFlowController;
-        this.sourceFolderEventHandler = sourceFolderEventHandler;
+        this.sourceFolderHandler = sourceFolderHandler;
         this.advancedFileOpService = advancedFileOpService;
         this.rootFolderService = rootFolderService;
     }

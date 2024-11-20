@@ -14,8 +14,6 @@ public class FileEventEntity extends BaseEntity {
     @TableId(type = IdType.AUTO)
     private Long fileEventId;
 
-    private Long parentFileEventId;
-
     private String fileEventType;
 
     private Long rootFolderId;
