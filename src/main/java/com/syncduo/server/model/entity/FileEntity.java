@@ -34,5 +34,5 @@ public class FileEntity extends BaseEntity {
     private Integer fileDeleted;
 
     @TableField(fill = FieldFill.INSERT)
-    private Integer fileDesync;
+    private Integer fileDesync; // 表示这个 file 和上游同步了一次,但是后续不需要再同步. 仅用在 content folder file
 }

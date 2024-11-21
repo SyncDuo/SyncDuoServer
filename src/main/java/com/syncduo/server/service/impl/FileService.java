@@ -1,7 +1,6 @@
 package com.syncduo.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -17,9 +16,12 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -49,19 +51,7 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         this.updateById(fileEntity);
     }
 
-    public void deleteBatchByUuid4s(List<String> uuid4s) throws SyncDuoException {
-        if (CollectionUtils.isEmpty(uuid4s)) {
-            throw new SyncDuoException("批量删除失败, uuid4 集合为空");
-        }
-        LambdaUpdateWrapper<FileEntity> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(FileEntity::getFileDeleted, FileDeletedEnum.FILE_DELETED.getCode());
-        updateWrapper.in(FileEntity::getFileUuid4, uuid4s);
-        boolean update = this.update(updateWrapper);
-        if (!update) {
-            throw new SyncDuoException("删除失败");
-        }
-    }
-
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void deleteBatchByFileEntity(List<FileEntity> fileEntityList) throws SyncDuoException {
         if (CollectionUtils.isEmpty(fileEntityList)) {
             return;
@@ -102,6 +92,26 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         return this.getByUuid4(uuid4);
     }
 
+    public List<FileEntity> getDestFileEntityFromSourceEntityIgnoredDesynced(
+            String destFolderFullPath,
+            FileEntity sourceFileEntity)
+            throws SyncDuoException {
+        if (StringUtils.isBlank(destFolderFullPath)) {
+            throw new SyncDuoException("获取file失败, destFolderFullPath 为空");
+        }
+        if (ObjectUtils.isEmpty(sourceFileEntity)) {
+            throw new SyncDuoException("获取file失败, sourceFileEntity 为空");
+        }
+        String destFileFullPath = FileOperationUtils.concatePathString(
+                destFolderFullPath,
+                sourceFileEntity.getRelativePath(),
+                sourceFileEntity.getFileName(),
+                sourceFileEntity.getFileExtension()
+        );
+        String uuid4 = FileOperationUtils.getUuid4(destFileFullPath);
+        return this.getByUuid4IgnoredDesynced(uuid4);
+    }
+
     public Path getFileFromFileEntity(String rootFolderFullPath, FileEntity fileEntity) throws SyncDuoException {
         if (StringUtils.isBlank(rootFolderFullPath)) {
             throw new SyncDuoException("获取file失败, rootFolderFullPath 为空");
@@ -127,6 +137,17 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         List<FileEntity> dbResult = this.list(queryWrapper);
 
         return CollectionUtils.isEmpty(dbResult) ? null : dbResult.get(0);
+    }
+
+    private List<FileEntity> getByUuid4IgnoredDesynced(String uuid4) throws SyncDuoException {
+        if (StringUtils.isEmpty(uuid4)) {
+            throw new SyncDuoException("获取文件记录失败, uuid4 为空");
+        }
+        LambdaQueryWrapper<FileEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FileEntity::getFileUuid4, uuid4);
+        List<FileEntity> dbResult = this.list(queryWrapper);
+
+        return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
     }
 
     public IPage<FileEntity> getByRootFolderIdPaged(Long rootFolderId, Long page, Long pageSize)

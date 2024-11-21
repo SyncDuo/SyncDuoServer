@@ -1,6 +1,6 @@
 package com.syncduo.server.mq.consumer;
 
-import com.syncduo.server.enums.RootFolderTypeEnum;
+import com.syncduo.server.enums.FileDesyncEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.FileEntity;
@@ -83,6 +83,7 @@ public class ContentFolderHandler {
                             case CONTENT_FOLDER -> this.onFileChangeFromContentFolder(fileEvent);
                         }
                     }
+                    case FILE_DESYNCED -> this.onFileDeSynced(fileEvent);
                     case FILE_DELETED -> this.onFileDeleteFromContentFolder(fileEvent);
                     default -> throw new SyncDuoException("content 文件夹的文件事件:%s 不识别".formatted(fileEvent));
                 }
@@ -160,16 +161,6 @@ public class ContentFolderHandler {
         }
     }
 
-    private void onFileChangeFromContentFolder(FileEventDto fileEvent) throws SyncDuoException {
-        Path file = fileEvent.getFile();
-        Long rootFolderId = fileEvent.getRootFolderId();
-        RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(rootFolderId);
-        FileEntity contentFileEntity =
-                this.fileService.getFileEntityFromFile(rootFolderId, rootFolderEntity.getRootFolderFullPath(), file);
-        this.fileService.updateFileEntityByFile(contentFileEntity, file);
-        // 记录 file entity
-    }
-
     private void onFileChangeFromInternalFolder(FileEventDto fileEvent) throws SyncDuoException {
         // 获取 file 和 对应的 fileEntity
         Path internalFile = fileEvent.getFile();
@@ -208,12 +199,35 @@ public class ContentFolderHandler {
         }
     }
 
+    private void onFileChangeFromContentFolder(FileEventDto fileEvent) throws SyncDuoException {
+        Path file = fileEvent.getFile();
+        Long rootFolderId = fileEvent.getRootFolderId();
+        RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(rootFolderId);
+        FileEntity contentFileEntity =
+                this.fileService.getFileEntityFromFile(rootFolderId, rootFolderEntity.getRootFolderFullPath(), file);
+        this.fileService.updateFileEntityByFile(contentFileEntity, file);
+        // 记录 file event
+    }
+
+    private void onFileDeSynced(FileEventDto fileEvent) throws SyncDuoException {
+        Path file = fileEvent.getFile();
+        Long rootFolderId = fileEvent.getRootFolderId();
+        RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(rootFolderId);
+        FileEntity contentFileEntity =
+                this.fileService.getFileEntityFromFile(rootFolderId, rootFolderEntity.getRootFolderFullPath(), file);
+        // file desynced
+        contentFileEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
+        this.fileService.updateFileEntityByFile(contentFileEntity, file);
+        // 记录 file event
+    }
+
     private void onFileDeleteFromContentFolder(FileEventDto fileEvent) throws SyncDuoException {
         Path file = fileEvent.getFile();
         Long rootFolderId = fileEvent.getRootFolderId();
         RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(rootFolderId);
         FileEntity contentFileEntity =
                 this.fileService.getFileEntityFromFile(rootFolderId, rootFolderEntity.getRootFolderFullPath(), file);
+        contentFileEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
         this.fileService.deleteBatchByFileEntity(Collections.singletonList(contentFileEntity));
         // 记录 file event
     }
