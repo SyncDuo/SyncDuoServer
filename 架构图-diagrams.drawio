@@ -1096,7 +1096,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-3" value="sync 的 file_id 是否出现在 incr 的 derived_id 中" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-3" value="sync 根据 uuid4 查找 incr 对应的文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="973" y="3920" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-6" target="iLLUCtNKBEfGMFKWvBqe-14" edge="1">
@@ -1130,46 +1130,30 @@
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-17" value="无" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1453" y="3920" width="160" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-29" target="iLLUCtNKBEfGMFKWvBqe-35" edge="1">
+        <mxCell id="AM-4zYK793EFqpcI2_eK-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-29" target="AM-4zYK793EFqpcI2_eK-13">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-26" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="iLLUCtNKBEfGMFKWvBqe-25" vertex="1" connectable="0">
-          <mxGeometry x="0.2814" y="-1" relative="1" as="geometry">
-            <mxPoint as="offset" />
+        <mxCell id="AM-4zYK793EFqpcI2_eK-15" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="AM-4zYK793EFqpcI2_eK-14">
+          <mxGeometry x="0.0129" y="-1" relative="1" as="geometry">
+            <mxPoint x="16" y="-1" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-29" target="iLLUCtNKBEfGMFKWvBqe-36" edge="1">
+        <mxCell id="AM-4zYK793EFqpcI2_eK-16" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="iLLUCtNKBEfGMFKWvBqe-29" target="iLLUCtNKBEfGMFKWvBqe-36">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-28" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="iLLUCtNKBEfGMFKWvBqe-27" vertex="1" connectable="0">
-          <mxGeometry x="0.29" y="2" relative="1" as="geometry">
-            <mxPoint x="9" y="21" as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-29" value="incr 的 file_id 是否出现在 content 的 derived_id 中" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-29" value="incr 根据 uuid4 查找 content 对应的文件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="973" y="4030" width="160" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-35" target="iLLUCtNKBEfGMFKWvBqe-37" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-35" target="iLLUCtNKBEfGMFKWvBqe-37" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-32" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="iLLUCtNKBEfGMFKWvBqe-31" vertex="1" connectable="0">
-          <mxGeometry x="0.4899" y="1" relative="1" as="geometry">
-            <mxPoint x="-5" y="1" as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-35" target="iLLUCtNKBEfGMFKWvBqe-38" edge="1">
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="AM-4zYK793EFqpcI2_eK-19" target="iLLUCtNKBEfGMFKWvBqe-38" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-34" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="iLLUCtNKBEfGMFKWvBqe-33" vertex="1" connectable="0">
           <mxGeometry x="0.313" y="1" relative="1" as="geometry">
-            <mxPoint as="offset" />
+            <mxPoint x="12" y="1" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iLLUCtNKBEfGMFKWvBqe-35" value="checksum 是否一致" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1213" y="4030" width="160" height="60" as="geometry" />
+        <mxCell id="iLLUCtNKBEfGMFKWvBqe-35" value="无" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1454" y="4030" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-40" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-36" target="iLLUCtNKBEfGMFKWvBqe-39" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -1183,7 +1167,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-36" value="是否满足 filter 条件" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1213" y="4120" width="160" height="60" as="geometry" />
+          <mxGeometry x="1214" y="4120" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-37" target="iLLUCtNKBEfGMFKWvBqe-46" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -1202,13 +1186,13 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-37" value="content file 是否 desync" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1453" y="4060" width="160" height="30" as="geometry" />
+          <mxGeometry x="1694" y="4060" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-38" value="无" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1453" y="4030" width="160" height="30" as="geometry" />
+          <mxGeometry x="1694" y="4030" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-39" value="无" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1453" y="4120" width="160" height="30" as="geometry" />
+          <mxGeometry x="1454" y="4120" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="iLLUCtNKBEfGMFKWvBqe-43" target="iLLUCtNKBEfGMFKWvBqe-29" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -1217,10 +1201,10 @@
           <mxGeometry x="740" y="4030" width="160" height="60" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-45" value="发送 file_modified_event" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1680" y="4060" width="160" height="30" as="geometry" />
+          <mxGeometry x="1921" y="4060" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="iLLUCtNKBEfGMFKWvBqe-46" value="incr 标记 desync = 1，更新 file 表" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1680" y="4030" width="160" height="30" as="geometry" />
+          <mxGeometry x="1921" y="4030" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="IXfRReW6GYPqaPBf3olO-11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="IXfRReW6GYPqaPBf3olO-8" target="IXfRReW6GYPqaPBf3olO-10" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -1458,7 +1442,7 @@
           <mxGeometry x="1400" y="6840" width="250" height="50" as="geometry" />
         </mxCell>
         <mxCell id="6cYNI9I4vqOvdMCe1HxM-18" value="发送 file_create_event" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1453" y="4150" width="160" height="30" as="geometry" />
+          <mxGeometry x="1454" y="4150" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="6cYNI9I4vqOvdMCe1HxM-22" value="无" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="1730" y="6840" width="250" height="30" as="geometry" />
@@ -1771,6 +1755,36 @@
         </mxCell>
         <mxCell id="o01KaqjgELcdw4EYDk6V-3" value="1. file desynced" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1730" y="5098.25" width="90" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="AM-4zYK793EFqpcI2_eK-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="AM-4zYK793EFqpcI2_eK-13" target="AM-4zYK793EFqpcI2_eK-19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AM-4zYK793EFqpcI2_eK-23" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="AM-4zYK793EFqpcI2_eK-18">
+          <mxGeometry x="0.5152" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AM-4zYK793EFqpcI2_eK-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="AM-4zYK793EFqpcI2_eK-13" target="iLLUCtNKBEfGMFKWvBqe-35">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AM-4zYK793EFqpcI2_eK-22" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="AM-4zYK793EFqpcI2_eK-21">
+          <mxGeometry x="0.536" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AM-4zYK793EFqpcI2_eK-13" value="content 是否 deSynced" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1213" y="4030" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="AM-4zYK793EFqpcI2_eK-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="AM-4zYK793EFqpcI2_eK-19" target="iLLUCtNKBEfGMFKWvBqe-37">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AM-4zYK793EFqpcI2_eK-25" value="否" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="AM-4zYK793EFqpcI2_eK-24">
+          <mxGeometry x="0.3182" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AM-4zYK793EFqpcI2_eK-19" value="checksum 是否一致" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1454" y="4060" width="160" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
