@@ -2,6 +2,7 @@ package com.syncduo.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.RootFolderTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.RootFolderMapper;
@@ -32,6 +33,22 @@ public class RootFolderService
 
         RootFolderEntity dbResult = this.getById(folderId);
         return ObjectUtils.isEmpty(dbResult) ? new RootFolderEntity() : dbResult;
+    }
+
+    // Pair<sourceFolderEntity, internalFolderEntity>
+    public Pair<RootFolderEntity, RootFolderEntity> getFolderPairByPath(String folderFullPath)
+            throws SyncDuoException {
+        RootFolderEntity sourceFolderEntity = this.getByFolderFullPath(folderFullPath);
+        if (ObjectUtils.isEmpty(sourceFolderEntity)) {
+            return null;
+        }
+        String internalFolderFullPath =
+                FileOperationUtils.getInternalFolderFullPath(folderFullPath);
+        RootFolderEntity internalFolderEntity = this.getByFolderFullPath(internalFolderFullPath);
+        if (ObjectUtils.isEmpty(internalFolderEntity)) {
+            throw new SyncDuoException("存在 sourceFolder %s, 但是没有 internalFolder".formatted(sourceFolderEntity));
+        }
+        return new ImmutablePair<>(sourceFolderEntity, internalFolderEntity);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -102,6 +119,7 @@ public class RootFolderService
 
         LambdaQueryWrapper<RootFolderEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(RootFolderEntity::getRootFolderFullPath, folderFullPath);
+        queryWrapper.eq(RootFolderEntity::getFolderDeleted, DeletedEnum.NOT_DELETED.getCode());
         List<RootFolderEntity> dbResult = this.list(queryWrapper);
 
         if (CollectionUtils.isEmpty(dbResult)) {

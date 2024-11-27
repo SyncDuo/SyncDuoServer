@@ -31,6 +31,13 @@ public class FileOperationUtils {
     @Value("${syncduo.server.filelock.retry.interval:3000L}")
     private static long fileLockWaitInterval = 5000L;
 
+    public static Path stringToPath(String path) throws SyncDuoException {
+        if (StringUtils.isEmpty(path)) {
+            throw new SyncDuoException("path is empty");
+        }
+        return Paths.get(path);
+    }
+
     public static Path concateStringToPath(
             String folderPath,
             String relativePath,
@@ -64,16 +71,6 @@ public class FileOperationUtils {
             return contentFolder;
         }
         return createFolder(contentFolder);
-    }
-
-    public static String getContentFolderFullPath(
-            String sourceFolderFullPath,
-            String contentFolderFullPath) throws SyncDuoException {
-        Path sourceFolder = isFolderPathValid(sourceFolderFullPath);
-        Path contentFolderParent = isFolderPathValid(contentFolderFullPath);
-        Path contentFolder = contentFolderParent.resolve(sourceFolder.getFileName());
-
-        return contentFolder.toAbsolutePath().toString();
     }
 
     public static String getInternalFolderFullPath(String sourceFolderFullPath) throws SyncDuoException {
@@ -350,6 +347,22 @@ public class FileOperationUtils {
             return folderPath;
         } else {
             throw new SyncDuoException("文件夹路径:%s 不存在或不是文件夹".formatted(path));
+        }
+    }
+
+    public static boolean isFolderPathExist(String path) throws SyncDuoException {
+        if (StringUtils.isBlank(path)) {
+            throw new SyncDuoException("文件夹路径为空");
+        }
+        Path folderPath = Paths.get(path);
+        if (Files.exists(folderPath)) {
+            if (Files.isDirectory(folderPath)) {
+                return true;
+            } else {
+                throw new SyncDuoException("路径 %s 不是文件夹".formatted(path));
+            }
+        } else {
+            return false;
         }
     }
 

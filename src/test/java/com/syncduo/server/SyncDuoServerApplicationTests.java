@@ -48,7 +48,7 @@ class SyncDuoServerApplicationTests {
 
     @Test
     void testFullScanMethod() throws SyncDuoException {
-        Path file = Paths.get("/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/folder/sourceFolder/test1.txt");
+        Path file = Paths.get("/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/sourceFolder");
         Pair<Timestamp, Timestamp> fileCrTimeAndMTime = FileOperationUtils.getFileCrTimeAndMTime(file);
         RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(3L);
         this.advancedFileOpService.fullScan(rootFolderEntity);

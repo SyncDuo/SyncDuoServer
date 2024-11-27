@@ -6,7 +6,6 @@ import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.mq.LimitedSizeSet;
 import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.service.impl.*;
 import com.syncduo.server.util.FileOperationUtils;
@@ -39,8 +38,6 @@ public class ContentFolderHandler {
 
     private final SyncSettingService syncSettingService;
 
-    private final LimitedSizeSet<FileEventDto> filterSet = new LimitedSizeSet<>(100);
-
     public ContentFolderHandler(
             SystemQueue systemQueue,
             FileService fileService,
@@ -66,10 +63,6 @@ public class ContentFolderHandler {
             if (ObjectUtils.isEmpty(fileEvent)) {
                 break;
             }
-            if (filterSet.contains(fileEvent)) {
-                continue;
-            }
-            filterSet.add(fileEvent);
             try {
                 switch (fileEvent.getFileEventTypeEnum()) {
                     case FILE_CREATED -> {

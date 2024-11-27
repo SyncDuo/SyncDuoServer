@@ -1,6 +1,6 @@
 package com.syncduo.server.configuration;
 
-import com.syncduo.server.enums.FileDeletedEnum;
+import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.FileDesyncEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import org.apache.ibatis.reflection.MetaObject;
@@ -23,9 +23,13 @@ public class MetaObjectHandler implements com.baomidou.mybatisplus.core.handlers
         this.strictInsertFill(
                 metaObject, "lastUpdatedTime", LocalDateTime.class, LocalDateTime.now(CHINA_ZONE_ID));
 
+        // folder entity autofill
+        this.strictInsertFill(
+                metaObject, "folderDeleted", Integer.class, DeletedEnum.NOT_DELETED.getCode());
+
         // file entity autofill
         this.strictInsertFill(
-                metaObject, "fileDeleted", Integer.class, FileDeletedEnum.FILE_NOT_DELETED.getCode());
+                metaObject, "fileDeleted", Integer.class, DeletedEnum.NOT_DELETED.getCode());
         this.strictInsertFill(metaObject, "fileDesync", Integer.class, FileDesyncEnum.FILE_SYNC.getCode());
 
         // file operation entity autofill
@@ -33,6 +37,8 @@ public class MetaObjectHandler implements com.baomidou.mybatisplus.core.handlers
 
         // sync flow entity autofill
         this.strictInsertFill(metaObject, "syncStatus", String.class, SyncFlowStatusEnum.NOT_SYNC.name());
+        this.strictInsertFill(
+                metaObject, "fileDeleted", Integer.class, DeletedEnum.NOT_DELETED.getCode());
     }
 
     @Override

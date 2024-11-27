@@ -1,6 +1,6 @@
 package com.syncduo.server.mq.consumer;
 
-import com.syncduo.server.enums.FileDeletedEnum;
+import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.enums.RootFolderTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
@@ -9,7 +9,6 @@ import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.model.entity.FileEventEntity;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.mq.LimitedSizeSet;
 import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.service.impl.*;
 import com.syncduo.server.util.FileOperationUtils;
@@ -41,8 +40,6 @@ public class SourceFolderHandler {
 
     private final FileEventService fileEventService;
 
-    private final LimitedSizeSet<FileEventDto> filterSet = new LimitedSizeSet<>(100);
-
     @Autowired
     public SourceFolderHandler(SystemQueue systemQueue,
                                FileService fileService,
@@ -66,10 +63,6 @@ public class SourceFolderHandler {
             if (ObjectUtils.isEmpty(fileEvent)) {
                 break;
             }
-            if (filterSet.contains(fileEvent)) {
-                continue;
-            }
-            filterSet.add(fileEvent);
             try {
                 switch (fileEvent.getFileEventTypeEnum()) {
                     case FILE_CREATED -> this.onFileCreate(fileEvent);
@@ -146,7 +139,7 @@ public class SourceFolderHandler {
                 file
         );
         // 更新 file_deleted=1
-        sourceFileEntity.setFileDeleted(FileDeletedEnum.FILE_DELETED.getCode());
+        sourceFileEntity.setFileDeleted(DeletedEnum.DELETED.getCode());
         // 更新数据库
         this.fileService.updateById(sourceFileEntity);
     }

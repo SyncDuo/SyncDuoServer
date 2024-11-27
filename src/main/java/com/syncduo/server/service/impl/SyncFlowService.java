@@ -2,19 +2,17 @@ package com.syncduo.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.mapper.RootFolderMapper;
 import com.syncduo.server.mapper.SyncFlowMapper;
-import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.service.IRootFolderService;
 import com.syncduo.server.service.ISyncFlowService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -24,8 +22,8 @@ public class SyncFlowService
 
     public SyncFlowEntity createSyncFlow(
             Long sourceFolderId, Long destFolderId, SyncFlowTypeEnum syncFlowType) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(syncFlowType)) {
-            throw new SyncDuoException("创建 Sync Flow 失败, syncFlowType 为空");
+        if (ObjectUtils.anyNull(sourceFolderId, destFolderId, syncFlowType)) {
+            throw new SyncDuoException("创建 Sync Flow 失败, sourceFolderId, destFolderId 或 syncFlowType 为空. %s");
         }
         SyncFlowEntity dbResult = this.getBySourceFolderIdAndDest(sourceFolderId, destFolderId);
         if (ObjectUtils.isEmpty(dbResult)) {
@@ -63,6 +61,19 @@ public class SyncFlowService
         List<SyncFlowEntity> dbResult = this.baseMapper.selectList(queryWrapper);
 
         return CollectionUtils.isEmpty(dbResult) ? new SyncFlowEntity() : dbResult.get(0);
+    }
+
+    public List<SyncFlowEntity> getInternalSyncFlowByFolderId(Long folderId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(folderId)) {
+            throw new SyncDuoException("获取 Sync Flow 失败, folderId 为空");
+        }
+        LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SyncFlowEntity::getSourceFolderId, folderId);
+        queryWrapper.eq(SyncFlowEntity::getFileDeleted, DeletedEnum.NOT_DELETED.getCode());
+        queryWrapper.eq(SyncFlowEntity::getSyncFlowType, SyncFlowTypeEnum.INTERNAL_TO_CONTENT);
+        List<SyncFlowEntity> dbResult = this.baseMapper.selectList(queryWrapper);
+
+        return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
     }
 
     public List<SyncFlowEntity> getBySourceFolderIdBatch(Long folderId) throws SyncDuoException {

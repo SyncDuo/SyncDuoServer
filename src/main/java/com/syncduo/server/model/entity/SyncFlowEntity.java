@@ -24,4 +24,7 @@ public class SyncFlowEntity extends BaseEntity {
     private String syncStatus;
 
     private Timestamp lastSyncTime;
+
+    @TableField(fill = FieldFill.INSERT)
+    private Integer fileDeleted;
 }

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.syncduo.server.enums.FileDeletedEnum;
+import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.FileMapper;
 import com.syncduo.server.model.entity.FileEntity;
@@ -57,7 +57,7 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
             return;
         }
         for (FileEntity fileEntity : fileEntityList) {
-            fileEntity.setFileDeleted(FileDeletedEnum.FILE_DELETED.getCode());
+            fileEntity.setFileDeleted(DeletedEnum.DELETED.getCode());
         }
         boolean updated = this.updateBatchById(fileEntityList);
         if (!updated) {
@@ -133,7 +133,7 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         }
         LambdaQueryWrapper<FileEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(FileEntity::getFileUuid4, uuid4);
-        queryWrapper.eq(FileEntity::getFileDeleted, FileDeletedEnum.FILE_NOT_DELETED.getCode());
+        queryWrapper.eq(FileEntity::getFileDeleted, DeletedEnum.NOT_DELETED.getCode());
         List<FileEntity> dbResult = this.list(queryWrapper);
 
         return CollectionUtils.isEmpty(dbResult) ? null : dbResult.get(0);
@@ -162,7 +162,7 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         }
         LambdaQueryWrapper<FileEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(FileEntity::getRootFolderId, rootFolderId);
-        queryWrapper.eq(FileEntity::getFileDeleted, FileDeletedEnum.FILE_NOT_DELETED.getCode());
+        queryWrapper.eq(FileEntity::getFileDeleted, DeletedEnum.NOT_DELETED.getCode());
         return this.page(new Page<>(page, pageSize), queryWrapper);
     }
 

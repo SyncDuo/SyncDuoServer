@@ -32,6 +32,30 @@ public class SyncSettingService
 
     private static final TypeReference<List<String>> LIST_STRING_TYPE_REFERENCE = new TypeReference<>(){};
 
+    public SyncSettingEntity createSyncSetting(Long syncFlowId, List<String> filters, int flattenFolder)
+            throws SyncDuoException {
+        if (ObjectUtils.anyNull(syncFlowId, flattenFolder)) {
+            throw new SyncDuoException("创建 syncSetting 失败, syncFlowId 或 flattenFolder 为空");
+        }
+        SyncSettingEntity syncSettingEntity = new SyncSettingEntity();
+        syncSettingEntity.setSyncFlowId(syncFlowId);
+        syncSettingEntity.setFlattenFolder(flattenFolder);
+        if (CollectionUtils.isNotEmpty(filters)) {
+            try {
+
+                String filterCriteria = OBJECT_MAPPER.writeValueAsString(filters);
+                syncSettingEntity.setFilterCriteria(filterCriteria);
+            } catch (JsonProcessingException e) {
+                throw new SyncDuoException("无法将 filters 序列化为字符串. %s".formatted(filters), e);
+            }
+        }
+        boolean save = this.save(syncSettingEntity);
+        if (!save) {
+            throw new SyncDuoException("保存 syncSetting 失败. %s".formatted(syncSettingEntity));
+        }
+        return syncSettingEntity;
+    }
+
     public SyncSettingEntity getBySyncFlowId(Long syncFlowId) throws SyncDuoException {
         if (ObjectUtils.isEmpty(syncFlowId)) {
             throw new SyncDuoException("syncFlowId 为空");
@@ -53,7 +77,7 @@ public class SyncSettingService
         } else if (SyncSettingEnum.MIRROR.getCode() == flattenFolder) {
             return false;
         } else {
-            log.error("无法读取 flatten folder 设置, syncSetting %s".formatted(syncSettingEntity));
+            log.error("无法读取 flatten folder 设置, syncSetting {}", syncSettingEntity);
             return false;
         }
     }
@@ -74,7 +98,7 @@ public class SyncSettingService
             }
             return false;
         } catch (JsonProcessingException e) {
-            log.error("无法读取过滤条件, syncSetting %s".formatted(syncSettingEntity));
+            log.error("无法读取过滤条件, syncSetting {}", syncSettingEntity);
             return false;
         }
     }
