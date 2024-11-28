@@ -116,12 +116,10 @@ public class RootFolderService
         if (StringUtils.isEmpty(folderFullPath)) {
             throw new SyncDuoException("参数检查失败, folderFullPath 为空");
         }
-
         LambdaQueryWrapper<RootFolderEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(RootFolderEntity::getRootFolderFullPath, folderFullPath);
         queryWrapper.eq(RootFolderEntity::getFolderDeleted, DeletedEnum.NOT_DELETED.getCode());
         List<RootFolderEntity> dbResult = this.list(queryWrapper);
-
         if (CollectionUtils.isEmpty(dbResult)) {
             return null;
         }

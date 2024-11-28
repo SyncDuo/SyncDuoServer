@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -32,22 +33,22 @@ public class SyncSettingService
 
     private static final TypeReference<List<String>> LIST_STRING_TYPE_REFERENCE = new TypeReference<>(){};
 
-    public SyncSettingEntity createSyncSetting(Long syncFlowId, List<String> filters, int flattenFolder)
+    public SyncSettingEntity createSyncSetting(Long syncFlowId, List<String> filters, SyncSettingEnum syncSettingEnum)
             throws SyncDuoException {
-        if (ObjectUtils.anyNull(syncFlowId, flattenFolder)) {
+        if (ObjectUtils.anyNull(syncFlowId, syncSettingEnum)) {
             throw new SyncDuoException("创建 syncSetting 失败, syncFlowId 或 flattenFolder 为空");
         }
         SyncSettingEntity syncSettingEntity = new SyncSettingEntity();
         syncSettingEntity.setSyncFlowId(syncFlowId);
-        syncSettingEntity.setFlattenFolder(flattenFolder);
-        if (CollectionUtils.isNotEmpty(filters)) {
-            try {
-
-                String filterCriteria = OBJECT_MAPPER.writeValueAsString(filters);
-                syncSettingEntity.setFilterCriteria(filterCriteria);
-            } catch (JsonProcessingException e) {
-                throw new SyncDuoException("无法将 filters 序列化为字符串. %s".formatted(filters), e);
-            }
+        syncSettingEntity.setFlattenFolder(syncSettingEnum.getCode());
+        if (CollectionUtils.isEmpty(filters)) {
+            filters = new ArrayList<>();
+        }
+        try {
+            String filterCriteria = OBJECT_MAPPER.writeValueAsString(filters);
+            syncSettingEntity.setFilterCriteria(filterCriteria);
+        } catch (JsonProcessingException e) {
+            throw new SyncDuoException("无法将 filters 序列化为字符串. %s".formatted(filters), e);
         }
         boolean save = this.save(syncSettingEntity);
         if (!save) {

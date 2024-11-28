@@ -31,11 +31,11 @@ public class FileOperationUtils {
     @Value("${syncduo.server.filelock.retry.interval:3000L}")
     private static long fileLockWaitInterval = 5000L;
 
-    public static Path stringToPath(String path) throws SyncDuoException {
+    public static boolean endsWithSeparator(String path) throws SyncDuoException {
         if (StringUtils.isEmpty(path)) {
             throw new SyncDuoException("path is empty");
         }
-        return Paths.get(path);
+        return path.endsWith(FileSystems.getDefault().getSeparator());
     }
 
     public static Path concateStringToPath(
@@ -65,7 +65,7 @@ public class FileOperationUtils {
             String sourceFolderFullPath,
             String contentFolderFullPath) throws SyncDuoException {
         Path sourceFolder = isFolderPathValid(sourceFolderFullPath);
-        Path contentFolderParent = isFolderPathValid(contentFolderFullPath);
+        Path contentFolderParent = isParentFolderPathValid(contentFolderFullPath);
         Path contentFolder = contentFolderParent.resolve(sourceFolder.getFileName());
         if (Files.exists(contentFolder)) {
             return contentFolder;
@@ -112,7 +112,6 @@ public class FileOperationUtils {
             String folderFullPath,
             SimpleFileVisitor<Path> simpleFileVisitor) throws SyncDuoException {
         Path folder = isFolderPathValid(folderFullPath);
-
         try {
             Files.walkFileTree(folder, simpleFileVisitor);
         } catch (IOException e) {
@@ -154,7 +153,7 @@ public class FileOperationUtils {
     }
 
     public static Pair<Timestamp, Timestamp> getFileCrTimeAndMTime(Path file) throws SyncDuoException {
-        log.info("正在读取文件:%s 的元数据".formatted(file.toAbsolutePath()));
+        log.info("正在读取文件:{} 的元数据", file.toAbsolutePath());
         if (!Files.exists(file) && Files.isRegularFile(file)) {
             throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
         }
@@ -184,7 +183,6 @@ public class FileOperationUtils {
         if (ObjectUtils.isEmpty(file)) {
             throw new SyncDuoException("无法获取文件名, file 为空");
         }
-
         // 获取文件名和文件格式
         String fileName = file.getFileName().toString();
         String fileExtension = "";
@@ -198,7 +196,7 @@ public class FileOperationUtils {
     }
 
     public static String getMD5Checksum(Path file) throws SyncDuoException {
-        log.info("正在读取文件:%s 的 MD5 checkum".formatted(file.toAbsolutePath()));
+        log.info("正在读取文件:{} 的 MD5 Checksum", file.toAbsolutePath());
 
         if (!Files.exists(file) && Files.isRegularFile(file)) {
             throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
@@ -212,35 +210,9 @@ public class FileOperationUtils {
         }
     }
 
-    public static BasicFileAttributes getFileBasicAttributes(Path file) throws SyncDuoException {
-        log.info("正在读取文件:%s 的元数据".formatted(file.toAbsolutePath()));
-
-        if (!Files.exists(file) && Files.isRegularFile(file)) {
-            throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
-        }
-
-        try (FileLock ignored = tryLockWithRetries(FileChannel.open(file, StandardOpenOption.READ), true)) {
-            return Files.readAttributes(file, BasicFileAttributes.class);
-        } catch (IOException e) {
-            throw new SyncDuoException("无法读取文件:%s 的元数据", e);
-        }
-    }
-
-    public static void scanFileRecursive(String folderPath, SimpleFileVisitor<Path> fileVisitor)
-            throws SyncDuoException {
-        log.info("正在遍历文件夹: %s".formatted(folderPath));
-
-        Path folder = isFolderPathValid(folderPath);
-        try {
-            Files.walkFileTree(folder, fileVisitor);
-        } catch (IOException e) {
-            throw new SyncDuoException("遍历文件出错", e);
-        }
-    }
-
 
     public static Path copyFile(String sourcePath, String destPath) throws SyncDuoException {
-        log.info("执行文件复制操作. 源文件 %s, 目的文件 %s".formatted(sourcePath, destPath));
+        log.info("执行文件复制操作. 源文件 {}, 目的文件 {}", sourcePath, destPath);
 
         ImmutablePair<Path, Path> pathPair = isFilePathValid(sourcePath, destPath);
         Path sourceFile = pathPair.getLeft();
@@ -275,7 +247,7 @@ public class FileOperationUtils {
     }
 
     public static Path hardlinkFile(String sourcePath, String destPath) throws SyncDuoException {
-        log.info("执行文件hardlink操作. 源文件 %s, 目的文件 %s".formatted(sourcePath, destPath));
+        log.info("执行文件hardlink操作. 源文件 {}, 目的文件 {}", sourcePath, destPath);
 
         Path sourceFile = isFilePathValid(sourcePath);
         Path destFile = Paths.get(destPath);
@@ -350,20 +322,23 @@ public class FileOperationUtils {
         }
     }
 
-    public static boolean isFolderPathExist(String path) throws SyncDuoException {
+    public static Path isFolderPathValid(Path folderPath) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(folderPath)) {
+            throw new SyncDuoException("folderPath 为空");
+        }
+        if (Files.exists(folderPath) && Files.isDirectory(folderPath)) {
+            return folderPath;
+        } else {
+            throw new SyncDuoException("文件夹路径:%s 不存在或不是文件夹".formatted(folderPath));
+        }
+    }
+
+    public static Path isParentFolderPathValid(String path) throws SyncDuoException {
         if (StringUtils.isBlank(path)) {
             throw new SyncDuoException("文件夹路径为空");
         }
         Path folderPath = Paths.get(path);
-        if (Files.exists(folderPath)) {
-            if (Files.isDirectory(folderPath)) {
-                return true;
-            } else {
-                throw new SyncDuoException("路径 %s 不是文件夹".formatted(path));
-            }
-        } else {
-            return false;
-        }
+        return isFolderPathValid(folderPath.getParent());
     }
 
     private static FileLock tryLockWithRetries(FileChannel fileChannel, boolean shared) throws SyncDuoException {
@@ -377,7 +352,7 @@ public class FileOperationUtils {
             if (ObjectUtils.isNotEmpty(lock)) {
                 break;
             }
-            log.info("正在重试获取文件锁.文件是 %s, 次数是 %s".formatted(fileChannel, i+1));
+            log.info("正在重试获取文件锁.文件是 {}, 次数是 {}", fileChannel, i+1);
             LockSupport.parkNanos(fileLockWaitInterval * 1_000_000);
         }
         if (ObjectUtils.isEmpty(lock)) {

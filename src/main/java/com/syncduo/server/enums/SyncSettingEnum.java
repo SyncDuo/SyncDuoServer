@@ -4,18 +4,15 @@ import lombok.Getter;
 
 @Getter
 public enum SyncSettingEnum {
-    FLATTEN_FOLDER(1, true),
+    FLATTEN_FOLDER(1),
 
-    MIRROR(0, false),
+    MIRROR(0),
     ;
 
     private final int code;
 
-    private final boolean value;
 
-
-    SyncSettingEnum(int code, boolean value) {
+    SyncSettingEnum(int code) {
         this.code = code;
-        this.value = value;
     }
 }

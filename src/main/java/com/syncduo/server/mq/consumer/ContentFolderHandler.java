@@ -56,7 +56,7 @@ public class ContentFolderHandler {
     // full scan content folder 触发. root folder type = content folder, 则不需要 file copy
     // internal folder 触发, root folder type = internal folder, 需要 file copy
     // internal 和 content folder compare 触发, root folder type = internal folder, 需要 file copy
-    @Scheduled(fixedDelayString = "${syncduo.server.message.polling.interval:5000}")
+    @Scheduled(fixedDelayString = "${syncduo.server.event.polling.interval:5000}")
     private void handleFileEvent() {
         for (int i = 0; i < pollingNum; i++) {
             FileEventDto fileEvent = this.systemQueue.pollContentFolderEvent();
@@ -81,7 +81,7 @@ public class ContentFolderHandler {
                     default -> throw new SyncDuoException("content 文件夹的文件事件:%s 不识别".formatted(fileEvent));
                 }
             } catch (SyncDuoException e) {
-                log.error("content 文件夹的文件事件:%s 处理失败".formatted(fileEvent), e);
+                log.error("content 文件夹的文件事件:{} 处理失败", fileEvent, e);
             }
         }
     }

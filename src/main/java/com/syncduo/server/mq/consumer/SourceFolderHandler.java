@@ -71,7 +71,7 @@ public class SourceFolderHandler {
                     default -> throw new SyncDuoException("文件夹的文件事件:%s 不识别".formatted(fileEvent));
                 }
             } catch (SyncDuoException e) {
-                log.error("文件夹的文件事件:%s 处理失败".formatted(fileEvent), e);
+                log.error("文件夹的文件事件:{} 处理失败", fileEvent, e);
             }
         }
     }
@@ -111,7 +111,7 @@ public class SourceFolderHandler {
                 sourceFolderEntity.getRootFolderFullPath(),
                 file
         );
-        // 更新  md5checksum,last_modified_time
+        // 更新  md5 checksum, last_modified_time
         this.fileService.updateFileEntityByFile(sourceFileEntity, file);
         // 记录 file event, 表示 source folder 发生的文件事件
         FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, sourceFileEntity);
@@ -194,7 +194,7 @@ public class SourceFolderHandler {
         Path internalFile = this.fileService.getFileFromFileEntity(
                 internalFolderEntity.getRootFolderFullPath(),
                 internalFileEntity);
-        // 更新  md5checksum,last_modified_time
+        // 更新  md5 checksum, last_modified_time
         this.fileService.updateFileEntityByFile(internalFileEntity, internalFile);
         return new ImmutablePair<>(internalFile, internalFileEntity);
     }
