@@ -27,7 +27,7 @@ import java.nio.file.Path;
 @Slf4j
 public class SourceFolderHandler {
 
-    @Value("${syncduo.server.event.polling.num:10}")
+    @Value("${syncduo.server.event.polling.num:50}")
     private Integer pollingNum;
 
     private final SystemQueue systemQueue;
@@ -78,27 +78,35 @@ public class SourceFolderHandler {
 
     private void onFileCreate(FileEventDto fileEvent) throws SyncDuoException {
         RootFolderEntity sourceFolderEntity = this.rootFolderService.getByFolderId(fileEvent.getRootFolderId());
-        // create record
-        FileEntity sourceFileEntity = this.fileService.fillFileEntityForCreate(
-                fileEvent.getFile(),
-                fileEvent.getRootFolderId(),
-                sourceFolderEntity.getRootFolderFullPath()
+        // 查看是否有重复的文件
+        FileEntity sourceFileEntity = this.fileService.getFileEntityFromFile(
+                sourceFolderEntity.getRootFolderId(),
+                sourceFolderEntity.getRootFolderFullPath(),
+                fileEvent.getFile()
         );
-        this.fileService.createFileRecord(sourceFileEntity);
+        if (ObjectUtils.isEmpty(sourceFileEntity)) {
+            // create record
+            sourceFileEntity = this.fileService.fillFileEntityForCreate(
+                    fileEvent.getFile(),
+                    fileEvent.getRootFolderId(),
+                    sourceFolderEntity.getRootFolderFullPath()
+            );
+            this.fileService.createFileRecord(sourceFileEntity);
+            // hardlink file
+            Pair<Path, FileEntity> fileAndEntityPair =
+                    this.addSourceFileToInternalFolder(sourceFolderEntity, sourceFileEntity);
+            // 发送 event 到 content 队列
+            this.systemQueue.sendFileEvent(FileEventDto.builder()
+                    .file(fileAndEntityPair.getLeft())
+                    .rootFolderId(fileAndEntityPair.getRight().getRootFolderId())
+                    .fileEventTypeEnum(FileEventTypeEnum.FILE_CREATED)
+                    .rootFolderTypeEnum(RootFolderTypeEnum.INTERNAL_FOLDER)
+                    .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
+                    .build());
+        }
         // 记录 file event, 表示 source folder 发生的文件事件
         FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, sourceFileEntity);
         this.fileEventService.save(fileEventEntity);
-        // hardlink file
-        Pair<Path, FileEntity> fileAndEntityPair =
-                this.addSourceFileToInternalFolder(sourceFolderEntity, sourceFileEntity);
-        // 发送 event 到 content 队列
-        this.systemQueue.sendFileEvent(FileEventDto.builder()
-                        .file(fileAndEntityPair.getLeft())
-                        .rootFolderId(fileAndEntityPair.getRight().getRootFolderId())
-                        .fileEventTypeEnum(FileEventTypeEnum.FILE_CREATED)
-                        .rootFolderTypeEnum(RootFolderTypeEnum.INTERNAL_FOLDER)
-                        .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
-                        .build());
     }
 
     private void onFileChange(FileEventDto fileEvent) throws SyncDuoException {
@@ -138,6 +146,10 @@ public class SourceFolderHandler {
                 sourceFolderEntity.getRootFolderFullPath(),
                 file
         );
+        // 幂等
+        if (ObjectUtils.isEmpty(sourceFileEntity)) {
+            return;
+        }
         // 更新 file_deleted=1
         sourceFileEntity.setFileDeleted(DeletedEnum.DELETED.getCode());
         // 更新数据库
@@ -159,11 +171,9 @@ public class SourceFolderHandler {
         RootFolderEntity internalFolderEntity =
                 this.rootFolderService.getByFolderId(source2InternalSyncFlow.getDestFolderId());
         // 拼接目标文件 full path
-        String destFileFullPath = FileOperationUtils.concatePathString(
+        String destFileFullPath = this.fileService.concatPathStringFromFolderAndFile(
                 internalFolderEntity.getRootFolderFullPath(),
-                sourceFileEntity.getRelativePath(),
-                sourceFileEntity.getFileName(),
-                sourceFileEntity.getFileExtension()
+                sourceFileEntity
         );
         // hardlink file
         Path internalFile = FileOperationUtils.hardlinkFile(sourceFileFullPath, destFileFullPath);

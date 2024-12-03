@@ -10,7 +10,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
@@ -31,6 +30,7 @@ public class FileOperationUtils {
     @Value("${syncduo.server.filelock.retry.interval:3000L}")
     private static long fileLockWaitInterval = 5000L;
 
+
     public static boolean endsWithSeparator(String path) throws SyncDuoException {
         if (StringUtils.isEmpty(path)) {
             throw new SyncDuoException("path is empty");
@@ -43,10 +43,7 @@ public class FileOperationUtils {
             String relativePath,
             String fileName,
             String fileExtension) throws SyncDuoException {
-        if (StringUtils.isAnyBlank(folderPath, relativePath, fileName, fileExtension)) {
-            throw new SyncDuoException("folderPath, relativePath, fileName, fileExtension 存在空值");
-        }
-        String filePath = folderPath + relativePath + fileName + fileExtension;
+        String filePath = concatePathString(folderPath, relativePath, fileName, fileExtension);
         return isFilePathValid(filePath);
     }
 
@@ -55,10 +52,14 @@ public class FileOperationUtils {
             String relativePath,
             String fileName,
             String fileExtension) throws SyncDuoException {
-        if (StringUtils.isAnyBlank(folderPath, relativePath, fileName, fileExtension)) {
-            throw new SyncDuoException("folderPath, relativePath, fileName, fileExtension 存在空值");
+        if (StringUtils.isAnyBlank(folderPath, relativePath, fileName)) {
+            throw new SyncDuoException("folderPath, relativePath, fileName 存在空值");
         }
-        return folderPath + relativePath + fileName + fileExtension;
+        String filePath = folderPath + relativePath + fileName;
+        if (StringUtils.isNotBlank(fileExtension)) {
+            filePath = filePath + "." + fileExtension;
+        }
+        return filePath;
     }
 
     public static Path createContentFolder(
@@ -76,7 +77,7 @@ public class FileOperationUtils {
     public static String getInternalFolderFullPath(String sourceFolderFullPath) throws SyncDuoException {
         Path sourceFolder = isFolderPathValid(sourceFolderFullPath);
         Path sourceFolderParent = sourceFolder.getParent();
-        String internalFolderName = "." + sourceFolder.getFileName() + "-internal";
+        String internalFolderName = "." + sourceFolder.getFileName();
 
         return sourceFolderParent.resolve(internalFolderName).toAbsolutePath().toString();
     }
@@ -119,7 +120,7 @@ public class FileOperationUtils {
         }
     }
 
-    public static String getSeparator() {
+    public static String getPathSeparator() {
         return FileSystems.getDefault().getSeparator();
     }
 
@@ -146,7 +147,7 @@ public class FileOperationUtils {
         Path relativizePath = rootFolder.relativize(file);
         String relativePathString = "";
         if (relativizePath.getNameCount() > 1) {
-            relativePathString = getSeparator() + relativizePath.getName(0).toString();
+            relativePathString = getPathSeparator() + relativizePath.getName(0).toString();
         }
         byte[] hash = DigestUtils.sha256(rootFolderId + relativePathString + file.getFileName());
         return UUID.nameUUIDFromBytes(hash).toString();
@@ -176,7 +177,9 @@ public class FileOperationUtils {
 
         Path rootFolder = Paths.get(rootFolderPath);
         Path relativizePath = rootFolder.relativize(file.getParent());
-        return relativizePath.toString();
+        return StringUtils.isEmpty(relativizePath.toString()) ?
+                FileOperationUtils.getPathSeparator() :
+                FileOperationUtils.getPathSeparator() + relativizePath;
     }
 
     public static Pair<String, String> getFileNameAndExtension(Path file) throws SyncDuoException {
@@ -214,35 +217,41 @@ public class FileOperationUtils {
     public static Path copyFile(String sourcePath, String destPath) throws SyncDuoException {
         log.info("执行文件复制操作. 源文件 {}, 目的文件 {}", sourcePath, destPath);
 
-        ImmutablePair<Path, Path> pathPair = isFilePathValid(sourcePath, destPath);
-        Path sourceFile = pathPair.getLeft();
-        Path destFile = pathPair.getRight();
+        // 检查源文件是否存在
+        Path sourceFile = isFilePathValid(sourcePath);
+        // 获取 destFile 的 Path 对象, 注意此时 destFile 不一定存在于文件系统上
+        Path destFile = Paths.get(destPath);
         // 保证目的地文件夹存在
         try {
             Files.createDirectories(destFile.getParent());
         } catch (IOException e) {
-            throw new SyncDuoException("文件夹递归创建失败. 源文件 %s, 目的文件 %s", e);
+            throw new SyncDuoException("文件夹递归创建失败. 源文件 %s, 目的文件 %s".formatted(sourcePath, destPath), e);
         }
-        try (FileLock ignore =
-                     tryLockWithRetries(FileChannel.open(sourceFile, StandardOpenOption.READ), true);
-             FileLock ignored =
-                     tryLockWithRetries(FileChannel.open(destFile, StandardOpenOption.CREATE), false)) {
-            return Files.copy(sourceFile, destFile);
+        // 打开目的地文件, 默认不存在则新建
+        try (FileLock ignore = tryLockWithRetries(
+                FileChannel.open(sourceFile, StandardOpenOption.READ),
+                true);
+             FileLock ignored = tryLockWithRetries(
+                     FileChannel.open(destFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE),
+                     false)) {
+            return Files.copy(sourceFile, destFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | SyncDuoException e) {
-            throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s", e);
+            throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
         }
     }
 
     public static Path updateFileByCopy(Path sourceFile, Path destFile) throws SyncDuoException {
         isFileValid(sourceFile);
         isFileValid(destFile);
-        try (FileLock ignore =
-                     tryLockWithRetries(FileChannel.open(sourceFile, StandardOpenOption.READ), true);
-             FileLock ignored =
-                     tryLockWithRetries(FileChannel.open(destFile, StandardOpenOption.CREATE), false)) {
-            return Files.copy(sourceFile, destFile);
+        try (FileLock ignore = tryLockWithRetries(
+                FileChannel.open(sourceFile, StandardOpenOption.READ),
+                true);
+             FileLock ignored = tryLockWithRetries(
+                     FileChannel.open(destFile, StandardOpenOption.WRITE),
+                     false)) {
+            return Files.copy(sourceFile, destFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | SyncDuoException e) {
-            throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s", e);
+            throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
         }
     }
 
@@ -258,40 +267,19 @@ public class FileOperationUtils {
         try {
             Files.createDirectories(destFile.getParent());
         } catch (IOException e) {
-            throw new SyncDuoException("文件夹递归创建失败. 源文件 %s, 目的文件 %s", e);
+            throw new SyncDuoException("文件夹递归创建失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
         }
         // hardlink file
         try (FileLock ignored =
                      tryLockWithRetries(FileChannel.open(sourceFile, StandardOpenOption.READ), true)) {
             // 执行文件 hardlink
-            return Files.createLink(sourceFile, destFile);
+            return Files.createLink(destFile, sourceFile);
         } catch (IOException | SyncDuoException e) {
-            throw new SyncDuoException("文件hardlink失败. 源文件 %s, 目的文件 %s", e);
+            throw new SyncDuoException("文件hardlink失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
         }
     }
 
-    private static ImmutablePair<Path, Path> isFilePathValid(String sourcePath, String destPath)
-            throws SyncDuoException {
-        if (StringUtils.isAnyBlank(sourcePath, destPath)) {
-            throw new SyncDuoException("源文件路径:%s 或目标文件路径:%s 为空.".formatted(sourcePath, destPath));
-        }
-
-        Path sourceFile = Paths.get(sourcePath);
-        Path destFile = Paths.get(destPath);
-
-        if (!Files.exists(sourceFile)) {
-            throw new SyncDuoException("源文件路径:%s 不存在".formatted(sourcePath));
-        }
-
-        Path parentFolder = destFile.getParent();
-        if (ObjectUtils.isNotEmpty(parentFolder) && !Files.exists(parentFolder)) {
-            throw new SyncDuoException("目标路径:%s 不存在".formatted(destPath));
-        }
-
-        return new ImmutablePair<>(sourceFile, destFile);
-    }
-
-    private static Path isFilePathValid(String filePath)
+    public static Path isFilePathValid(String filePath)
             throws SyncDuoException {
         if (StringUtils.isBlank(filePath)) {
             throw new SyncDuoException("文件路径:%s 为空".formatted(filePath));
@@ -302,6 +290,15 @@ public class FileOperationUtils {
             throw new SyncDuoException("文件路径:%s 不存在".formatted(filePath));
         }
         return sourceFile;
+    }
+
+    public static boolean isFilePathExist(String filePath)
+            throws SyncDuoException {
+        if (StringUtils.isBlank(filePath)) {
+            throw new SyncDuoException("文件路径:%s 为空".formatted(filePath));
+        }
+        Path sourceFile = Paths.get(filePath);
+        return Files.exists(sourceFile);
     }
 
     private static void isFileValid(Path file) throws SyncDuoException {

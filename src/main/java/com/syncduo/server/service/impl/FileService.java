@@ -31,7 +31,6 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         if (ObjectUtils.isEmpty(fileEntity)) {
             throw new SyncDuoException("创建文件记录失败, FileEntity 为空");
         }
-
         boolean saved = this.save(fileEntity);
         if (!saved) {
             throw new SyncDuoException("创建文件记录失败, 无法写入数据库");
@@ -113,18 +112,44 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
     }
 
     public Path getFileFromFileEntity(String rootFolderFullPath, FileEntity fileEntity) throws SyncDuoException {
+        return FileOperationUtils.isFilePathValid(concatPathStringFromFolderAndFile(rootFolderFullPath, fileEntity));
+    }
+
+    public String concatPathStringFromFolderAndFile(String rootFolderFullPath, FileEntity fileEntity)
+            throws SyncDuoException {
         if (StringUtils.isBlank(rootFolderFullPath)) {
-            throw new SyncDuoException("获取file失败, rootFolderFullPath 为空");
+            throw new SyncDuoException("rootFolderFullPath 为空");
         }
         if (ObjectUtils.isEmpty(fileEntity)) {
-            throw new SyncDuoException("获取file失败, fileEntity 为空");
+            throw new SyncDuoException("fileEntity 为空");
         }
-        return FileOperationUtils.concateStringToPath(
-                rootFolderFullPath,
-                fileEntity.getRelativePath(),
-                fileEntity.getFileName(),
-                fileEntity.getFileExtension()
-        );
+        String filePath = rootFolderFullPath +
+                fileEntity.getRelativePath() +
+                FileOperationUtils.getPathSeparator() +
+                fileEntity.getFileName();
+        if (StringUtils.isNotBlank(fileEntity.getFileExtension())) {
+            filePath = filePath + "." + fileEntity.getFileExtension();
+        }
+        return filePath;
+    }
+
+    public String concatPathStringFromFolderAndFileFlattenFolder(
+            String rootFolderFullPath,
+            FileEntity fileEntity)
+            throws SyncDuoException {
+        if (StringUtils.isBlank(rootFolderFullPath)) {
+            throw new SyncDuoException("rootFolderFullPath 为空");
+        }
+        if (ObjectUtils.isEmpty(fileEntity)) {
+            throw new SyncDuoException("fileEntity 为空");
+        }
+        String filePath = rootFolderFullPath +
+                FileOperationUtils.getPathSeparator() +
+                fileEntity.getFileUuid4();
+        if (StringUtils.isNotBlank(fileEntity.getFileExtension())) {
+            filePath = filePath + "." + fileEntity.getFileExtension();
+        }
+        return filePath;
     }
 
     public FileEntity getByUuid4(String uuid4) throws SyncDuoException {

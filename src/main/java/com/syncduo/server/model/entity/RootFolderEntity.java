@@ -14,6 +14,9 @@ public class RootFolderEntity extends BaseEntity {
 
     private String rootFolderName;
 
+    // always starts with "/"
+    // always ends with "folder name"
+    // eg: /root/folder1
     private String rootFolderFullPath;
 
     private String rootFolderType;

@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @RestController("/sync-flow")
@@ -126,7 +125,7 @@ public class SyncFlowController {
                 SyncFlowTypeEnum.SOURCE_TO_INTERNAL);
         // 创建 internal to content sync flow
         SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.createSyncFlow(
-                sourceFolderEntity.getRootFolderId(),
+                internalFolderEntity.getRootFolderId(),
                 contentFolderEntity.getRootFolderId(),
                 SyncFlowTypeEnum.INTERNAL_TO_CONTENT
         );
@@ -226,7 +225,7 @@ public class SyncFlowController {
         // 按照输入拼接 destFolderFullPath
         if (syncFlowRequest.getConcatDestFolderPath()) {
             destFolderFullPath = syncFlowRequest.getDestFolderFullPath() +
-                    FileOperationUtils.getSeparator() +
+                    FileOperationUtils.getPathSeparator() +
                     sourceFolder.getFileName();
             syncFlowRequest.setDestFolderFullPath(destFolderFullPath);
         }

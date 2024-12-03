@@ -90,9 +90,19 @@ public class ContentFolderHandler {
         Path file = fileEvent.getFile();
         Long rootFolderId = fileEvent.getRootFolderId();
         RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(rootFolderId);
-        FileEntity contentFileEntity =
-                this.fileService.fillFileEntityForCreate(file, rootFolderId, rootFolderEntity.getRootFolderFullPath());
-        this.fileService.createFileRecord(contentFileEntity);
+        // 检查 file 是否已创建
+        FileEntity contentFileEntity = this.fileService.getFileEntityFromFile(
+                rootFolderEntity.getRootFolderId(),
+                rootFolderEntity.getRootFolderFullPath(),
+                file
+        );
+        if (ObjectUtils.isEmpty(contentFileEntity)) {
+            contentFileEntity = this.fileService.fillFileEntityForCreate(
+                    file,
+                    rootFolderId,
+                    rootFolderEntity.getRootFolderFullPath());
+            this.fileService.createFileRecord(contentFileEntity);
+        }
         // 记录 file event
     }
 
@@ -118,27 +128,28 @@ public class ContentFolderHandler {
                     this.rootFolderService.getByFolderId(syncFlowEntity.getDestFolderId());
             Long syncFlowId = syncFlowEntity.getSyncFlowId();
             // 判断是否过滤
+            // 每个文件都不管历史有没有过滤, 都要从重新走一遍, 就是想让 filter 修改后可以生效
             if (this.syncSettingService.isFilter(syncFlowId, internalFile)) {
                 break;
             }
             boolean flattenFolder = this.syncSettingService.isFlattenFolder(syncFlowId);
             String contentFileFullPath;
             if (flattenFolder) {
-                // 如果镜像复制, 则 file copy
-                contentFileFullPath = FileOperationUtils.concatePathString(
+                // 如果不使用原来的文件夹结构, 则 file copy with uuid4 name, 且 relative path 为空
+                contentFileFullPath = this.fileService.concatPathStringFromFolderAndFileFlattenFolder(
                         contentFolderEntity.getRootFolderFullPath(),
-                        internalFileEntity.getRelativePath(),
-                        internalFileEntity.getFileName(),
-                        internalFileEntity.getFileExtension()
+                        internalFileEntity
                 );
             } else {
-                // 如果不使用原来的文件夹结构, 则 file copy with uuid4 name, 且 relative path 为空
-                contentFileFullPath = FileOperationUtils.concatePathString(
+                // 如果镜像复制, 则 file copy
+                contentFileFullPath = this.fileService.concatPathStringFromFolderAndFile(
                         contentFolderEntity.getRootFolderFullPath(),
-                        "",
-                        internalFileEntity.getFileUuid4(),
-                        internalFileEntity.getFileExtension()
+                        internalFileEntity
                 );
+            }
+            // 如果 contentFileFullPath 已存在文件, 说明 create file event 重复了, 则直接返回
+            if (FileOperationUtils.isFilePathExist(contentFileFullPath)) {
+                return;
             }
             // file copy
             Path contentFile =

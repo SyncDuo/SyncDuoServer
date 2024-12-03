@@ -28,6 +28,12 @@ public class FileEntity extends BaseEntity {
 
     private Long rootFolderId;
 
+
+    // always starts with "/"
+    // if no sub folder, then only contains "/"
+    // eg: <parent folder>/
+    // else ends with "folder name"
+    // eg: <parent folder><relativePath> which <relativePath> contains prefix "/"
     private String relativePath;
 
     @TableField(fill = FieldFill.INSERT)

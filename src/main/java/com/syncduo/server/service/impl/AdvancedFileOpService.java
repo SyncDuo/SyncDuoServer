@@ -91,6 +91,9 @@ public class AdvancedFileOpService {
         FileOperationUtils.walkFilesTree(rootFolder.getRootFolderFullPath(), new SimpleFileVisitor<>(){
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (ObjectUtils.isEmpty(attrs)) {
+                    return FileVisitResult.CONTINUE;
+                }
                 try {
                     String uuid4 = FileOperationUtils.getUUID4(rootFolderId, rootFolder.getRootFolderFullPath(), file);
                     FileEventTypeEnum fileEventType;
@@ -115,7 +118,7 @@ public class AdvancedFileOpService {
                             .destFolderTypeEnum(rootFolderType)
                             .build());
                 } catch (SyncDuoException e) {
-                    log.error("遍历文件失败 %s".formatted(file), e);
+                    log.error("遍历文件失败 {}", file, e);
                 }
                 return FileVisitResult.CONTINUE;
             }
@@ -145,7 +148,8 @@ public class AdvancedFileOpService {
         RootFolderEntity internalFolderEntity = this.rootFolderService.getByFolderId(internalFolderId);
         // page helper 查询
         this.pageHelper(
-                (startPage, pageSize) -> this.fileService.getByRootFolderIdPaged(sourceFolderId, startPage, pageSize),
+                (startPage, pageSize) ->
+                        this.fileService.getByRootFolderIdPaged(sourceFolderId, startPage, pageSize),
                 (sourceFileEntity) -> {
                     // 获取 source file
                     Path sourceFile = this.fileService.getFileFromFileEntity(
@@ -203,7 +207,8 @@ public class AdvancedFileOpService {
         RootFolderEntity contentFolderEntity = this.rootFolderService.getByFolderId(contentFolderId);
         // page helper 查询
         this.pageHelper(
-                (startPage, pageSize) -> this.fileService.getByRootFolderIdPaged(internalFolderId, startPage, pageSize),
+                (startPage, pageSize) ->
+                        this.fileService.getByRootFolderIdPaged(internalFolderId, startPage, pageSize),
                 (internalFileEntity) -> {
                     // 获取 internal file
                     Path internalFile = this.fileService.getFileFromFileEntity(

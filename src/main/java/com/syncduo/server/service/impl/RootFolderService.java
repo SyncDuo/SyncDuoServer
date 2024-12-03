@@ -92,7 +92,7 @@ public class RootFolderService
             }
         }
 
-        // 文件夹名称 = .<sourceFolder>-internal, 与原文件夹为同一路径
+        // 文件夹名称 = .<sourceFolder>, 与原文件夹为同一路径
         String internalFolderPath = FileOperationUtils.getInternalFolderFullPath(sourceFolderFullPath);
         RootFolderEntity internalFolderEntity = this.getByFolderFullPath(internalFolderPath);
         if (ObjectUtils.isEmpty(internalFolderEntity)) {
