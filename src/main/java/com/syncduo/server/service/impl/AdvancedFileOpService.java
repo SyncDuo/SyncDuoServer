@@ -136,7 +136,11 @@ public class AdvancedFileOpService {
         Long rootFolderId = rootFolder.getRootFolderId();
         RootFolderTypeEnum rootFolderType = RootFolderTypeEnum.valueOf(rootFolder.getRootFolderType());
         if (ObjectUtils.isEmpty(rootFolderType)) {
-            throw new SyncDuoException("无法进行 full scan, rootFolderType %s 不支持".formatted(rootFolderType));
+            throw new SyncDuoException("无法进行 full scan, rootFolderType 为空");
+        }
+        // internal folder 不进行 full scan, 因为对于用户来说不可见, 也不允许修改
+        if (rootFolderType.equals(RootFolderTypeEnum.INTERNAL_FOLDER)) {
+            return false;
         }
         // 创建<uuid4, fileEntity> 的 set
         HashMap<String, FileEntity> uuid4TimeStampMap = new HashMap<>(1000);

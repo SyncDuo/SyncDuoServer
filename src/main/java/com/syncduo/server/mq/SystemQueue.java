@@ -28,7 +28,7 @@ public class SystemQueue {
                 fileEvent.getRootFolderTypeEnum(),
                 fileEvent.getDestFolderTypeEnum())) {
             throw new SyncDuoException("发送 file event 失败, fileEvent %s".formatted(fileEvent) +
-                    "file, rootFolderEntity, fileEventType, rootFolderType, destFolderTypeEnum 存在空值");
+                    "file, rootFolderId, fileEventType, rootFolderType, destFolderTypeEnum 存在空值");
         }
         RootFolderTypeEnum destFolderTypeEnum = fileEvent.getDestFolderTypeEnum();
         switch (destFolderTypeEnum) {

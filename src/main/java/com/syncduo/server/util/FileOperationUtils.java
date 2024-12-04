@@ -41,15 +41,6 @@ public class FileOperationUtils {
         return path.endsWith(FileSystems.getDefault().getSeparator());
     }
 
-    public static Path concateStringToPath(
-            String folderPath,
-            String relativePath,
-            String fileName,
-            String fileExtension) throws SyncDuoException {
-        String filePath = concatePathString(folderPath, relativePath, fileName, fileExtension);
-        return isFilePathValid(filePath);
-    }
-
     public static String concatePathString(
             String folderPath,
             String relativePath,
@@ -341,6 +332,7 @@ public class FileOperationUtils {
         return isFolderPathValid(folderPath.getParent());
     }
 
+    // todo: 并发读退化为没有锁, 并发写才需要乐观锁
     public static FileLock tryLockWithRetries(FileChannel fileChannel, boolean shared) throws SyncDuoException {
         FileLock fileLock;
         int retryCount = 0;

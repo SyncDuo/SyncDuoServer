@@ -56,7 +56,6 @@ public class SourceFolderHandler {
 
     // source watcher 触发
     // full scan source folder 触发
-    // todo: full scan internal folder 触发
     // source 和 internal folder compare 触发
     @Scheduled(fixedDelayString = "${syncduo.server.message.polling.interval:5000}")
     private void handle() {
@@ -170,7 +169,7 @@ public class SourceFolderHandler {
         String sourceFileFullPath = sourceFile.toAbsolutePath().toString();
         // 获取 internal folder 信息
         SyncFlowEntity source2InternalSyncFlow =
-                this.syncFlowService.getBySourceFolderId(sourceFileEntity.getRootFolderId());
+                this.syncFlowService.getSourceSyncFlowByFolderId(sourceFileEntity.getRootFolderId());
         RootFolderEntity internalFolderEntity =
                 this.rootFolderService.getByFolderId(source2InternalSyncFlow.getDestFolderId());
         // 拼接目标文件 full path
@@ -195,7 +194,7 @@ public class SourceFolderHandler {
             throws SyncDuoException {
         // 获取 internal folder 信息
         SyncFlowEntity source2InternalSyncFlow =
-                this.syncFlowService.getBySourceFolderId(sourceFileEntity.getRootFolderId());
+                this.syncFlowService.getSourceSyncFlowByFolderId(sourceFileEntity.getRootFolderId());
         RootFolderEntity internalFolderEntity =
                 this.rootFolderService.getByFolderId(source2InternalSyncFlow.getDestFolderId());
         // 获取 internal file entity

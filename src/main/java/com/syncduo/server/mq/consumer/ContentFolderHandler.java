@@ -116,7 +116,8 @@ public class ContentFolderHandler {
                 internalFile
         );
         // 根据 internalFolderId -> sync-flow -> contentFolderEntity
-        List<SyncFlowEntity> syncFlowList = this.syncFlowService.getBySourceFolderIdBatch(fileEvent.getRootFolderId());
+        List<SyncFlowEntity> syncFlowList =
+                this.syncFlowService.getInternalSyncFlowByFolderId(fileEvent.getRootFolderId());
         if (CollectionUtils.isEmpty(syncFlowList)) {
             throw new SyncDuoException(
                     "创建 content file 失败,没有找到对应的 sync flow. fileEvent 是 %s".formatted(fileEvent));
@@ -175,7 +176,8 @@ public class ContentFolderHandler {
                 internalFile
         );
         // 根据 internalFolderId -> sync-flow -> contentFolderEntity
-        List<SyncFlowEntity> syncFlowList = this.syncFlowService.getBySourceFolderIdBatch(fileEvent.getRootFolderId());
+        List<SyncFlowEntity> syncFlowList =
+                this.syncFlowService.getInternalSyncFlowByFolderId(fileEvent.getRootFolderId());
         if (CollectionUtils.isEmpty(syncFlowList)) {
             throw new SyncDuoException(
                     "创建 content file 失败,没有找到对应的 sync flow. fileEvent 是 %s".formatted(fileEvent));
