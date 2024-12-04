@@ -1,10 +1,7 @@
 package com.syncduo.server.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.syncduo.server.enums.FileDesyncEnum;
-import com.syncduo.server.enums.FileEventTypeEnum;
-import com.syncduo.server.enums.RootFolderTypeEnum;
-import com.syncduo.server.enums.SyncFlowTypeEnum;
+import com.syncduo.server.enums.*;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.FileEntity;
@@ -18,6 +15,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -26,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -38,13 +37,72 @@ public class AdvancedFileOpService {
 
     private final RootFolderService rootFolderService;
 
+    private final SyncFlowService syncFlowService;
+
     @Autowired
     public AdvancedFileOpService(
             FileService fileService,
-            SystemQueue systemQueue, RootFolderService rootFolderService) {
+            SystemQueue systemQueue,
+            RootFolderService rootFolderService,
+            SyncFlowService syncFlowService) {
         this.fileService = fileService;
         this.systemQueue = systemQueue;
         this.rootFolderService = rootFolderService;
+        this.syncFlowService = syncFlowService;
+    }
+
+    @Scheduled(fixedDelayString = "${syncduo.server.check.folder.insync.interval:1800000}")
+    public void checkFolderInSync() {
+        try {
+            List<SyncFlowEntity> syncFlowEntityList =
+                    this.syncFlowService.getBySyncFlowStatus(SyncFlowStatusEnum.SYNC);
+            if (CollectionUtils.isEmpty(syncFlowEntityList)) {
+                return;
+            }
+            // Get current time minus 5 minutes
+            Timestamp fiveMinutesAgo = Timestamp.from(Instant.now().minusSeconds(5 * 60));
+            for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
+                // 获取 sync Flow Entity 的 type
+                SyncFlowTypeEnum syncFlowType = SyncFlowTypeEnum.valueOf(syncFlowEntity.getSyncFlowType());
+                if (ObjectUtils.isEmpty(syncFlowType)) {
+                    throw new SyncDuoException("SyncFlowType is empty");
+                }
+                // 检查 lastSyncTime 是否为空
+                if (ObjectUtils.isEmpty(syncFlowEntity.getLastSyncTime())) {
+                    throw new SyncDuoException("LastSyncTime is empty");
+                }
+                if (syncFlowEntity.getLastSyncTime().before(fiveMinutesAgo)) {
+                    // 执行 full scan
+                    RootFolderEntity sourceFolderEntity =
+                            this.rootFolderService.getByFolderId(syncFlowEntity.getSourceFolderId());
+                    RootFolderEntity destFolderEntity =
+                            this.rootFolderService.getByFolderId(syncFlowEntity.getDestFolderId());
+                    boolean isSourceFolderSync = this.fullScan(sourceFolderEntity);
+                    boolean isDestFolderSync = this.fullScan(destFolderEntity);
+                    boolean isSynced = false;
+                    if (isSourceFolderSync && isDestFolderSync) {
+                        switch (syncFlowType) {
+                            case SOURCE_TO_INTERNAL -> isSynced = this.isSource2InternalSyncFlowSynced(syncFlowEntity);
+                            case INTERNAL_TO_CONTENT -> isSynced = this.isInternal2ContentSyncFlowSync(syncFlowEntity);
+                            default -> throw new SyncDuoException("不支持的 SyncFlowType is " + syncFlowType);
+                        }
+                    }
+                    if (isSynced) {
+                        this.syncFlowService.updateSyncFlowStatus(
+                                syncFlowEntity,
+                                SyncFlowStatusEnum.SYNC
+                        );
+                    } else {
+                        this.syncFlowService.updateSyncFlowStatus(
+                                syncFlowEntity,
+                                SyncFlowStatusEnum.NOT_SYNC
+                        );
+                    }
+                }
+            }
+        } catch (SyncDuoException e) {
+            log.error("checkFolderInSync 失败", e);
+        }
     }
 
     public void initialScan(RootFolderEntity rootFolder) throws SyncDuoException {
@@ -84,7 +142,8 @@ public class AdvancedFileOpService {
         HashMap<String, FileEntity> uuid4TimeStampMap = new HashMap<>(1000);
         // 根据 rootFolderId 分页查询全部文件, 填充 <uuid4, fileEntity> 的 set
         this.pageHelper(
-                ((startPage, pageSize) -> this.fileService.getByRootFolderIdPaged(rootFolderId, startPage, pageSize)),
+                ((startPage, pageSize) ->
+                        this.fileService.getByRootFolderIdPaged(rootFolderId, startPage, pageSize)),
                 (fileEntity) -> uuid4TimeStampMap.put(fileEntity.getFileUuid4(), fileEntity)
         );
         // 遍历文件夹, 根据 set 判断文件新增或修改

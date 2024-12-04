@@ -1,6 +1,8 @@
 package com.syncduo.server;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -8,6 +10,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Random;
 
 public class FileOperationTestUtil {
+
+    private static final Random random = new Random();
 
     public static void createFolders(String path, int depth, int width) throws IOException {
         Path folderPath = Paths.get(path);
@@ -93,17 +97,44 @@ public class FileOperationTestUtil {
         writeRandomBinaryData(binFile);
     }
 
-    private static byte[] generateNumbers() {
-        // Create numbers 1 to 10, each as a separate line in the text file
-        StringBuilder sb = new StringBuilder();
-        for (int i = 1; i <= 10; i++) {
-            sb.append(i).append(System.lineSeparator());
+    // pair<Txt File, Binary File>
+    public static Pair<Path, Path> createTxtAndBinFile(
+            Path folderPath) throws IOException {
+        // Create .txt file with the naming convention
+        Path txtFile = folderPath.resolve("1" + ".txt");
+        if (!Files.exists(txtFile)) {
+            Files.createFile(txtFile);
         }
+
+        // Write numbers 1 to 10 to the .txt file
+        Files.write(txtFile, generateNumbers(), StandardOpenOption.WRITE);
+
+        // Create .bin file with the naming convention
+        Path binFile = folderPath.resolve("1" + ".bin");
+        if (!Files.exists(binFile)) {
+            Files.createFile(binFile);
+        }
+
+        // Write random binary data to the .bin file
+        writeRandomBinaryData(binFile);
+
+        return new ImmutablePair<Path, Path>(txtFile, binFile);
+    }
+
+    private static byte[] generateNumbers() {
+        StringBuilder sb = new StringBuilder();
+
+        // Generate 10 random numbers between 1 and 10000
+        for (int i = 0; i < 10; i++) {
+            int randomNumber = random.nextInt(10000) + 1; // Generates a random number from 1 to 10000
+            sb.append(randomNumber).append(System.lineSeparator());
+        }
+
+        // Return the generated numbers as a byte array
         return sb.toString().getBytes();
     }
 
     private static void writeRandomBinaryData(Path binFile) throws IOException {
-        Random random = new Random();
         byte[] randomBytes = new byte[1024]; // Generate 1 KB of random data
         random.nextBytes(randomBytes);
         Files.write(binFile, randomBytes, StandardOpenOption.WRITE);

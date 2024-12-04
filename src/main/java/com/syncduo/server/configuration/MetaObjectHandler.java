@@ -38,7 +38,7 @@ public class MetaObjectHandler implements com.baomidou.mybatisplus.core.handlers
         // sync flow entity autofill
         this.strictInsertFill(metaObject, "syncStatus", String.class, SyncFlowStatusEnum.NOT_SYNC.name());
         this.strictInsertFill(
-                metaObject, "fileDeleted", Integer.class, DeletedEnum.NOT_DELETED.getCode());
+                metaObject, "syncFlowDeleted", Integer.class, DeletedEnum.NOT_DELETED.getCode());
     }
 
     @Override

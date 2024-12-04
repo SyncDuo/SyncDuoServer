@@ -10,14 +10,19 @@ import com.syncduo.server.service.impl.*;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @SpringBootTest
@@ -137,6 +142,32 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
+    void testFilelockMethod() throws IOException, InterruptedException {
+        Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(testParentPath));
+        new Thread(() -> {
+            try {
+                FileLock fileLock = FileOperationUtils.tryLockWithRetries(
+                        FileChannel.open(txtAndBinFile.getLeft(), StandardOpenOption.READ), true);
+                TimeUnit.SECONDS.sleep(2);
+                fileLock.release();
+            } catch (IOException | InterruptedException | SyncDuoException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+
+         new Thread(() -> {
+            try {
+                FileLock fileLock = FileOperationUtils.tryLockWithRetries(
+                        FileChannel.open(txtAndBinFile.getLeft(), StandardOpenOption.READ), true);
+                fileLock.release();
+            } catch (IOException | SyncDuoException e) {
+                throw new RuntimeException(e);
+            }
+         }).start();
+        Thread.sleep(1000 * 5);
+    }
+
+    @Test
     void testInitialScan() throws SyncDuoException {
         RootFolderEntity sourceFolder = this.rootFolderService.getByFolderId(1L);
         RootFolderEntity content = this.rootFolderService.getByFolderId(3L);
@@ -148,6 +179,11 @@ class SyncDuoServerApplicationTests {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    @Test
+    void testCheckFolderInSync() throws SyncDuoException {
+        this.advancedFileOpService.checkFolderInSync();
     }
 
     @Test

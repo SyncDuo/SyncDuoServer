@@ -7,28 +7,31 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
+import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
 public class FileOperationUtils {
 
-    @Value("${syncduo.server.filelock.retry.count:3}")
-    private static int fileLockRetryCount = 3;
+    private static final int MAX_RETRIES = 3;
 
-    @Value("${syncduo.server.filelock.retry.interval:3000L}")
-    private static long fileLockWaitInterval = 5000L;
+    private static final int MIN_WAIT_TIME_SECONDS = 3;
+
+    private static final int MAX_WAIT_TIME_SECONDS = 7;
+
+    private static final Random RANDOM = new Random();
 
 
     public static boolean endsWithSeparator(String path) throws SyncDuoException {
@@ -338,23 +341,42 @@ public class FileOperationUtils {
         return isFolderPathValid(folderPath.getParent());
     }
 
-    private static FileLock tryLockWithRetries(FileChannel fileChannel, boolean shared) throws SyncDuoException {
-        FileLock lock = null;
-        for (int i = 0; i < fileLockRetryCount; i++) {
+    public static FileLock tryLockWithRetries(FileChannel fileChannel, boolean shared) throws SyncDuoException {
+        FileLock fileLock;
+        int retryCount = 0;
+
+        String lockType = shared ? "Read (Shared)" : "Write (Exclusive)";
+
+        while (retryCount < MAX_RETRIES) {
             try {
-                lock = fileChannel.tryLock(0, Long.MAX_VALUE, shared);
-            } catch (IOException e) {
-                throw new SyncDuoException("无法获取锁,文件是 %s".formatted(fileChannel));
+                // Try to acquire the lock (shared or exclusive)
+                fileLock = fileChannel.tryLock(0, Long.MAX_VALUE, shared);
+
+                if (ObjectUtils.isNotEmpty(fileLock)) {
+                    log.info("{} Lock acquired on attempt {}", lockType, retryCount);
+                    return fileLock; // Lock acquired, return it
+                }
+            } catch (IllegalArgumentException | IOException e) {
+                // Handle any IO exceptions
+                throw new SyncDuoException(
+                        "Exception occurred while attempting to acquire %s file lock".formatted(lockType), e);
+            } catch (OverlappingFileLockException e) {
+                // If lock could not be acquired, increment retry count and wait for a random time
+                retryCount++;
+                if (retryCount < MAX_RETRIES) {
+                    int waitTime = RANDOM.nextInt(MIN_WAIT_TIME_SECONDS, MAX_WAIT_TIME_SECONDS + 1);
+                    log.info("{} Lock attempt failed, retrying in {} seconds...", lockType, waitTime);
+                    try {
+                        TimeUnit.SECONDS.sleep(waitTime);
+                    } catch (InterruptedException e2) {
+                        Thread.currentThread().interrupt();  // Restore interrupted status
+                        throw new SyncDuoException("Thread was interrupted while waiting to retry", e2);
+                    }
+                }
             }
-            if (ObjectUtils.isNotEmpty(lock)) {
-                break;
-            }
-            log.info("正在重试获取文件锁.文件是 {}, 次数是 {}", fileChannel, i+1);
-            LockSupport.parkNanos(fileLockWaitInterval * 1_000_000);
         }
-        if (ObjectUtils.isEmpty(lock)) {
-            throw new SyncDuoException("获取锁失败 %s".formatted(fileChannel));
-        }
-        return lock;
+        // If no lock was acquired after the retries, throw exception
+        throw new SyncDuoException(
+                "Failed to acquire file %s lock after %s attempts".formatted(lockType, MAX_RETRIES));
     }
 }

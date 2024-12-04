@@ -3,6 +3,7 @@ package com.syncduo.server.mq.consumer;
 import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.enums.RootFolderTypeEnum;
+import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.FileEntity;
@@ -55,6 +56,7 @@ public class SourceFolderHandler {
 
     // source watcher 触发
     // full scan source folder 触发
+    // todo: full scan internal folder 触发
     // source 和 internal folder compare 触发
     @Scheduled(fixedDelayString = "${syncduo.server.message.polling.interval:5000}")
     private void handle() {
@@ -156,6 +158,7 @@ public class SourceFolderHandler {
         this.fileService.updateById(sourceFileEntity);
     }
 
+    // Pair<>(internalFile, internalFileEntity);
     private Pair<Path, FileEntity> addSourceFileToInternalFolder(
             RootFolderEntity sourceFolderEntity,
             FileEntity sourceFileEntity) throws SyncDuoException {
