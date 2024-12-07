@@ -29,23 +29,42 @@ public class FileOperationTestUtil {
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (ObjectUtils.anyNull(file, attrs)) {
-                    return FileVisitResult.CONTINUE;
-                }
                 Files.delete(file);
                 return super.visitFile(file, attrs);
             }
 
             @Override
             public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                if (ObjectUtils.anyNull(dir, exc)) {
-                    return FileVisitResult.CONTINUE;
+                Files.delete(dir);
+                return super.postVisitDirectory(dir, exc);
+            }
+        });
+        System.out.println("All folders and files have been deleted successfully.");
+    }
+
+    public static void deleteAllFoldersLeaveItSelf(Path path) throws IOException {
+        if (!Files.exists(path)) {
+            System.out.println("The specified path does not exist.");
+            return;
+        }
+
+        // Use walkFileTree to recursively delete files and directories
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return super.visitFile(file, attrs);
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                if (dir.equals(path)) {
+                    return super.postVisitDirectory(dir, exc);
                 }
                 Files.delete(dir);
                 return super.postVisitDirectory(dir, exc);
             }
         });
-
         System.out.println("All folders and files have been deleted successfully.");
     }
 

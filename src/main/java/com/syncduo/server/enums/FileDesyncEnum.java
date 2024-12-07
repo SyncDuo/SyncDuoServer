@@ -13,4 +13,13 @@ public enum FileDesyncEnum {
     FileDesyncEnum(int val) {
         this.code = val;
     }
+
+    public static FileDesyncEnum getByCode(int val) {
+        for (FileDesyncEnum e : FileDesyncEnum.values()) {
+            if (e.code == val) {
+                return e;
+            }
+        }
+        return null;
+    }
 }

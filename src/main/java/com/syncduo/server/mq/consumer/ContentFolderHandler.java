@@ -131,13 +131,18 @@ public class ContentFolderHandler {
             // 判断是否过滤
             // 每个文件都不管历史有没有过滤, 都要从重新走一遍, 就是想让 filter 修改后可以生效
             if (this.syncSettingService.isFilter(syncFlowId, internalFile)) {
+                // 减少 pending event count
+                this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
                 break;
             }
             boolean flattenFolder = this.syncSettingService.isFlattenFolder(syncFlowId);
             String contentFileFullPath;
+            // internal -> content file, 如果是 flatten
+            // 则 content file entity 的 file_name = internal file entity 的 uuid4
+            // 且 content file entity 的 relative path 为 "/"
             if (flattenFolder) {
                 // 如果不使用原来的文件夹结构, 则 file copy with uuid4 name, 且 relative path 为空
-                contentFileFullPath = this.fileService.concatPathStringFromFolderAndFileFlattenFolder(
+                contentFileFullPath = this.fileService.concatContentFilePathFlattenFolder(
                         contentFolderEntity.getRootFolderFullPath(),
                         internalFileEntity
                 );
@@ -150,6 +155,8 @@ public class ContentFolderHandler {
             }
             // 如果 contentFileFullPath 已存在文件, 说明 create file event 重复了, 则直接返回
             if (FileOperationUtils.isFilePathExist(contentFileFullPath)) {
+                // 减少 pending event count
+                this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
                 return;
             }
             // file copy
@@ -162,6 +169,8 @@ public class ContentFolderHandler {
                     contentFolderEntity.getRootFolderFullPath()
             );
             this.fileService.createFileRecord(contentFileEntity);
+            // 减少 pending event count
+            this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
             // 记录 file event
         }
     }
@@ -187,21 +196,21 @@ public class ContentFolderHandler {
             // 获取 content folder entity
             RootFolderEntity contentFolderEntity =
                     this.rootFolderService.getByFolderId(syncFlowEntity.getDestFolderId());
-            FileEntity contentFileEntity = this.fileService.getDestFileEntityFromSourceEntity(
-                    contentFolderEntity.getRootFolderFullPath(),
+            FileEntity contentFileEntity = this.fileService.getInternalFileEntityFromSourceEntity(
+                    contentFolderEntity.getRootFolderId(),
                     internalFileEntity);
             Path contentFile = this.fileService.getFileFromFileEntity(
                     contentFolderEntity.getRootFolderFullPath(),
                     contentFileEntity);
-            if (ObjectUtils.isEmpty(contentFileEntity)) {
-                // 找不到说明是被过滤的文件
-                return;
-            } else {
+            if (ObjectUtils.isNotEmpty(contentFile)) {
+                // 找到文件则 update with copy, 找不到文件说明已经过滤了, 则不需要 update with copy
                 // 找到了则 file update copy
                 contentFile = FileOperationUtils.updateFileByCopy(internalFile, contentFile);
                 this.fileService.updateFileEntityByFile(contentFileEntity, contentFile);
                 // 记录 file event
             }
+            // 减少 pending event count
+            this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
         }
     }
 

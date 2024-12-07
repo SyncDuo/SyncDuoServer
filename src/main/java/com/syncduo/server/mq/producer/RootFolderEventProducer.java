@@ -38,16 +38,17 @@ public class RootFolderEventProducer {
         if (ObjectUtils.anyNull(rootFolderEntity)) {
             throw new SyncDuoException("创建 watcher 失败, rootFolderEntity 为空");
         }
+        // 只有 source 和 content folder 可以添加 watcher
+        RootFolderTypeEnum rootFolderTypeEnum = RootFolderTypeEnum.valueOf(rootFolderEntity.getRootFolderType());
+        if (ObjectUtils.isEmpty(rootFolderTypeEnum) || rootFolderTypeEnum.equals(RootFolderTypeEnum.INTERNAL_FOLDER)) {
+            throw new SyncDuoException("无效 rootFolderTypeEnum %s".formatted(rootFolderTypeEnum));
+        }
         // 获取 root folder full path, 并添加 observer
         Path folder = FileOperationUtils.isFolderPathValid(rootFolderEntity.getRootFolderFullPath());
         FileAlterationObserver observer =
                 new FileAlterationObserver(folder.toFile(), FileFilterUtils.fileFileFilter());
         // 获取 root folder id 和 root folder type
         Long rootFolderId = rootFolderEntity.getRootFolderId();
-        RootFolderTypeEnum rootFolderTypeEnum = RootFolderTypeEnum.valueOf(rootFolderEntity.getRootFolderType());
-        if (ObjectUtils.isEmpty(rootFolderTypeEnum) || rootFolderTypeEnum.equals(RootFolderTypeEnum.INTERNAL_FOLDER)) {
-            throw new SyncDuoException("无效 rootFolderTypeEnum %s".formatted(rootFolderTypeEnum));
-        }
         observer.addListener(new FileAlterationListenerAdaptor() {
             @Override
             public void onFileCreate(File file) {

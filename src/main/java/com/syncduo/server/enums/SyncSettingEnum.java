@@ -15,4 +15,13 @@ public enum SyncSettingEnum {
     SyncSettingEnum(int code) {
         this.code = code;
     }
+
+    public static SyncSettingEnum getByCode(int code) {
+        for (SyncSettingEnum e : SyncSettingEnum.values()) {
+            if (e.code == code) {
+                return e;
+            }
+        }
+        return null;
+    }
 }

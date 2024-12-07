@@ -41,21 +41,6 @@ public class FileOperationUtils {
         return path.endsWith(FileSystems.getDefault().getSeparator());
     }
 
-    public static String concatePathString(
-            String folderPath,
-            String relativePath,
-            String fileName,
-            String fileExtension) throws SyncDuoException {
-        if (StringUtils.isAnyBlank(folderPath, relativePath, fileName)) {
-            throw new SyncDuoException("folderPath, relativePath, fileName 存在空值");
-        }
-        String filePath = folderPath + relativePath + fileName;
-        if (StringUtils.isNotBlank(fileExtension)) {
-            filePath = filePath + "." + fileExtension;
-        }
-        return filePath;
-    }
-
     public static Path createContentFolder(
             String sourceFolderFullPath,
             String contentFolderFullPath) throws SyncDuoException {
@@ -118,32 +103,31 @@ public class FileOperationUtils {
         return FileSystems.getDefault().getSeparator();
     }
 
-    public static String getUuid4(String fileFullPath) throws SyncDuoException {
-        if (StringUtils.isEmpty(fileFullPath)) {
-            throw new SyncDuoException("获取 uuid4 失败, 文件路径为空");
-        }
-        byte[] hash = DigestUtils.sha256(fileFullPath);
-        return UUID.nameUUIDFromBytes(hash).toString();
-    }
-
+    // 拼接字符串 <rootFolderId><relativePath><fileFullName>
+    // 生成 UUID4
     public static String getUUID4(Long rootFolderId, String rootFolderFullPath, Path file)
             throws SyncDuoException {
         if (ObjectUtils.anyNull(rootFolderId, file)) {
             throw new SyncDuoException("获取 uuid4 失败, rootFolderId 或 file 为空");
         }
-        if (StringUtils.isAnyBlank(rootFolderFullPath)) {
-            throw new SyncDuoException("获取 uuid4 失败, rootFolderFullPath 为空");
-        }
         Path rootFolder = isFolderPathValid(rootFolderFullPath);
         if (!file.startsWith(rootFolder)) {
             throw new SyncDuoException("文件路径不包含 rootFolderFullPath");
         }
-        Path relativizePath = rootFolder.relativize(file);
-        String relativePathString = "";
-        if (relativizePath.getNameCount() > 1) {
-            relativePathString = getPathSeparator() + relativizePath.getName(0).toString();
+        String relativizePath = getRelativePath(rootFolderFullPath, file);
+        byte[] hash = DigestUtils.sha256(rootFolderId + relativizePath + file.getFileName());
+        return UUID.nameUUIDFromBytes(hash).toString();
+    }
+
+    public static String getUUID4(Long rootFolderId, String fileRelativePath, String fileFullName)
+            throws SyncDuoException {
+        if (ObjectUtils.anyNull(rootFolderId)) {
+            throw new SyncDuoException("获取 uuid4 失败, rootFolderId 为空");
         }
-        byte[] hash = DigestUtils.sha256(rootFolderId + relativePathString + file.getFileName());
+        if (StringUtils.isAnyBlank(fileRelativePath, fileFullName)) {
+            throw new SyncDuoException("获取 uuid4 失败, fileRelativePath 或 fileFullName 为空");
+        }
+        byte[] hash = DigestUtils.sha256(rootFolderId + fileRelativePath + fileFullName);
         return UUID.nameUUIDFromBytes(hash).toString();
     }
 
@@ -164,12 +148,15 @@ public class FileOperationUtils {
         return new ImmutablePair<>(new Timestamp(createTimeStamp), new Timestamp(lastModifiedTimeStamp));
     }
 
-    public static String getFileParentFolderRelativePath(String rootFolderPath, Path file) throws SyncDuoException {
-        if (StringUtils.isEmpty(rootFolderPath)) {
-            throw new SyncDuoException("无法计算文件的相对路径, rootFolderPath 为空");
+    public static String getRelativePath(String rootFolderPath, Path file) throws SyncDuoException {
+        // 检查 rootFolderPath 参数
+        Path rootFolder = isFolderPathValid(rootFolderPath);
+        if (ObjectUtils.anyNull(file)) {
+            throw new SyncDuoException("无法计算相对路径, file 为空");
         }
-
-        Path rootFolder = Paths.get(rootFolderPath);
+        if (!file.startsWith(rootFolder)) {
+            throw new SyncDuoException("文件路径不包含 rootFolderFullPath");
+        }
         Path relativizePath = rootFolder.relativize(file.getParent());
         return StringUtils.isEmpty(relativizePath.toString()) ?
                 FileOperationUtils.getPathSeparator() :
@@ -206,7 +193,6 @@ public class FileOperationUtils {
             throw new SyncDuoException("无法读取文件:%s 的 MD5 checksum".formatted(file.toAbsolutePath()));
         }
     }
-
 
     public static Path copyFile(String sourcePath, String destPath) throws SyncDuoException {
         log.info("执行文件复制操作. 源文件 {}, 目的文件 {}", sourcePath, destPath);
@@ -332,7 +318,7 @@ public class FileOperationUtils {
         return isFolderPathValid(folderPath.getParent());
     }
 
-    // todo: 并发读退化为没有锁, 并发写才需要乐观锁
+    // todo: 并发读退化为没有锁, 并发写才需要锁
     public static FileLock tryLockWithRetries(FileChannel fileChannel, boolean shared) throws SyncDuoException {
         FileLock fileLock;
         int retryCount = 0;

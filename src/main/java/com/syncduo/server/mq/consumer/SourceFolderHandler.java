@@ -3,7 +3,6 @@ package com.syncduo.server.mq.consumer;
 import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.enums.RootFolderTypeEnum;
-import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.FileEntity;
@@ -55,7 +54,7 @@ public class SourceFolderHandler {
     }
 
     // source watcher 触发
-    // full scan source folder 触发
+    // full scan source folder, content folder 触发
     // source 和 internal folder compare 触发
     @Scheduled(fixedDelayString = "${syncduo.server.message.polling.interval:5000}")
     private void handle() {
@@ -66,6 +65,8 @@ public class SourceFolderHandler {
             }
             try {
                 switch (fileEvent.getFileEventTypeEnum()) {
+                    // 每一种事件其实都包含了两种流向
+                    // source -> internal, internal -> internal
                     case FILE_CREATED -> this.onFileCreate(fileEvent);
                     case FILE_CHANGED -> this.onFileChange(fileEvent);
                     case FILE_DELETED -> this.onFileDelete(fileEvent);
@@ -105,6 +106,8 @@ public class SourceFolderHandler {
                     .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
                     .build());
         }
+        // 减少 source -> internal pending event
+        this.syncFlowService.decrSource2InternalCount(sourceFolderEntity.getRootFolderId());
         // 记录 file event, 表示 source folder 发生的文件事件
         FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, sourceFileEntity);
         this.fileEventService.save(fileEventEntity);
@@ -135,6 +138,8 @@ public class SourceFolderHandler {
                         .rootFolderTypeEnum(RootFolderTypeEnum.INTERNAL_FOLDER)
                         .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
                         .build());
+        // 减少 source -> internal pending event
+        this.syncFlowService.decrSource2InternalCount(sourceFolderEntity.getRootFolderId());
     }
 
     private void onFileDelete(FileEventDto fileEvent) throws SyncDuoException {
@@ -198,8 +203,8 @@ public class SourceFolderHandler {
         RootFolderEntity internalFolderEntity =
                 this.rootFolderService.getByFolderId(source2InternalSyncFlow.getDestFolderId());
         // 获取 internal file entity
-        FileEntity internalFileEntity = this.fileService.getDestFileEntityFromSourceEntity(
-                internalFolderEntity.getRootFolderFullPath(),
+        FileEntity internalFileEntity = this.fileService.getInternalFileEntityFromSourceEntity(
+                internalFolderEntity.getRootFolderId(),
                 sourceFileEntity
         );
         // 获取 file

@@ -5,7 +5,6 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.http.SyncFlowRequest;
 import com.syncduo.server.model.dto.http.SyncFlowResponse;
 import com.syncduo.server.model.entity.*;
-import com.syncduo.server.mq.consumer.SourceFolderHandler;
 import com.syncduo.server.service.impl.*;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
@@ -45,6 +45,9 @@ class SyncDuoServerApplicationTests {
     private final SyncSettingService syncSettingService;
 
     private final FileOperationService fileOperationService;
+
+    @Autowired
+    private ThreadPoolTaskScheduler taskScheduler;
 
     private static final String testParentPath =
             "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources";
@@ -114,6 +117,7 @@ class SyncDuoServerApplicationTests {
                             .collect(Collectors.toList())
             );
         }
+        log.info("truncate all table");
     }
 
     void prepareTestEnvironment(
@@ -125,14 +129,15 @@ class SyncDuoServerApplicationTests {
         // truncate database
         this.truncateAllTable();
         // delete folder
-        FileOperationTestUtil.deleteAllFolders(Path.of(sourceFolderPath));
+        // 删除 source folder 全部内容, 但是不包括 source folder 本身
+        FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
         FileOperationTestUtil.deleteAllFolders(Path.of(internalFolderPath));
         FileOperationTestUtil.deleteAllFolders(Path.of(contentFolderPath));
         // create folder
         FileOperationTestUtil.createFolders(
                 sourceFolderPath,
-                4,
-                3
+                2,
+                1
         );
         try {
             function.run();
@@ -165,6 +170,42 @@ class SyncDuoServerApplicationTests {
             }
          }).start();
         Thread.sleep(1000 * 5);
+    }
+
+    @Test
+    void testGetFileEntityFromFile() throws SyncDuoException {
+        Path file = Path.of(testParentPath + "/.sourceFolder/TestFolder1_1/TestFolder2_1/TestFolder2_1.txt");
+        FileEntity fileEntityFromFile = this.fileService.getFileEntityFromFile(
+                146L,
+                testParentPath + "/.sourceFolder",
+                file
+        );
+        System.out.println(1);
+    }
+
+    @Test
+    void testInternal2ContentUUID4() throws SyncDuoException {
+        Path internalFile = FileOperationUtils.isFilePathValid(testParentPath + "/sourceFolder/" + "TestFolder0_1.txt");
+        Path contentFile = FileOperationUtils.isFilePathValid(
+                testParentPath + "/contentParentFolder/sourceFolder/" + "TestFolder0_1.txt");
+
+        FileEntity internalFileEntity = this.fileService.fillFileEntityForCreate(
+                internalFile,
+                100L,
+                testParentPath + "/sourceFolder"
+        );
+        FileEntity contentFileEntity = this.fileService.fillFileEntityForCreate(
+                contentFile,
+                101L,
+                testParentPath + "/contentParentFolder/sourceFolder"
+        );
+        String uuid4 = FileOperationUtils.getUUID4(
+                101L,
+                FileOperationUtils.getPathSeparator(),
+                internalFileEntity.getFileUuid4() + "." + internalFileEntity.getFileExtension()
+        );
+        assert uuid4.equals(contentFileEntity.getFileUuid4());
+        log.info("1");
     }
 
     @Test
@@ -226,7 +267,7 @@ class SyncDuoServerApplicationTests {
         });
         // Add a sleep to allow time for manual break-point inspection
         try {
-            Thread.sleep(1000 * 10);  // 1000 millisecond * sec
+            Thread.sleep(1000 * 15);  // 1000 millisecond * sec
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

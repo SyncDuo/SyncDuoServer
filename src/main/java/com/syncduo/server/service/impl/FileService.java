@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.syncduo.server.enums.DeletedEnum;
+import com.syncduo.server.enums.SyncSettingEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.FileMapper;
 import com.syncduo.server.model.entity.FileEntity;
@@ -41,7 +42,7 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         if (ObjectUtils.anyNull(fileEntity, file)) {
             throw new SyncDuoException("获取file失败, fileEntity 或 file 为空");
         }
-        // 更新  md5checksum,last_modified_time
+        // 更新  md5 checksum, last_modified_time
         Pair<Timestamp, Timestamp> fileCrTimeAndMTime = FileOperationUtils.getFileCrTimeAndMTime(file);
         fileEntity.setLastUpdatedTime(fileCrTimeAndMTime.getRight());
         String md5Checksum = FileOperationUtils.getMD5Checksum(file);
@@ -73,42 +74,56 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         return this.getByUuid4(uuid4);
     }
 
-    public FileEntity getDestFileEntityFromSourceEntity(String destFolderFullPath, FileEntity sourceFileEntity)
+    public FileEntity getInternalFileEntityFromSourceEntity(Long destFolderId, FileEntity sourceFileEntity)
             throws SyncDuoException {
-        if (StringUtils.isBlank(destFolderFullPath)) {
-            throw new SyncDuoException("获取file失败, destFolderFullPath 为空");
+        if (ObjectUtils.anyNull(destFolderId, sourceFileEntity)) {
+            throw new SyncDuoException("获取file失败, destFolderId 或 sourceFileEntity 为空");
         }
-        if (ObjectUtils.isEmpty(sourceFileEntity)) {
-            throw new SyncDuoException("获取file失败, sourceFileEntity 为空");
+        String fileName = sourceFileEntity.getFileName();
+        if (StringUtils.isNotBlank(sourceFileEntity.getFileExtension())) {
+            fileName = fileName + "." + sourceFileEntity.getFileExtension();
         }
-        String destFileFullPath = FileOperationUtils.concatePathString(
-                destFolderFullPath,
+        String uuid4 = FileOperationUtils.getUUID4(
+                destFolderId,
                 sourceFileEntity.getRelativePath(),
-                sourceFileEntity.getFileName(),
-                sourceFileEntity.getFileExtension()
+                fileName
         );
-        String uuid4 = FileOperationUtils.getUuid4(destFileFullPath);
         return this.getByUuid4(uuid4);
     }
 
-    public List<FileEntity> getDestFileEntityFromSourceEntityIgnoredDesynced(
-            String destFolderFullPath,
-            FileEntity sourceFileEntity)
+    public FileEntity getContentFileEntityFromInternalEntityIgnoreDeleted(
+            Long destFolderId,
+            FileEntity sourceFileEntity,
+            SyncSettingEnum syncSetting)
             throws SyncDuoException {
-        if (StringUtils.isBlank(destFolderFullPath)) {
-            throw new SyncDuoException("获取file失败, destFolderFullPath 为空");
+        if (ObjectUtils.anyNull(destFolderId, sourceFileEntity, syncSetting)) {
+            throw new SyncDuoException("获取 file entity 失败, destFolderId, sourceFileEntity 或 syncSetting 为空");
         }
-        if (ObjectUtils.isEmpty(sourceFileEntity)) {
-            throw new SyncDuoException("获取file失败, sourceFileEntity 为空");
+        String fileName = sourceFileEntity.getFileName();
+        if (StringUtils.isNotBlank(sourceFileEntity.getFileExtension())) {
+            fileName = fileName + "." + sourceFileEntity.getFileExtension();
         }
-        String destFileFullPath = FileOperationUtils.concatePathString(
-                destFolderFullPath,
-                sourceFileEntity.getRelativePath(),
-                sourceFileEntity.getFileName(),
-                sourceFileEntity.getFileExtension()
-        );
-        String uuid4 = FileOperationUtils.getUuid4(destFileFullPath);
-        return this.getByUuid4IgnoredDesynced(uuid4);
+        String uuid4;
+        if (syncSetting.equals(SyncSettingEnum.MIRROR)) {
+            uuid4 = FileOperationUtils.getUUID4(
+                    destFolderId,
+                    sourceFileEntity.getRelativePath(),
+                    fileName
+            );
+        } else {
+            uuid4 = FileOperationUtils.getUUID4(
+                    destFolderId,
+                    FileOperationUtils.getPathSeparator(),
+                    fileName
+            );
+        }
+        List<FileEntity> contentFileEntityList = this.getByUuid4IgnoredDelete(uuid4);
+        if (CollectionUtils.isEmpty(contentFileEntityList)) {
+            return null;
+        }
+        contentFileEntityList.sort(
+                (o1, o2) -> o2.getLastUpdatedTime().compareTo(o1.getLastUpdatedTime()));
+        return contentFileEntityList.get(0);
     }
 
     public Path getFileFromFileEntity(String rootFolderFullPath, FileEntity fileEntity) throws SyncDuoException {
@@ -133,21 +148,21 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         return filePath;
     }
 
-    public String concatPathStringFromFolderAndFileFlattenFolder(
-            String rootFolderFullPath,
-            FileEntity fileEntity)
+    public String concatContentFilePathFlattenFolder(
+            String contentFolderPath,
+            FileEntity internalFileEntity)
             throws SyncDuoException {
-        if (StringUtils.isBlank(rootFolderFullPath)) {
-            throw new SyncDuoException("rootFolderFullPath 为空");
+        if (StringUtils.isBlank(contentFolderPath)) {
+            throw new SyncDuoException("contentFolderPath 为空");
         }
-        if (ObjectUtils.isEmpty(fileEntity)) {
-            throw new SyncDuoException("fileEntity 为空");
+        if (ObjectUtils.isEmpty(internalFileEntity)) {
+            throw new SyncDuoException("internalFileEntity 为空");
         }
-        String filePath = rootFolderFullPath +
+        String filePath = contentFolderPath +
                 FileOperationUtils.getPathSeparator() +
-                fileEntity.getFileUuid4();
-        if (StringUtils.isNotBlank(fileEntity.getFileExtension())) {
-            filePath = filePath + "." + fileEntity.getFileExtension();
+                internalFileEntity.getFileUuid4();
+        if (StringUtils.isNotBlank(internalFileEntity.getFileExtension())) {
+            filePath = filePath + "." + internalFileEntity.getFileExtension();
         }
         return filePath;
     }
@@ -164,7 +179,11 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         return CollectionUtils.isEmpty(dbResult) ? null : dbResult.get(0);
     }
 
-    private List<FileEntity> getByUuid4IgnoredDesynced(String uuid4) throws SyncDuoException {
+    // 三种形态
+    // FILE_SYNC, 则 FILE NOT DELETE
+    // FILE_DESYNC, FILE DELETE
+    // FILE_DESYNC, FILE NOT DELETE
+    private List<FileEntity> getByUuid4IgnoredDelete(String uuid4) throws SyncDuoException {
         if (StringUtils.isEmpty(uuid4)) {
             throw new SyncDuoException("获取文件记录失败, uuid4 为空");
         }
@@ -206,16 +225,20 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
 
         // 设置 root folder id , 根据 folder full path 计算 relative path
         fileEntity.setRootFolderId(rootFolderId);
-        String relativePath = FileOperationUtils.getFileParentFolderRelativePath(rootFolderFullPath, file);
+        String relativePath = FileOperationUtils.getRelativePath(rootFolderFullPath, file);
         fileEntity.setRelativePath(relativePath);
 
         // 获取 file name 和 file extension
         Pair<String, String> fileNameAndExtension = FileOperationUtils.getFileNameAndExtension(file);
         fileEntity.setFileName(fileNameAndExtension.getLeft());
+        String fileFullName = fileNameAndExtension.getLeft();
         fileEntity.setFileExtension(fileNameAndExtension.getRight());
+        if (StringUtils.isNotBlank(fileNameAndExtension.getRight())) {
+            fileFullName = fileFullName + "." + fileNameAndExtension.getRight();
+        }
 
         // 获取 uuid4
-        String uuid4 = FileOperationUtils.getUUID4(rootFolderId, rootFolderFullPath, file);
+        String uuid4 = FileOperationUtils.getUUID4(rootFolderId, relativePath, fileFullName);
         fileEntity.setFileUuid4(uuid4);
 
         return fileEntity;
