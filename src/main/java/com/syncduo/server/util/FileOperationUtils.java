@@ -1,5 +1,6 @@
 package com.syncduo.server.util;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.syncduo.server.exception.SyncDuoException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
@@ -19,11 +21,16 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 @Component
 public class FileOperationUtils {
+
+    private static final ConcurrentHashMap<Path, ReentrantReadWriteLock> fileLockMap =
+            new ConcurrentHashMap<>(10000);
 
     private static final int MAX_RETRIES = 3;
 
@@ -81,11 +88,27 @@ public class FileOperationUtils {
     }
 
     public static void deleteFolder(Path folder) throws SyncDuoException {
+        // 检查参数
+        Path folderPath = isFolderPathValid(folder);
+        // Use walkFileTree to recursively delete files and directories
         try {
-            Files.deleteIfExists(folder);
+            Files.walkFileTree(folderPath, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return super.visitFile(file, attrs);
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return super.postVisitDirectory(dir, exc);
+                }
+            });
         } catch (IOException e) {
-            throw new SyncDuoException("删除文件夹失败 %s".formatted(folder), e);
+            throw new SyncDuoException("遍历删除文件夹失败 ", e);
         }
+        log.info("All folders and files have been deleted successfully.");
     }
 
     public static void walkFilesTree(
@@ -137,15 +160,20 @@ public class FileOperationUtils {
             throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
         }
         BasicFileAttributes basicFileAttributes;
-        try (FileLock ignored = tryLockWithRetries(FileChannel.open(file, StandardOpenOption.READ), true)) {
+        ReentrantReadWriteLock lock = null;
+        try {
+            lock = tryLockWithRetries(file, true);
             basicFileAttributes = Files.readAttributes(file, BasicFileAttributes.class);
-        } catch (IOException e) {
+            long createTimeStamp = basicFileAttributes.creationTime().toMillis();
+            long lastModifiedTimeStamp = basicFileAttributes.lastModifiedTime().toMillis();
+            return new ImmutablePair<>(new Timestamp(createTimeStamp), new Timestamp(lastModifiedTimeStamp));
+        } catch (SyncDuoException | IOException e) {
             throw new SyncDuoException("无法读取文件:%s 的元数据", e);
+        } finally {
+            if (ObjectUtils.isNotEmpty(lock)) {
+                lock.readLock().unlock();
+            }
         }
-        long createTimeStamp = basicFileAttributes.creationTime().toMillis();
-        long lastModifiedTimeStamp = basicFileAttributes.lastModifiedTime().toMillis();
-
-        return new ImmutablePair<>(new Timestamp(createTimeStamp), new Timestamp(lastModifiedTimeStamp));
     }
 
     public static String getRelativePath(String rootFolderPath, Path file) throws SyncDuoException {
@@ -186,11 +214,18 @@ public class FileOperationUtils {
             throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
         }
 
-        try (FileLock ignored = tryLockWithRetries(FileChannel.open(file, StandardOpenOption.READ), true);
-             InputStream is = Files.newInputStream(file)) {
-            return DigestUtils.md5Hex(is);
-        } catch (IOException e) {
+        ReentrantReadWriteLock lock = null;
+        try {
+            lock = tryLockWithRetries(file, true);
+            try (InputStream is = Files.newInputStream(file)) {
+                return DigestUtils.md5Hex(is);
+            }
+        } catch (SyncDuoException | IOException e) {
             throw new SyncDuoException("无法读取文件:%s 的 MD5 checksum".formatted(file.toAbsolutePath()));
+        } finally {
+            if (ObjectUtils.isNotEmpty(lock)) {
+                lock.readLock().unlock();
+            }
         }
     }
 
@@ -200,38 +235,60 @@ public class FileOperationUtils {
         // 检查源文件是否存在
         Path sourceFile = isFilePathValid(sourcePath);
         // 获取 destFile 的 Path 对象, 注意此时 destFile 不一定存在于文件系统上
-        Path destFile = Paths.get(destPath);
-        // 保证目的地文件夹存在
-        try {
-            Files.createDirectories(destFile.getParent());
-        } catch (IOException e) {
-            throw new SyncDuoException("文件夹递归创建失败. 源文件 %s, 目的文件 %s".formatted(sourcePath, destPath), e);
+        Path destFile = Path.of(destPath);
+        if (!Files.exists(destFile)) {
+            // 保证目的地文件夹存在
+            try {
+                Files.createDirectories(destFile.getParent());
+            } catch (IOException e) {
+                throw new SyncDuoException("文件夹递归创建失败. 源文件 %s, 目的文件 %s".formatted(sourcePath, destPath), e);
+            }
+            // 创建一个空的文件, 用于获取 write lock
+            try {
+                Files.createFile(destFile);
+            } catch (IOException e) {
+                throw new SyncDuoException("创建空的文件 %s 失败".formatted(destFile), e);
+            }
         }
-        // 打开目的地文件, 默认不存在则新建
-        try (FileLock ignore = tryLockWithRetries(
-                FileChannel.open(sourceFile, StandardOpenOption.READ),
-                true);
-             FileLock ignored = tryLockWithRetries(
-                     FileChannel.open(destFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE),
-                     false)) {
+        // 初始化锁
+        ReentrantReadWriteLock sourceLock = null;
+        ReentrantReadWriteLock destLock = null;
+        try {
+            sourceLock = tryLockWithRetries(sourceFile, true);
+            destLock = tryLockWithRetries(destFile, false);
             return Files.copy(sourceFile, destFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | SyncDuoException e) {
             throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
+        } finally {
+            if (ObjectUtils.isNotEmpty(sourceLock)) {
+                sourceLock.readLock().unlock();
+            }
+            if (ObjectUtils.isNotEmpty(destLock)) {
+                destLock.writeLock().unlock();
+            }
         }
     }
 
     public static Path updateFileByCopy(Path sourceFile, Path destFile) throws SyncDuoException {
+        // 检查参数
         isFileValid(sourceFile);
         isFileValid(destFile);
-        try (FileLock ignore = tryLockWithRetries(
-                FileChannel.open(sourceFile, StandardOpenOption.READ),
-                true);
-             FileLock ignored = tryLockWithRetries(
-                     FileChannel.open(destFile, StandardOpenOption.WRITE),
-                     false)) {
+
+        ReentrantReadWriteLock sourceLock = null;
+        ReentrantReadWriteLock destLock = null;
+        try {
+            sourceLock = tryLockWithRetries(sourceFile, true);
+            destLock = tryLockWithRetries(destFile, false);
             return Files.copy(sourceFile, destFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | SyncDuoException e) {
             throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
+        } finally {
+            if (ObjectUtils.isNotEmpty(sourceLock)) {
+                sourceLock.readLock().unlock();
+            }
+            if (ObjectUtils.isNotEmpty(destLock)) {
+                destLock.writeLock().unlock();
+            }
         }
     }
 
@@ -250,12 +307,18 @@ public class FileOperationUtils {
             throw new SyncDuoException("文件夹递归创建失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
         }
         // hardlink file
-        try (FileLock ignored =
-                     tryLockWithRetries(FileChannel.open(sourceFile, StandardOpenOption.READ), true)) {
+        ReentrantReadWriteLock lock = null;
+        try {
+            // 获取读锁
+            lock = tryLockWithRetries(sourceFile, true);
             // 执行文件 hardlink
             return Files.createLink(destFile, sourceFile);
         } catch (IOException | SyncDuoException e) {
             throw new SyncDuoException("文件hardlink失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
+        } finally {
+            if (ObjectUtils.isNotEmpty(lock)) {
+                lock.readLock().unlock();
+            }
         }
     }
 
@@ -318,43 +381,36 @@ public class FileOperationUtils {
         return isFolderPathValid(folderPath.getParent());
     }
 
-    // todo: 并发读退化为没有锁, 并发写才需要锁
-    public static FileLock tryLockWithRetries(FileChannel fileChannel, boolean shared) throws SyncDuoException {
-        FileLock fileLock;
-        int retryCount = 0;
-
+    public static ReentrantReadWriteLock tryLockWithRetries(Path file, boolean shared) throws SyncDuoException {
+        // 判断锁类型
         String lockType = shared ? "Read (Shared)" : "Write (Exclusive)";
-
-        while (retryCount < MAX_RETRIES) {
-            try {
-                // Try to acquire the lock (shared or exclusive)
-                fileLock = fileChannel.tryLock(0, Long.MAX_VALUE, shared);
-
-                if (ObjectUtils.isNotEmpty(fileLock)) {
-                    log.info("{} Lock acquired on attempt {}", lockType, retryCount);
-                    return fileLock; // Lock acquired, return it
+        // 获取锁, 没有则初始化
+        ReentrantReadWriteLock lock = fileLockMap.computeIfAbsent(file, o -> new ReentrantReadWriteLock());
+        int retryCount = 0;
+        try {
+            while (retryCount < MAX_RETRIES) {
+                int waitTime = RANDOM.nextInt(MIN_WAIT_TIME_SECONDS, MAX_WAIT_TIME_SECONDS + 1);
+                boolean locked;
+                if (shared) {
+                    locked = lock.readLock().tryLock(waitTime, TimeUnit.SECONDS);
+                } else {
+                    locked = lock.writeLock().tryLock(waitTime, TimeUnit.SECONDS);
                 }
-            } catch (IllegalArgumentException | IOException e) {
-                // Handle any IO exceptions
-                throw new SyncDuoException(
-                        "Exception occurred while attempting to acquire %s file lock".formatted(lockType), e);
-            } catch (OverlappingFileLockException e) {
-                // If lock could not be acquired, increment retry count and wait for a random time
-                retryCount++;
-                if (retryCount < MAX_RETRIES) {
-                    int waitTime = RANDOM.nextInt(MIN_WAIT_TIME_SECONDS, MAX_WAIT_TIME_SECONDS + 1);
+                if (locked) {
+                    log.info("{} Lock acquired on attempt {}", lockType, retryCount);
+                    return lock;
+                } else {
                     log.info("{} Lock attempt failed, retrying in {} seconds...", lockType, waitTime);
-                    try {
-                        TimeUnit.SECONDS.sleep(waitTime);
-                    } catch (InterruptedException e2) {
-                        Thread.currentThread().interrupt();  // Restore interrupted status
-                        throw new SyncDuoException("Thread was interrupted while waiting to retry", e2);
-                    }
+                    retryCount++;
                 }
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.info("线程被打断");
+        } catch (NullPointerException e) {
+            throw new SyncDuoException(
+                    "Exception occurred while attempting to acquire %s file lock".formatted(lockType), e);
         }
-        // If no lock was acquired after the retries, throw exception
-        throw new SyncDuoException(
-                "Failed to acquire file %s lock after %s attempts".formatted(lockType, MAX_RETRIES));
+        throw new SyncDuoException("获取锁超时");
     }
 }

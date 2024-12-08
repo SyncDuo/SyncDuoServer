@@ -19,10 +19,12 @@ import org.springframework.test.context.ActiveProfiles;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 @SpringBootTest
@@ -50,7 +52,7 @@ class SyncDuoServerApplicationTests {
     private ThreadPoolTaskScheduler taskScheduler;
 
     private static final String testParentPath =
-            "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources";
+            "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/resources";
 
     @Autowired
     SyncDuoServerApplicationTests(
@@ -125,14 +127,14 @@ class SyncDuoServerApplicationTests {
             String internalFolderPath,
             String contentFolderPath,
             Runnable function)
-            throws IOException {
+            throws IOException, SyncDuoException {
         // truncate database
         this.truncateAllTable();
         // delete folder
         // 删除 source folder 全部内容, 但是不包括 source folder 本身
         FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
-        FileOperationTestUtil.deleteAllFolders(Path.of(internalFolderPath));
-        FileOperationTestUtil.deleteAllFolders(Path.of(contentFolderPath));
+        FileOperationUtils.deleteFolder(Path.of(internalFolderPath));
+        FileOperationUtils.deleteFolder(Path.of(contentFolderPath));
         // create folder
         FileOperationTestUtil.createFolders(
                 sourceFolderPath,
@@ -149,27 +151,29 @@ class SyncDuoServerApplicationTests {
     @Test
     void testFilelockMethod() throws IOException, InterruptedException {
         Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(testParentPath));
-        new Thread(() -> {
+        Path txtFile = txtAndBinFile.getLeft();
+        Thread thread1 = new Thread(() -> {
             try {
-                FileLock fileLock = FileOperationUtils.tryLockWithRetries(
-                        FileChannel.open(txtAndBinFile.getLeft(), StandardOpenOption.READ), true);
-                TimeUnit.SECONDS.sleep(2);
-                fileLock.release();
-            } catch (IOException | InterruptedException | SyncDuoException e) {
+                ReentrantReadWriteLock lock = FileOperationUtils.tryLockWithRetries(txtFile, true);
+                System.out.println(Files.readAllLines(txtFile));
+                Thread.sleep(1000 * 7);
+                lock.readLock().unlock();
+            } catch (SyncDuoException | IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
-        }).start();
-
-         new Thread(() -> {
+        });
+        Thread thread2 = new Thread(() -> {
             try {
-                FileLock fileLock = FileOperationUtils.tryLockWithRetries(
-                        FileChannel.open(txtAndBinFile.getLeft(), StandardOpenOption.READ), true);
-                fileLock.release();
-            } catch (IOException | SyncDuoException e) {
+                ReentrantReadWriteLock lock = FileOperationUtils.tryLockWithRetries(txtFile, false);
+                System.out.println(Files.readAllLines(txtFile));
+            } catch (SyncDuoException | IOException e) {
                 throw new RuntimeException(e);
             }
-         }).start();
-        Thread.sleep(1000 * 5);
+        });
+        thread1.start();
+        thread2.start();
+        thread1.join();
+        thread2.join();
     }
 
     @Test
