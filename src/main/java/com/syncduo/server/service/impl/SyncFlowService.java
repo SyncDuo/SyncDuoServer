@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @Slf4j
@@ -257,33 +258,34 @@ public class SyncFlowService
         }
     }
 
-    @AllArgsConstructor
     @Data
     private static class EventCount {
 
         Long destFolderId;
 
-        Long eventCount;
+        AtomicLong eventCount;
+
+        public EventCount(Long destFolderId, long eventCount) {
+            this.destFolderId = destFolderId;
+            this.eventCount = new AtomicLong(eventCount);
+        }
 
         public void decr() throws SyncDuoException {
-            if (eventCount == 0L) {
-                throw new SyncDuoException("event count 已为零. %s " + this);
+            if (eventCount.get() <= 0L) {
+                throw new SyncDuoException("event count 已小于或等于零. %s " + this);
             }
-            if (eventCount < 0L) {
-                throw new SyncDuoException("event count 小于零. %s " + this);
-            }
-            eventCount--;
+            eventCount.decrementAndGet();
         }
 
         public boolean isEventCountZero() {
-            return eventCount == 0L;
+            return eventCount.get() == 0L;
         }
 
         public void incr() throws SyncDuoException {
-            if (eventCount < 0L) {
+            if (eventCount.get() < 0L) {
                 throw new SyncDuoException("event count 小于零. %s " + this);
             }
-            eventCount++;
+            eventCount.incrementAndGet();
         }
     }
 }
