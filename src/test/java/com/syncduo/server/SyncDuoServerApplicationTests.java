@@ -13,6 +13,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.EnableLoadTimeWeaving;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -131,15 +133,20 @@ class SyncDuoServerApplicationTests {
         // truncate database
         this.truncateAllTable();
         // delete folder
-        // 删除 source folder 全部内容, 但是不包括 source folder 本身
-        FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
-        FileOperationUtils.deleteFolder(Path.of(internalFolderPath));
-        FileOperationUtils.deleteFolder(Path.of(contentFolderPath));
+        try {
+            // 删除 source folder 全部内容, 但是不包括 source folder 本身
+            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
+            FileOperationUtils.deleteFolder(Path.of(internalFolderPath));
+            FileOperationUtils.deleteFolder(Path.of(contentFolderPath));
+        } catch (SyncDuoException e) {
+            log.error("删除文件夹失败.", e);
+        }
+
         // create folder
         FileOperationTestUtil.createFolders(
                 sourceFolderPath,
-                2,
-                1
+                4,
+                3
         );
         try {
             function.run();
@@ -268,10 +275,11 @@ class SyncDuoServerApplicationTests {
             syncFlowRequest.setConcatDestFolderPath(true);
             syncFlowRequest.setFlattenFolder(false);
             SyncFlowResponse syncFlowResponse = syncFlowController.addSource2ContentSyncFlow(syncFlowRequest);
+            log.info(syncFlowResponse.toString());
         });
         // Add a sleep to allow time for manual break-point inspection
         try {
-            Thread.sleep(1000 * 15);  // 1000 millisecond * sec
+            Thread.sleep(1000 * 60);  // 1000 millisecond * sec
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

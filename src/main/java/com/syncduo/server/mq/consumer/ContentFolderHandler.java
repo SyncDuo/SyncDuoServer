@@ -13,12 +13,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -56,6 +59,7 @@ public class ContentFolderHandler {
     // full scan content folder 触发. root folder type = content folder, 则不需要 file copy
     // internal folder 触发, root folder type = internal folder, 需要 file copy
     // internal 和 content folder compare 触发, root folder type = internal folder, 需要 file copy
+    // todo: 并发执行
     @Scheduled(fixedDelayString = "${syncduo.server.event.polling.interval:5000}")
     private void handleFileEvent() {
         for (int i = 0; i < pollingNum; i++) {
@@ -133,7 +137,7 @@ public class ContentFolderHandler {
             if (this.syncSettingService.isFilter(syncFlowId, internalFile)) {
                 // 减少 pending event count
                 this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
-                break;
+                continue;
             }
             boolean flattenFolder = this.syncSettingService.isFlattenFolder(syncFlowId);
             String contentFileFullPath;
@@ -157,7 +161,7 @@ public class ContentFolderHandler {
             if (FileOperationUtils.isFilePathExist(contentFileFullPath)) {
                 // 减少 pending event count
                 this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
-                return;
+                continue;
             }
             // file copy
             Path contentFile =

@@ -9,6 +9,7 @@ import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SyncSettingEntity;
 import com.syncduo.server.mq.SystemQueue;
+import com.syncduo.server.mq.producer.RootFolderEventProducer;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -16,6 +17,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -41,21 +43,25 @@ public class AdvancedFileOpService {
 
     private final SyncSettingService syncSettingService;
 
+    private final RootFolderEventProducer rootFolderEventProducer;
+
     @Autowired
     public AdvancedFileOpService(
             FileService fileService,
             SystemQueue systemQueue,
             RootFolderService rootFolderService,
             SyncFlowService syncFlowService,
-            SyncSettingService syncSettingService) {
+            SyncSettingService syncSettingService,
+            RootFolderEventProducer rootFolderEventProducer) {
         this.fileService = fileService;
         this.systemQueue = systemQueue;
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.syncSettingService = syncSettingService;
+        this.rootFolderEventProducer = rootFolderEventProducer;
     }
 
-//    @Scheduled(fixedDelayString = "${syncduo.server.check.folder.insync.interval:1800000}")
+    @Scheduled(fixedDelayString = "${syncduo.server.check.folder.insync.interval:1800000}")
     public void checkFolderInSync() {
         try {
             List<SyncFlowEntity> syncFlowEntityList =
@@ -66,50 +72,48 @@ public class AdvancedFileOpService {
             // Get current time minus 5 minutes
             Timestamp fiveMinutesAgo = Timestamp.from(Instant.now().minusSeconds(5 * 60));
             for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
+                // 检查 lastSyncTime 是否为空
+                if (ObjectUtils.isEmpty(syncFlowEntity.getLastSyncTime())) {
+                    throw new SyncDuoException("LastSyncTime is empty");
+                }
+                // 五分钟内没有修改, 则检查同步情况
+                if (syncFlowEntity.getLastSyncTime().before(fiveMinutesAgo)) {
+                    boolean isSynced = this.isSyncFlowSync(syncFlowEntity);
+                    log.info("sync-flow {} sync status: {}", syncFlowEntity, isSynced);
+                }
+            }
+        } catch (SyncDuoException e) {
+            log.error("checkFolderInSync 失败", e);
+        }
+    }
+
+    public void systemStartUp() throws SyncDuoException {
+        List<SyncFlowEntity> allSyncFlowList = this.syncFlowService.getAllSyncFlow();
+        if (CollectionUtils.isEmpty(allSyncFlowList)) {
+            log.info("systemStartUp 没有未删除的 sync-flow");
+            return;
+        }
+        for (SyncFlowEntity syncFlowEntity : allSyncFlowList) {
+            boolean isSynced = this.isSyncFlowSync(syncFlowEntity);
+            // 如果是 inSynced, 则添加 watcher
+            if (isSynced) {
                 // 获取 sync Flow Entity 的 type
                 SyncFlowTypeEnum syncFlowType = SyncFlowTypeEnum.valueOf(syncFlowEntity.getSyncFlowType());
                 if (ObjectUtils.isEmpty(syncFlowType)) {
                     throw new SyncDuoException("SyncFlowType is empty");
                 }
-                // 检查 lastSyncTime 是否为空
-                if (ObjectUtils.isEmpty(syncFlowEntity.getLastSyncTime())) {
-                    throw new SyncDuoException("LastSyncTime is empty");
-                }
-                if (syncFlowEntity.getLastSyncTime().before(fiveMinutesAgo)) {
-                    // 获取 source 和 dest 的 rootFolderEntity
-                    RootFolderEntity sourceFolderEntity =
+                RootFolderEntity rootFolderEntity;
+                switch (syncFlowType) {
+                    case SOURCE_TO_INTERNAL -> rootFolderEntity =
                             this.rootFolderService.getByFolderId(syncFlowEntity.getSourceFolderId());
-                    RootFolderEntity destFolderEntity =
+                    case INTERNAL_TO_CONTENT -> rootFolderEntity =
                             this.rootFolderService.getByFolderId(syncFlowEntity.getDestFolderId());
-                    // 执行 full scan
-                    boolean isSourceFolderSync = this.fullScan(sourceFolderEntity);
-                    boolean isDestFolderSync = this.fullScan(destFolderEntity);
-                    boolean isSynced = true;
-                    // 根据 full scan 的结果更新 isSynced
-                    // 并且判断是否需要执行 compare
-                    if (isSourceFolderSync && isDestFolderSync) {
-                        switch (syncFlowType) {
-                            case SOURCE_TO_INTERNAL -> isSynced = this.isSource2InternalSyncFlowSynced(syncFlowEntity);
-                            case INTERNAL_TO_CONTENT -> isSynced = this.isInternal2ContentSyncFlowSync(syncFlowEntity);
-                            default -> throw new SyncDuoException("不支持的 SyncFlowType is " + syncFlowType);
-                        }
-                    }
-                    if (isSynced) {
-                        // isSynced 的情况也要更新数据库, 是因为需要更新 lastSyncedTime 字段, 减少 checkFolderInSync 的频率
-                        this.syncFlowService.updateSyncFlowStatus(
-                                syncFlowEntity,
-                                SyncFlowStatusEnum.SYNC
-                        );
-                    } else {
-                        this.syncFlowService.updateSyncFlowStatus(
-                                syncFlowEntity,
-                                SyncFlowStatusEnum.NOT_SYNC
-                        );
-                    }
+                    default -> throw new SyncDuoException("不支持的 sync-flow type. " + syncFlowType);
                 }
+                rootFolderEventProducer.addWatcher(rootFolderEntity);
             }
-        } catch (SyncDuoException e) {
-            log.error("checkFolderInSync 失败", e);
+            // todo: 如果不是 inSynced, 怎么在文件事件处理完了之后添加 watcher?
+            log.info("sync-flow {} sync status: {}", syncFlowEntity, isSynced);
         }
     }
 
@@ -136,6 +140,45 @@ public class AdvancedFileOpService {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    private boolean isSyncFlowSync(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        // 获取 sync Flow Entity 的 type
+        SyncFlowTypeEnum syncFlowType = SyncFlowTypeEnum.valueOf(syncFlowEntity.getSyncFlowType());
+        if (ObjectUtils.isEmpty(syncFlowType)) {
+            throw new SyncDuoException("SyncFlowType is empty");
+        }
+        // 获取 source 和 dest 的 rootFolderEntity
+        RootFolderEntity sourceFolderEntity =
+                this.rootFolderService.getByFolderId(syncFlowEntity.getSourceFolderId());
+        RootFolderEntity destFolderEntity =
+                this.rootFolderService.getByFolderId(syncFlowEntity.getDestFolderId());
+        // 执行 full scan
+        boolean isSourceFolderSync = this.fullScan(sourceFolderEntity);
+        boolean isDestFolderSync = this.fullScan(destFolderEntity);
+        boolean isSynced = true;
+        // 根据 full scan 的结果更新 isSynced
+        // 并且判断是否需要执行 compare
+        if (isSourceFolderSync && isDestFolderSync) {
+            switch (syncFlowType) {
+                case SOURCE_TO_INTERNAL -> isSynced = this.isSource2InternalSyncFlowSynced(syncFlowEntity);
+                case INTERNAL_TO_CONTENT -> isSynced = this.isInternal2ContentSyncFlowSync(syncFlowEntity);
+                default -> throw new SyncDuoException("不支持的 SyncFlowType is " + syncFlowType);
+            }
+        }
+        if (isSynced) {
+            // isSynced 的情况也要更新数据库, 是因为需要更新 lastSyncedTime 字段, 减少 checkFolderInSync 的频率
+            this.syncFlowService.updateSyncFlowStatus(
+                    syncFlowEntity,
+                    SyncFlowStatusEnum.SYNC
+            );
+        } else {
+            this.syncFlowService.updateSyncFlowStatus(
+                    syncFlowEntity,
+                    SyncFlowStatusEnum.NOT_SYNC
+            );
+        }
+        return isSynced;
     }
 
     public boolean fullScan(RootFolderEntity rootFolder) throws SyncDuoException {

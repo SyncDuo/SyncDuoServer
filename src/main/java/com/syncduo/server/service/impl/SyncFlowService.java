@@ -16,6 +16,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
+
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class SyncFlowService
     // 如果是 source -> internal sync-flow, 则 List 只有一个元素
     // 如果是 internal -> content sync-flow, 则 list 有很多元素
     private final ConcurrentHashMap<Long, List<EventCount>> eventCountMap =
-            new ConcurrentHashMap<>(100);
+            new ConcurrentHashMap<>(1000);
 
     public void incrSource2InternalCount(Long rootFolderId) throws SyncDuoException {
         if (ObjectUtils.isEmpty(rootFolderId)) {
@@ -50,10 +51,9 @@ public class SyncFlowService
                 throw new SyncDuoException("source2 internal sync-flow exceed 1");
             }
             EventCount internalEventCount = eventCounts.get(0);
-            internalEventCount.setEventCount(internalEventCount.getEventCount() + 1);
+            internalEventCount.incr();
         }
         this.eventCountMap.put(rootFolderId, eventCounts);
-        log.info("Map info {}", eventCountMap);
     }
 
     public void decrSource2InternalCount(Long rootFolderId) throws SyncDuoException {
@@ -68,20 +68,11 @@ public class SyncFlowService
             throw new SyncDuoException("source2 internal sync-flow exceed 1");
         }
         EventCount internalEventCount = eventCounts.get(0);
-        Long eventCount = internalEventCount.getEventCount();
-        if (eventCount == 0) {
-            throw new SyncDuoException("internal 2 content sync-flow event count already 0");
-        }
-        if (eventCount > 1) {
-            internalEventCount.setEventCount(eventCount - 1);
-            return;
-        }
-        if (eventCount == 1) {
-            internalEventCount.setEventCount(0L);
+        internalEventCount.decr();
+        if (internalEventCount.isEventCountZero()) {
             SyncFlowEntity source2InternalSyncFlow = this.getSourceSyncFlowByFolderId(rootFolderId);
             this.updateSyncFlowStatus(source2InternalSyncFlow, SyncFlowStatusEnum.SYNC);
         }
-        log.info("Map info {}", eventCountMap);
     }
 
     public void incrInternal2ContentCount(Long rootFolderId) throws SyncDuoException {
@@ -102,10 +93,9 @@ public class SyncFlowService
         } else {
             // 已经初始化了, 则每个 eventCount 增加一个事件计数
             for (EventCount eventCount : eventCounts) {
-                eventCount.setEventCount(eventCount.getEventCount() + 1);
+                eventCount.incr();
             }
         }
-        log.info("Map info {}", eventCountMap);
     }
 
     public void decrInternal2ContentCount(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
@@ -120,9 +110,9 @@ public class SyncFlowService
         boolean isSync = false;
         for (EventCount eventCount : eventCounts) {
             if (eventCount.getDestFolderId().equals(syncFlowEntity.getDestFolderId())) {
-                eventCount.setEventCount(eventCount.getEventCount() - 1);
+                eventCount.decr();
                 isDecrease = true;
-                if (eventCount.getEventCount() == 0) {
+                if (eventCount.isEventCountZero()) {
                     isSync = true;
                 }
             }
@@ -133,7 +123,6 @@ public class SyncFlowService
         if (isSync) {
             this.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
         }
-        log.info("Map info {}", eventCountMap);
     }
 
     public SyncFlowEntity createSyncFlow(
@@ -218,6 +207,13 @@ public class SyncFlowService
         return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
     }
 
+    public List<SyncFlowEntity> getAllSyncFlow() {
+        LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SyncFlowEntity::getSyncFlowDeleted, DeletedEnum.NOT_DELETED.getCode());
+        List<SyncFlowEntity> dbResult = this.list(queryWrapper);
+        return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
+    }
+
     public void updateSyncFlowStatus(
             SyncFlowEntity syncFlowEntity,
             SyncFlowStatusEnum syncFlowStatusEnum) throws SyncDuoException {
@@ -268,5 +264,26 @@ public class SyncFlowService
         Long destFolderId;
 
         Long eventCount;
+
+        public void decr() throws SyncDuoException {
+            if (eventCount == 0L) {
+                throw new SyncDuoException("event count 已为零. %s " + this);
+            }
+            if (eventCount < 0L) {
+                throw new SyncDuoException("event count 小于零. %s " + this);
+            }
+            eventCount--;
+        }
+
+        public boolean isEventCountZero() {
+            return eventCount == 0L;
+        }
+
+        public void incr() throws SyncDuoException {
+            if (eventCount < 0L) {
+                throw new SyncDuoException("event count 小于零. %s " + this);
+            }
+            eventCount++;
+        }
     }
 }

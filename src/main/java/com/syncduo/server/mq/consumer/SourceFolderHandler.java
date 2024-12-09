@@ -17,11 +17,16 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Service
 @Slf4j
@@ -56,6 +61,7 @@ public class SourceFolderHandler {
     // source watcher 触发
     // full scan source folder, content folder 触发
     // source 和 internal folder compare 触发
+    // todo: 并发执行
     @Scheduled(fixedDelayString = "${syncduo.server.message.polling.interval:5000}")
     private void handle() {
         for (int i = 0; i < pollingNum; i++) {
@@ -80,6 +86,9 @@ public class SourceFolderHandler {
 
     private void onFileCreate(FileEventDto fileEvent) throws SyncDuoException {
         RootFolderEntity sourceFolderEntity = this.rootFolderService.getByFolderId(fileEvent.getRootFolderId());
+        if (ObjectUtils.isEmpty(sourceFolderEntity)) {
+            throw new SyncDuoException("sourceFolderEntity 为空");
+        }
         // 查看是否有重复的文件
         FileEntity sourceFileEntity = this.fileService.getFileEntityFromFile(
                 sourceFolderEntity.getRootFolderId(),

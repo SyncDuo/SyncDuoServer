@@ -70,7 +70,6 @@ public class SystemQueue {
             }
             default -> throw new SyncDuoException("不支持的 rootFolderType %s".formatted(destFolderTypeEnum));
         }
-
     }
 
     public FileEventDto pollSourceFolderEvent() {
