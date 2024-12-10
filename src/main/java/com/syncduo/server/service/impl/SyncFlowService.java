@@ -9,7 +9,6 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.SyncFlowMapper;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.service.ISyncFlowService;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -37,14 +36,19 @@ public class SyncFlowService
     private final ConcurrentHashMap<Long, List<EventCount>> eventCountMap =
             new ConcurrentHashMap<>(1000);
 
-    public void incrSource2InternalCount(Long rootFolderId) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(rootFolderId)) {
-            throw new SyncDuoException("rootFolderId is null");
+    // map<internal-folder-id, internal-event-count>
+    // 用于在 content decr event count 的时候, 判断 source->internal 是否同步
+    private final ConcurrentHashMap<Long, EventCount> internalEventCountMap =
+            new ConcurrentHashMap<>(1000);
+
+    public void incrSource2InternalCount(Long sourceFolderId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(sourceFolderId)) {
+            throw new SyncDuoException("sourceFolderId is null");
         }
-        List<EventCount> eventCounts = this.eventCountMap.get(rootFolderId);
+        List<EventCount> eventCounts = this.eventCountMap.get(sourceFolderId);
         // 初始化
         if (CollectionUtils.isEmpty(eventCounts)) {
-            SyncFlowEntity source2InternalSyncFlow = this.getSourceSyncFlowByFolderId(rootFolderId);
+            SyncFlowEntity source2InternalSyncFlow = this.getSourceSyncFlowByFolderId(sourceFolderId);
             eventCounts = new ArrayList<>(1);
             eventCounts.add(new EventCount(source2InternalSyncFlow.getDestFolderId(), 1L));
         } else {
@@ -54,14 +58,17 @@ public class SyncFlowService
             EventCount internalEventCount = eventCounts.get(0);
             internalEventCount.incr();
         }
-        this.eventCountMap.put(rootFolderId, eventCounts);
+        // 放入 eventCountMap 和 internalEventCountMap
+        this.eventCountMap.put(sourceFolderId, eventCounts);
+        EventCount internalEventCount = eventCounts.get(0);
+        this.internalEventCountMap.put(internalEventCount.getDestFolderId(), internalEventCount);
     }
 
-    public void decrSource2InternalCount(Long rootFolderId) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(rootFolderId)) {
-            throw new SyncDuoException("rootFolderId is null");
+    public void decrSource2InternalCount(Long sourceFolderId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(sourceFolderId)) {
+            throw new SyncDuoException("sourceFolderId is null");
         }
-        List<EventCount> eventCounts = this.eventCountMap.get(rootFolderId);
+        List<EventCount> eventCounts = this.eventCountMap.get(sourceFolderId);
         if (CollectionUtils.isEmpty(eventCounts)) {
             throw new SyncDuoException("can't find source2 internal sync-flow");
         }
@@ -71,26 +78,26 @@ public class SyncFlowService
         EventCount internalEventCount = eventCounts.get(0);
         internalEventCount.decr();
         if (internalEventCount.isEventCountZero()) {
-            SyncFlowEntity source2InternalSyncFlow = this.getSourceSyncFlowByFolderId(rootFolderId);
+            SyncFlowEntity source2InternalSyncFlow = this.getSourceSyncFlowByFolderId(sourceFolderId);
             this.updateSyncFlowStatus(source2InternalSyncFlow, SyncFlowStatusEnum.SYNC);
         }
     }
 
-    public void incrInternal2ContentCount(Long rootFolderId) throws SyncDuoException {
+    public void incrInternal2ContentCount(Long internalFolderId) throws SyncDuoException {
         // 检查参数
-        if (ObjectUtils.anyNull(rootFolderId)) {
-            throw new SyncDuoException("rootFolderId 空值");
+        if (ObjectUtils.anyNull(internalFolderId)) {
+            throw new SyncDuoException("internalFolderId 空值");
         }
         // 判断有没有初始化
-        List<EventCount> eventCounts = this.eventCountMap.get(rootFolderId);
+        List<EventCount> eventCounts = this.eventCountMap.get(internalFolderId);
         if (CollectionUtils.isEmpty(eventCounts)) {
             eventCounts = new ArrayList<>(1);
             // 初始化
-            List<SyncFlowEntity> internalSyncFlowList = this.getInternalSyncFlowByFolderId(rootFolderId);
+            List<SyncFlowEntity> internalSyncFlowList = this.getInternalSyncFlowByFolderId(internalFolderId);
             for (SyncFlowEntity internalSyncFlow : internalSyncFlowList) {
                 eventCounts.add(new EventCount(internalSyncFlow.getDestFolderId(), 1L));
             }
-            this.eventCountMap.put(rootFolderId, eventCounts);
+            this.eventCountMap.put(internalFolderId, eventCounts);
         } else {
             // 已经初始化了, 则每个 eventCount 增加一个事件计数
             for (EventCount eventCount : eventCounts) {
@@ -100,6 +107,7 @@ public class SyncFlowService
     }
 
     public void decrInternal2ContentCount(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        // 查询参数
         if (ObjectUtils.anyNull(syncFlowEntity)) {
             throw new SyncDuoException("syncFlowEntity is null");
         }
@@ -107,21 +115,21 @@ public class SyncFlowService
         if (CollectionUtils.isEmpty(eventCounts)) {
             throw new SyncDuoException("can't find internal 2 content sync-flow " + syncFlowEntity);
         }
-        boolean isDecrease = false;
-        boolean isSync = false;
+        EventCount internalEventCount = this.internalEventCountMap.get(syncFlowEntity.getSourceFolderId());
+        if (ObjectUtils.isEmpty(internalEventCount)) {
+            throw new SyncDuoException("can't find internal event count " + syncFlowEntity);
+        }
+        EventCount contentEventCount = null;
         for (EventCount eventCount : eventCounts) {
             if (eventCount.getDestFolderId().equals(syncFlowEntity.getDestFolderId())) {
-                eventCount.decr();
-                isDecrease = true;
-                if (eventCount.isEventCountZero()) {
-                    isSync = true;
-                }
+                contentEventCount = eventCount;
             }
         }
-        if(!isDecrease) {
-            throw new SyncDuoException("can't find internal 2 content sync-flow " + syncFlowEntity);
+        if (ObjectUtils.isEmpty(contentEventCount)) {
+            throw new SyncDuoException("can't find content event count " + syncFlowEntity);
         }
-        if (isSync) {
+        contentEventCount.decr();
+        if (contentEventCount.isEventCountZero() && internalEventCount.isEventCountZero()) {
             this.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
         }
     }
@@ -143,12 +151,17 @@ public class SyncFlowService
                 throw new SyncDuoException("创建 Sync Flow 失败, 无法保存到数据库");
             }
         }
-        // source -> internal 添加到 eventCountMap
+        // sync-flow 添加到 eventCountMap
         List<EventCount> eventCounts = this.eventCountMap.get(dbResult.getSourceFolderId());
         if (CollectionUtils.isEmpty(eventCounts)) {
             eventCounts = new ArrayList<>(1);
             eventCounts.add(new EventCount(dbResult.getDestFolderId(), 0L));
             this.eventCountMap.put(dbResult.getSourceFolderId(), eventCounts);
+            // 如果是 source -> internal, 则需要再添加 internalEventCount Map
+            if (syncFlowType.equals(SyncFlowTypeEnum.SOURCE_TO_INTERNAL)) {
+                EventCount internalEventCount = eventCounts.get(0);
+                this.internalEventCountMap.put(internalEventCount.getDestFolderId(), internalEventCount);
+            }
         }
         // 返回
         return dbResult;
@@ -237,7 +250,8 @@ public class SyncFlowService
             throw new SyncDuoException("syncFlowEntity is null");
         }
         // 删除 sync-flow
-        boolean isDeleted = this.removeById(syncFlowEntity);
+        syncFlowEntity.setSyncFlowDeleted(DeletedEnum.DELETED.getCode());
+        boolean isDeleted = this.updateById(syncFlowEntity);
         if (!isDeleted) {
             throw new SyncDuoException("删除 sync-flow 失败");
         }
@@ -246,7 +260,12 @@ public class SyncFlowService
         try {
             SyncFlowTypeEnum syncFlowTypeEnum = SyncFlowTypeEnum.valueOf(syncFlowType);
             switch (syncFlowTypeEnum) {
-                case SOURCE_TO_INTERNAL: this.eventCountMap.remove(syncFlowEntity.getSourceFolderId());
+                case SOURCE_TO_INTERNAL: {
+                    // source -> internal 删除, internal event map 删除, internal to content map 删除
+                    this.eventCountMap.remove(syncFlowEntity.getSourceFolderId());
+                    this.internalEventCountMap.remove(syncFlowEntity.getDestFolderId());
+                    this.eventCountMap.remove(syncFlowEntity.getDestFolderId());
+                }
                 case INTERNAL_TO_CONTENT: {
                     List<EventCount> eventCounts = this.eventCountMap.get(syncFlowEntity.getSourceFolderId());
                     eventCounts.removeIf(eventCount ->
