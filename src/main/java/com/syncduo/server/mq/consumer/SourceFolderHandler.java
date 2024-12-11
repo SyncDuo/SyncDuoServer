@@ -21,7 +21,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -31,9 +30,6 @@ import java.nio.file.Path;
 @Service
 @Slf4j
 public class SourceFolderHandler implements DisposableBean {
-
-    @Value("${syncduo.server.event.polling.num:50}")
-    private Integer pollingNum;
 
     private final SystemQueue systemQueue;
 
