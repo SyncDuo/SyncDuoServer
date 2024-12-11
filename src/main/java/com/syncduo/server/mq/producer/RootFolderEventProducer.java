@@ -38,12 +38,14 @@ public class RootFolderEventProducer implements DisposableBean {
         this.systemQueue = systemQueue;
     }
 
+    // source folder 监听所有文件事件
+    // content folder 监听文件删除事件, 其他事件通过 full scan, compare 触发
     public void addWatcher(RootFolderEntity rootFolderEntity) throws SyncDuoException {
         if (ObjectUtils.anyNull(rootFolderEntity)) {
             throw new SyncDuoException("创建 watcher 失败, rootFolderEntity 为空");
         }
         // 只有 source 和 content folder 可以添加 watcher
-        RootFolderTypeEnum rootFolderTypeEnum = RootFolderTypeEnum.valueOf(rootFolderEntity.getRootFolderType());
+        RootFolderTypeEnum rootFolderTypeEnum = RootFolderTypeEnum.getByString(rootFolderEntity.getRootFolderType());
         if (ObjectUtils.isEmpty(rootFolderTypeEnum) || rootFolderTypeEnum.equals(RootFolderTypeEnum.INTERNAL_FOLDER)) {
             throw new SyncDuoException("无效 rootFolderTypeEnum %s".formatted(rootFolderTypeEnum));
         }
@@ -53,52 +55,72 @@ public class RootFolderEventProducer implements DisposableBean {
                 new FileAlterationObserver(folder.toFile());
         // 获取 root folder id 和 root folder type
         Long rootFolderId = rootFolderEntity.getRootFolderId();
-        observer.addListener(new FileAlterationListenerAdaptor() {
-            @Override
-            public void onFileCreate(File file) {
-                try {
-                    systemQueue.sendFileEvent(FileEventDto.builder()
-                            .file(file.toPath())
-                            .rootFolderId(rootFolderId)
-                            .fileEventTypeEnum(FileEventTypeEnum.FILE_CREATED)
-                            .rootFolderTypeEnum(rootFolderTypeEnum)
-                            .destFolderTypeEnum(rootFolderTypeEnum)
-                            .build());
-                } catch (SyncDuoException e) {
-                    log.error("source 文件夹发送 file event 失败", e);
+        // 添加 listener
+        if (rootFolderTypeEnum.equals(RootFolderTypeEnum.SOURCE_FOLDER)) {
+            observer.addListener(new FileAlterationListenerAdaptor() {
+                @Override
+                public void onFileCreate(File file) {
+                    try {
+                        systemQueue.sendFileEvent(FileEventDto.builder()
+                                .file(file.toPath())
+                                .rootFolderId(rootFolderId)
+                                .fileEventTypeEnum(FileEventTypeEnum.FILE_CREATED)
+                                .rootFolderTypeEnum(rootFolderTypeEnum)
+                                .destFolderTypeEnum(rootFolderTypeEnum)
+                                .build());
+                    } catch (SyncDuoException e) {
+                        log.error("source 文件夹发送 file event 失败", e);
+                    }
                 }
-            }
 
-            @Override
-            public void onFileDelete(File file) {
-                try {
-                    systemQueue.sendFileEvent(FileEventDto.builder()
-                            .file(file.toPath())
-                            .rootFolderId(rootFolderId)
-                            .fileEventTypeEnum(FileEventTypeEnum.FILE_CHANGED)
-                            .rootFolderTypeEnum(rootFolderTypeEnum)
-                            .destFolderTypeEnum(rootFolderTypeEnum)
-                            .build());
-                } catch (SyncDuoException e) {
-                    log.error("source 文件夹发送 file event 失败", e);
+                @Override
+                public void onFileDelete(File file) {
+                    try {
+                        systemQueue.sendFileEvent(FileEventDto.builder()
+                                .file(file.toPath())
+                                .rootFolderId(rootFolderId)
+                                .fileEventTypeEnum(FileEventTypeEnum.FILE_DELETED)
+                                .rootFolderTypeEnum(rootFolderTypeEnum)
+                                .destFolderTypeEnum(rootFolderTypeEnum)
+                                .build());
+                    } catch (SyncDuoException e) {
+                        log.error("source 文件夹发送 file event 失败", e);
+                    }
                 }
-            }
 
-            @Override
-            public void onFileChange(File file) {
-                try {
-                    systemQueue.sendFileEvent(FileEventDto.builder()
-                            .file(file.toPath())
-                            .rootFolderId(rootFolderId)
-                            .fileEventTypeEnum(FileEventTypeEnum.FILE_DELETED)
-                            .rootFolderTypeEnum(rootFolderTypeEnum)
-                            .destFolderTypeEnum(rootFolderTypeEnum)
-                            .build());
-                } catch (SyncDuoException e) {
-                    log.error("source 文件夹发送 file event 失败", e);
+                @Override
+                public void onFileChange(File file) {
+                    try {
+                        systemQueue.sendFileEvent(FileEventDto.builder()
+                                .file(file.toPath())
+                                .rootFolderId(rootFolderId)
+                                .fileEventTypeEnum(FileEventTypeEnum.FILE_CHANGED)
+                                .rootFolderTypeEnum(rootFolderTypeEnum)
+                                .destFolderTypeEnum(rootFolderTypeEnum)
+                                .build());
+                    } catch (SyncDuoException e) {
+                        log.error("source 文件夹发送 file event 失败", e);
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            observer.addListener(new FileAlterationListenerAdaptor() {
+                @Override
+                public void onFileDelete(File file) {
+                    try {
+                        systemQueue.sendFileEvent(FileEventDto.builder()
+                                .file(file.toPath())
+                                .rootFolderId(rootFolderId)
+                                .fileEventTypeEnum(FileEventTypeEnum.FILE_DELETED)
+                                .rootFolderTypeEnum(rootFolderTypeEnum)
+                                .destFolderTypeEnum(rootFolderTypeEnum)
+                                .build());
+                    } catch (SyncDuoException e) {
+                        log.error("source 文件夹发送 file event 失败", e);
+                    }
+                }
+            });
+        }
         FileAlterationMonitor monitor = new FileAlterationMonitor(interval);
         monitor.addObserver(observer);
         try {

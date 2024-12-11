@@ -32,8 +32,6 @@ public class ContentFolderHandler implements DisposableBean {
 
     private final SyncFlowService syncFlowService;
 
-    private final FileEventService fileEventService;
-
     private final SyncSettingService syncSettingService;
 
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -45,14 +43,12 @@ public class ContentFolderHandler implements DisposableBean {
             FileService fileService,
             RootFolderService rootFolderService,
             SyncFlowService syncFlowService,
-            FileEventService fileEventService,
             SyncSettingService syncSettingService,
             ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         this.systemQueue = systemQueue;
         this.fileService = fileService;
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
-        this.fileEventService = fileEventService;
         this.syncSettingService = syncSettingService;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
@@ -60,7 +56,6 @@ public class ContentFolderHandler implements DisposableBean {
     // full scan content folder 触发. root folder type = content folder, 则不需要 file copy
     // internal folder 触发, root folder type = internal folder, 需要 file copy
     // internal 和 content folder compare 触发, root folder type = internal folder, 需要 file copy
-    // todo: 并发执行
     @Async("threadPoolTaskExecutor")
     public void startHandle() {
         while (running) {

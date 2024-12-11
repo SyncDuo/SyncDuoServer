@@ -6,5 +6,13 @@ public enum RootFolderTypeEnum {
 
     INTERNAL_FOLDER,
 
-    CONTENT_FOLDER
+    CONTENT_FOLDER;
+
+    public static RootFolderTypeEnum getByString(String rootFolderTypeString) {
+        try {
+            return RootFolderTypeEnum.valueOf(rootFolderTypeString);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

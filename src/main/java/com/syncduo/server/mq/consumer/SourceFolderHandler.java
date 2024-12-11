@@ -63,7 +63,6 @@ public class SourceFolderHandler implements DisposableBean {
     // source watcher 触发
     // full scan source folder, content folder 触发
     // source 和 internal folder compare 触发
-    // todo: 并发执行
     @Async("threadPoolTaskExecutor")
     public void startHandle() {
         while (running) {

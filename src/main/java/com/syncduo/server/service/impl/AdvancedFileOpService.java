@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -96,23 +95,19 @@ public class AdvancedFileOpService {
         }
         for (SyncFlowEntity syncFlowEntity : allSyncFlowList) {
             boolean isSynced = this.isSyncFlowSync(syncFlowEntity);
-            // 如果是 inSynced, 则添加 watcher
-            if (isSynced) {
-                // 获取 sync Flow Entity 的 type
-                SyncFlowTypeEnum syncFlowType = SyncFlowTypeEnum.valueOf(syncFlowEntity.getSyncFlowType());
-                if (ObjectUtils.isEmpty(syncFlowType)) {
-                    throw new SyncDuoException("SyncFlowType is empty");
-                }
-                Long folderIdToAddWatcher;
-                switch (syncFlowType) {
-                    case SOURCE_TO_INTERNAL -> folderIdToAddWatcher = syncFlowEntity.getSourceFolderId();
-                    case INTERNAL_TO_CONTENT -> folderIdToAddWatcher = syncFlowEntity.getDestFolderId();
-                    default -> throw new SyncDuoException("不支持的 sync-flow type. " + syncFlowType);
-                }
-                RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(folderIdToAddWatcher);
-                rootFolderEventProducer.addWatcher(rootFolderEntity);
+            // 获取 sync Flow Entity 的 type
+            SyncFlowTypeEnum syncFlowType = SyncFlowTypeEnum.getByString(syncFlowEntity.getSyncFlowType());
+            if (ObjectUtils.isEmpty(syncFlowType)) {
+                throw new SyncDuoException("SyncFlowType is empty");
             }
-            // todo: 如果不是 inSynced, 怎么在文件事件处理完了之后添加 watcher?
+            Long folderIdToAddWatcher;
+            switch (syncFlowType) {
+                case SOURCE_TO_INTERNAL -> folderIdToAddWatcher = syncFlowEntity.getSourceFolderId();
+                case INTERNAL_TO_CONTENT -> folderIdToAddWatcher = syncFlowEntity.getDestFolderId();
+                default -> throw new SyncDuoException("不支持的 sync-flow type. " + syncFlowType);
+            }
+            RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(folderIdToAddWatcher);
+            rootFolderEventProducer.addWatcher(rootFolderEntity);
             log.info("sync-flow {} sync status: {}", syncFlowEntity, isSynced);
         }
     }
@@ -208,7 +203,7 @@ public class AdvancedFileOpService {
         // 遍历文件夹, 根据 set 判断文件新增或修改
         FileOperationUtils.walkFilesTree(rootFolder.getRootFolderFullPath(), new SimpleFileVisitor<>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (ObjectUtils.isEmpty(attrs)) {
                     return FileVisitResult.CONTINUE;
                 }
@@ -268,9 +263,8 @@ public class AdvancedFileOpService {
         // 根据 syncFlow 获得 source folder entity
         Long sourceFolderId = syncFlow.getSourceFolderId();
         RootFolderEntity sourceFolderEntity = this.rootFolderService.getByFolderId(sourceFolderId);
-        // 根据 syncFlow 获得 internal folder entity
+        // 根据 syncFlow 获得 internalFolderId
         Long internalFolderId = syncFlow.getDestFolderId();
-        RootFolderEntity internalFolderEntity = this.rootFolderService.getByFolderId(internalFolderId);
         // page helper 查询 folder 下所有的 file, 并执行 compare 操作
         this.pageHelper(
                 (startPage, pageSize) ->
