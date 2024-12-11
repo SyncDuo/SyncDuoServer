@@ -12,23 +12,19 @@ import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
-public class ContentFolderHandler {
-    @Value("${syncduo.server.event.polling.num:10}")
-    private Integer pollingNum;
-
+public class ContentFolderHandler implements DisposableBean {
     private final SystemQueue systemQueue;
 
     private final FileService fileService;
@@ -41,52 +37,60 @@ public class ContentFolderHandler {
 
     private final SyncSettingService syncSettingService;
 
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    private volatile boolean running = true;
+
     public ContentFolderHandler(
             SystemQueue systemQueue,
             FileService fileService,
             RootFolderService rootFolderService,
             SyncFlowService syncFlowService,
             FileEventService fileEventService,
-            SyncSettingService syncSettingService) {
+            SyncSettingService syncSettingService,
+            ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         this.systemQueue = systemQueue;
         this.fileService = fileService;
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.fileEventService = fileEventService;
         this.syncSettingService = syncSettingService;
+        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
 
     // full scan content folder 触发. root folder type = content folder, 则不需要 file copy
     // internal folder 触发, root folder type = internal folder, 需要 file copy
     // internal 和 content folder compare 触发, root folder type = internal folder, 需要 file copy
     // todo: 并发执行
-    @Scheduled(fixedDelayString = "${syncduo.server.event.polling.interval:5000}")
-    private void handleFileEvent() {
-        for (int i = 0; i < pollingNum; i++) {
+    @Async("threadPoolTaskExecutor")
+    public void startHandle() {
+        while (running) {
             FileEventDto fileEvent = this.systemQueue.pollContentFolderEvent();
             if (ObjectUtils.isEmpty(fileEvent)) {
-                break;
+                continue;
             }
-            try {
-                switch (fileEvent.getFileEventTypeEnum()) {
-                    case FILE_CREATED -> {
-                        switch (fileEvent.getRootFolderTypeEnum()) {
-                            case INTERNAL_FOLDER -> this.onFileCreateFromInternalFolder(fileEvent);
-                            case CONTENT_FOLDER -> this.onFileCreateFromContentFolder(fileEvent);
-                    }}
-                    case FILE_CHANGED -> {
-                        switch (fileEvent.getRootFolderTypeEnum()) {
-                            case INTERNAL_FOLDER -> this.onFileChangeFromInternalFolder(fileEvent);
-                            case CONTENT_FOLDER -> this.onFileChangeFromContentFolder(fileEvent);
+            this.threadPoolTaskExecutor.submit(() -> {
+                try {
+                    switch (fileEvent.getFileEventTypeEnum()) {
+                        case FILE_CREATED -> {
+                            switch (fileEvent.getRootFolderTypeEnum()) {
+                                case INTERNAL_FOLDER -> this.onFileCreateFromInternalFolder(fileEvent);
+                                case CONTENT_FOLDER -> this.onFileCreateFromContentFolder(fileEvent);
+                            }}
+                        case FILE_CHANGED -> {
+                            switch (fileEvent.getRootFolderTypeEnum()) {
+                                case INTERNAL_FOLDER -> this.onFileChangeFromInternalFolder(fileEvent);
+                                case CONTENT_FOLDER -> this.onFileChangeFromContentFolder(fileEvent);
+                            }
                         }
+                        case FILE_DESYNCED -> this.onFileDeSynced(fileEvent);
+                        case FILE_DELETED -> this.onFileDeleteFromContentFolder(fileEvent);
+                        default -> throw new SyncDuoException("content 文件夹的文件事件:%s 不识别".formatted(fileEvent));
                     }
-                    case FILE_DESYNCED -> this.onFileDeSynced(fileEvent);
-                    case FILE_DELETED -> this.onFileDeleteFromContentFolder(fileEvent);
-                    default -> throw new SyncDuoException("content 文件夹的文件事件:%s 不识别".formatted(fileEvent));
+                } catch (SyncDuoException e) {
+                    log.error("content 文件夹的文件事件:{} 处理失败", fileEvent, e);
                 }
-            } catch (SyncDuoException e) {
-                log.error("content 文件夹的文件事件:{} 处理失败", fileEvent, e);
-            }
+            });
         }
     }
 
@@ -249,5 +253,11 @@ public class ContentFolderHandler {
         contentFileEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
         this.fileService.deleteBatchByFileEntity(Collections.singletonList(contentFileEntity));
         // 记录 file event
+    }
+
+    @Override
+    public void destroy() {
+        log.info("stop content handler");
+        running = false;
     }
 }

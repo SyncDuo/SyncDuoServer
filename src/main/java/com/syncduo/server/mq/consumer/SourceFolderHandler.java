@@ -16,21 +16,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Service
 @Slf4j
-public class SourceFolderHandler {
+public class SourceFolderHandler implements DisposableBean {
 
     @Value("${syncduo.server.event.polling.num:50}")
     private Integer pollingNum;
@@ -45,42 +42,50 @@ public class SourceFolderHandler {
 
     private final FileEventService fileEventService;
 
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    private volatile boolean running = true;  // Flag to control the event loop
+
     @Autowired
     public SourceFolderHandler(SystemQueue systemQueue,
                                FileService fileService,
                                RootFolderService rootFolderService,
                                SyncFlowService syncFlowService,
-                               FileEventService fileEventService) {
+                               FileEventService fileEventService,
+                               ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         this.systemQueue = systemQueue;
         this.fileService = fileService;
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.fileEventService = fileEventService;
+        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
 
     // source watcher 触发
     // full scan source folder, content folder 触发
     // source 和 internal folder compare 触发
     // todo: 并发执行
-    @Scheduled(fixedDelayString = "${syncduo.server.message.polling.interval:5000}")
-    private void handle() {
-        for (int i = 0; i < pollingNum; i++) {
+    @Async("threadPoolTaskExecutor")
+    public void startHandle() {
+        while (running) {
             FileEventDto fileEvent = systemQueue.pollSourceFolderEvent();
             if (ObjectUtils.isEmpty(fileEvent)) {
-                break;
+                continue;
             }
-            try {
-                switch (fileEvent.getFileEventTypeEnum()) {
-                    // 每一种事件其实都包含了两种流向
-                    // source -> internal, internal -> internal
-                    case FILE_CREATED -> this.onFileCreate(fileEvent);
-                    case FILE_CHANGED -> this.onFileChange(fileEvent);
-                    case FILE_DELETED -> this.onFileDelete(fileEvent);
-                    default -> throw new SyncDuoException("文件夹的文件事件:%s 不识别".formatted(fileEvent));
+            this.threadPoolTaskExecutor.submit(() -> {
+                try {
+                    switch (fileEvent.getFileEventTypeEnum()) {
+                        // 每一种事件其实都包含了两种流向
+                        // source -> internal, internal -> internal
+                        case FILE_CREATED -> this.onFileCreate(fileEvent);
+                        case FILE_CHANGED -> this.onFileChange(fileEvent);
+                        case FILE_DELETED -> this.onFileDelete(fileEvent);
+                        default -> throw new SyncDuoException("文件夹的文件事件:%s 不识别".formatted(fileEvent));
+                    }
+                } catch (SyncDuoException e) {
+                    log.error("文件夹的文件事件:{} 处理失败", fileEvent, e);
                 }
-            } catch (SyncDuoException e) {
-                log.error("文件夹的文件事件:{} 处理失败", fileEvent, e);
-            }
+            });
         }
     }
 
@@ -235,5 +240,11 @@ public class SourceFolderHandler {
         fileEventEntity.setFileId(fileEntity.getFileId());
         fileEventEntity.setFileEventType(fileEvent.getFileEventTypeEnum().name());
         return fileEventEntity;
+    }
+
+    @Override
+    public void destroy() {
+        log.info("stop source handler");
+        running = false;
     }
 }

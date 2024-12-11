@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableAsync
 @EnableTransactionManagement
 public class SyncDuoServerApplication {
 

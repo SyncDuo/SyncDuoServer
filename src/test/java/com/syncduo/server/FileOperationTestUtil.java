@@ -114,7 +114,7 @@ public class FileOperationTestUtil {
         // Write random binary data to the .bin file
         writeRandomBinaryData(binFile);
 
-        return new ImmutablePair<Path, Path>(txtFile, binFile);
+        return new ImmutablePair<>(txtFile, binFile);
     }
 
     private static byte[] generateNumbers() {

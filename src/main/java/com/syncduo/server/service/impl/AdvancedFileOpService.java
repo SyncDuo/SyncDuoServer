@@ -11,6 +11,7 @@ import com.syncduo.server.model.entity.SyncSettingEntity;
 import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.mq.producer.RootFolderEventProducer;
 import com.syncduo.server.util.FileOperationUtils;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -102,14 +103,13 @@ public class AdvancedFileOpService {
                 if (ObjectUtils.isEmpty(syncFlowType)) {
                     throw new SyncDuoException("SyncFlowType is empty");
                 }
-                RootFolderEntity rootFolderEntity;
+                Long folderIdToAddWatcher;
                 switch (syncFlowType) {
-                    case SOURCE_TO_INTERNAL -> rootFolderEntity =
-                            this.rootFolderService.getByFolderId(syncFlowEntity.getSourceFolderId());
-                    case INTERNAL_TO_CONTENT -> rootFolderEntity =
-                            this.rootFolderService.getByFolderId(syncFlowEntity.getDestFolderId());
+                    case SOURCE_TO_INTERNAL -> folderIdToAddWatcher = syncFlowEntity.getSourceFolderId();
+                    case INTERNAL_TO_CONTENT -> folderIdToAddWatcher = syncFlowEntity.getDestFolderId();
                     default -> throw new SyncDuoException("不支持的 sync-flow type. " + syncFlowType);
                 }
+                RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(folderIdToAddWatcher);
                 rootFolderEventProducer.addWatcher(rootFolderEntity);
             }
             // todo: 如果不是 inSynced, 怎么在文件事件处理完了之后添加 watcher?

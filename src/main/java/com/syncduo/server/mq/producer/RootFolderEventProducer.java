@@ -13,21 +13,26 @@ import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
-public class RootFolderEventProducer {
+public class RootFolderEventProducer implements DisposableBean {
 
     @Value("${syncduo.server.event.polling.interval:10000}")
     private Integer interval;
 
     private final SystemQueue systemQueue;
+
+    // <rootFolderId, monitor>
+    private final ConcurrentHashMap<Long, FileAlterationMonitor> map = new ConcurrentHashMap<>(100);
 
     @Autowired
     public RootFolderEventProducer(SystemQueue systemQueue) {
@@ -46,7 +51,7 @@ public class RootFolderEventProducer {
         // 获取 root folder full path, 并添加 observer
         Path folder = FileOperationUtils.isFolderPathValid(rootFolderEntity.getRootFolderFullPath());
         FileAlterationObserver observer =
-                new FileAlterationObserver(folder.toFile(), FileFilterUtils.fileFileFilter());
+                new FileAlterationObserver(folder.toFile());
         // 获取 root folder id 和 root folder type
         Long rootFolderId = rootFolderEntity.getRootFolderId();
         observer.addListener(new FileAlterationListenerAdaptor() {
@@ -99,8 +104,21 @@ public class RootFolderEventProducer {
         monitor.addObserver(observer);
         try {
             monitor.start();
+            this.map.put(rootFolderId, monitor);
         } catch (Exception e) {
             throw new SyncDuoException("启动文件夹 monitor 失败", e);
         }
+    }
+
+    @Override
+    public void destroy() {
+        this.map.forEach((k, v) -> {
+            try {
+                v.stop();
+                log.info("shutdown monitor. rootFolderId is {}", k);
+            } catch (Exception e) {
+                log.error("failed to shutdown monitor. rootFolder is {}", k, e);
+            }
+        });
     }
 }

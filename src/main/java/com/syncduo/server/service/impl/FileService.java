@@ -68,7 +68,7 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
     public FileEntity getFileEntityFromFile(Long rootFolderId, String rootFolderFullPath, Path file)
             throws SyncDuoException {
         if (ObjectUtils.anyNull(rootFolderId, file)) {
-            throw new SyncDuoException("rootFolderId 或 file 为空");
+            throw new SyncDuoException("rootFolderId %s 或 file %s 为空".formatted(rootFolderId, file));
         }
         String uuid4 = FileOperationUtils.getUUID4(rootFolderId, rootFolderFullPath, file);
         return this.getByUuid4(uuid4);

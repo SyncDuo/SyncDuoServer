@@ -10,22 +10,18 @@ import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.EnableLoadTimeWeaving;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
@@ -53,8 +49,13 @@ class SyncDuoServerApplicationTests {
     @Autowired
     private ThreadPoolTaskScheduler taskScheduler;
 
-    private static final String testParentPath =
-            "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/resources";
+    private static final String testParentPath = "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/resources";
+
+    private static final String sourceFolderPath = testParentPath + "/sourceFolder";
+
+    private static final String internalFolderPath = testParentPath + "/.sourceFolder";
+
+    private static final String contentFolderPath = testParentPath + "/contentParentFolder";
 
     @Autowired
     SyncDuoServerApplicationTests(
@@ -74,6 +75,32 @@ class SyncDuoServerApplicationTests {
         this.fileEventService = fileEventService;
         this.syncSettingService = syncSettingService;
         this.fileOperationService = fileOperationService;
+    }
+
+    @BeforeEach
+    void prepareEnvironment() throws IOException {
+        this.cleanUp();
+        // create folder
+        FileOperationTestUtil.createFolders(
+                sourceFolderPath,
+                4,
+                3
+        );
+        log.info("initial finish");
+    }
+
+    void cleanUp() {
+        // truncate database
+        this.truncateAllTable();
+        // delete folder
+        try {
+            // 删除 source folder 全部内容, 但是不包括 source folder 本身
+            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
+            FileOperationUtils.deleteFolder(Path.of(internalFolderPath));
+            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(contentFolderPath));
+        } catch (SyncDuoException | IOException e) {
+            log.error("删除文件夹失败.", e);
+        }
     }
 
     void truncateAllTable() {
@@ -122,37 +149,6 @@ class SyncDuoServerApplicationTests {
             );
         }
         log.info("truncate all table");
-    }
-
-    void prepareTestEnvironment(
-            String sourceFolderPath,
-            String internalFolderPath,
-            String contentFolderPath,
-            Runnable function)
-            throws IOException, SyncDuoException {
-        // truncate database
-        this.truncateAllTable();
-        // delete folder
-        try {
-            // 删除 source folder 全部内容, 但是不包括 source folder 本身
-            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
-            FileOperationUtils.deleteFolder(Path.of(internalFolderPath));
-            FileOperationUtils.deleteFolder(Path.of(contentFolderPath));
-        } catch (SyncDuoException e) {
-            log.error("删除文件夹失败.", e);
-        }
-
-        // create folder
-        FileOperationTestUtil.createFolders(
-                sourceFolderPath,
-                4,
-                3
-        );
-        try {
-            function.run();
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
     }
 
     @Test
@@ -259,27 +255,17 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void testSyncFlowController() throws IOException, SyncDuoException {
-        String sourceFolder = testParentPath + "/" + "sourceFolder";
-        String internalFolder = testParentPath + "/" + ".sourceFolder";
-        String contentParentFolder = testParentPath + "/" + "contentParentFolder";
-        String contentFolder = contentParentFolder + "/" + "sourceFolder";
-        prepareTestEnvironment(
-                sourceFolder,
-                internalFolder,
-                contentFolder,
-                () -> {
-            SyncFlowRequest syncFlowRequest = new SyncFlowRequest();
-            syncFlowRequest.setSourceFolderFullPath(sourceFolder);
-            syncFlowRequest.setDestFolderFullPath(contentParentFolder);
-            syncFlowRequest.setConcatDestFolderPath(true);
-            syncFlowRequest.setFlattenFolder(false);
-            SyncFlowResponse syncFlowResponse = syncFlowController.addSource2ContentSyncFlow(syncFlowRequest);
-            log.info(syncFlowResponse.toString());
-        });
+    void testSyncFlowController() {
+        SyncFlowRequest syncFlowRequest = new SyncFlowRequest();
+        syncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
+        syncFlowRequest.setDestFolderFullPath(contentFolderPath);
+        syncFlowRequest.setConcatDestFolderPath(true);
+        syncFlowRequest.setFlattenFolder(false);
+        SyncFlowResponse syncFlowResponse = syncFlowController.addSource2ContentSyncFlow(syncFlowRequest);
+        log.info(syncFlowResponse.toString());
         // Add a sleep to allow time for manual break-point inspection
         try {
-            Thread.sleep(1000 * 60);  // 1000 millisecond * sec
+            Thread.sleep(1000 * 20);  // 1000 millisecond * sec
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
