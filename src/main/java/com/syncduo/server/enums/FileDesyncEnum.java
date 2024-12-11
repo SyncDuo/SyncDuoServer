@@ -10,6 +10,7 @@ public enum FileDesyncEnum {
     ;
 
     private final int code;
+
     FileDesyncEnum(int val) {
         this.code = val;
     }

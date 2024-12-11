@@ -10,6 +10,7 @@ public enum DeletedEnum {
     ;
 
     private final int code;
+
     DeletedEnum(int val) {
         this.code = val;
     }

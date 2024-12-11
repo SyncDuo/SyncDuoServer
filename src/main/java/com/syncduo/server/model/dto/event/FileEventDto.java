@@ -2,10 +2,8 @@ package com.syncduo.server.model.dto.event;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.enums.RootFolderTypeEnum;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.nio.file.Path;
 

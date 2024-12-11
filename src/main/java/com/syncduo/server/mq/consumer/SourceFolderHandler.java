@@ -10,7 +10,10 @@ import com.syncduo.server.model.entity.FileEventEntity;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.mq.SystemQueue;
-import com.syncduo.server.service.impl.*;
+import com.syncduo.server.service.impl.FileEventService;
+import com.syncduo.server.service.impl.FileService;
+import com.syncduo.server.service.impl.RootFolderService;
+import com.syncduo.server.service.impl.SyncFlowService;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -146,12 +149,12 @@ public class SourceFolderHandler implements DisposableBean {
         Pair<Path, FileEntity> fileAndEntityPair = this.updateInternalFileFromSourceFileEntity(sourceFileEntity);
         // 发送 event 到 content 队列
         this.systemQueue.sendFileEvent(FileEventDto.builder()
-                        .file(fileAndEntityPair.getLeft())
-                        .rootFolderId(fileAndEntityPair.getRight().getRootFolderId())
-                        .fileEventTypeEnum(FileEventTypeEnum.FILE_CHANGED)
-                        .rootFolderTypeEnum(RootFolderTypeEnum.INTERNAL_FOLDER)
-                        .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
-                        .build());
+                .file(fileAndEntityPair.getLeft())
+                .rootFolderId(fileAndEntityPair.getRight().getRootFolderId())
+                .fileEventTypeEnum(FileEventTypeEnum.FILE_CHANGED)
+                .rootFolderTypeEnum(RootFolderTypeEnum.INTERNAL_FOLDER)
+                .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
+                .build());
         // 减少 source -> internal pending event
         this.syncFlowService.decrSource2InternalCount(sourceFolderEntity.getRootFolderId());
     }

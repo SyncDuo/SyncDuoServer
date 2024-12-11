@@ -1,6 +1,5 @@
 package com.syncduo.server.util;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.syncduo.server.exception.SyncDuoException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -12,10 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;

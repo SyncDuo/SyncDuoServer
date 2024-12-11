@@ -11,7 +11,6 @@ import com.syncduo.server.model.entity.SyncSettingEntity;
 import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.mq.producer.RootFolderEventProducer;
 import com.syncduo.server.util.FileOperationUtils;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -28,7 +27,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
@@ -123,7 +123,7 @@ public class AdvancedFileOpService {
         if (ObjectUtils.isEmpty(rootFolderType) || rootFolderType.equals(RootFolderTypeEnum.INTERNAL_FOLDER)) {
             throw new SyncDuoException("rootFolderType %s 不支持".formatted(rootFolderType));
         }
-        FileOperationUtils.walkFilesTree(rootFolder.getRootFolderFullPath(), new SimpleFileVisitor<>(){
+        FileOperationUtils.walkFilesTree(rootFolder.getRootFolderFullPath(), new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 try {
@@ -206,7 +206,7 @@ public class AdvancedFileOpService {
                 (fileEntity) -> uuid4FileEntityMap.put(fileEntity.getFileUuid4(), fileEntity)
         );
         // 遍历文件夹, 根据 set 判断文件新增或修改
-        FileOperationUtils.walkFilesTree(rootFolder.getRootFolderFullPath(), new SimpleFileVisitor<>(){
+        FileOperationUtils.walkFilesTree(rootFolder.getRootFolderFullPath(), new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (ObjectUtils.isEmpty(attrs)) {
@@ -351,7 +351,7 @@ public class AdvancedFileOpService {
                                     contentFolderId,
                                     internalFileEntity,
                                     syncSetting
-                    );
+                            );
                     if (ObjectUtils.isEmpty(contentFileEntity)) {
                         // 找不到, 说明确实没有同步, 则发送 file created event
                         this.systemQueue.sendFileEvent(
@@ -371,13 +371,13 @@ public class AdvancedFileOpService {
                     switch (code) {
                         case 1 -> {
                             this.systemQueue.sendFileEvent(
-                                FileEventDto.builder()
-                                        .file(internalFile)
-                                        .rootFolderId(internalFolderId)
-                                        .fileEventTypeEnum(FileEventTypeEnum.FILE_CHANGED)
-                                        .rootFolderTypeEnum(RootFolderTypeEnum.INTERNAL_FOLDER)
-                                        .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
-                                        .build());
+                                    FileEventDto.builder()
+                                            .file(internalFile)
+                                            .rootFolderId(internalFolderId)
+                                            .fileEventTypeEnum(FileEventTypeEnum.FILE_CHANGED)
+                                            .rootFolderTypeEnum(RootFolderTypeEnum.INTERNAL_FOLDER)
+                                            .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
+                                            .build());
                             isSync.set(false);
                         }
                         case 3 -> this.systemQueue.sendFileEvent(
@@ -432,7 +432,7 @@ public class AdvancedFileOpService {
                     return 0;
                 }
                 return 3;
-            } else if (isFileEntityChange(internalFileEntity, contentFileEntity)){
+            } else if (isFileEntityChange(internalFileEntity, contentFileEntity)) {
                 // 不需要 desynced, 且 internal file 有更新, 则代表 changed
                 return 1;
             } else {
@@ -456,7 +456,7 @@ public class AdvancedFileOpService {
             return;
         }
         long pages = dbResultPaged.getPages();
-        for (long i = 1L; i < pages + 1;) {
+        for (long i = 1L; i < pages + 1; ) {
             List<FileEntity> sourceFileEntityList = dbResultPaged.getRecords();
             for (FileEntity sourceFileEntity : sourceFileEntityList) {
                 throwingConsumer.accept(sourceFileEntity);

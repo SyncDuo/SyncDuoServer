@@ -7,16 +7,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syncduo.server.enums.SyncSettingEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.mapper.SyncFlowMapper;
 import com.syncduo.server.mapper.SyncSettingMapper;
-import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SyncSettingEntity;
-import com.syncduo.server.service.ISyncFlowService;
 import com.syncduo.server.service.ISyncSettingService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -31,7 +27,8 @@ public class SyncSettingService
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final TypeReference<List<String>> LIST_STRING_TYPE_REFERENCE = new TypeReference<>(){};
+    private static final TypeReference<List<String>> LIST_STRING_TYPE_REFERENCE = new TypeReference<>() {
+    };
 
     public SyncSettingEntity createSyncSetting(Long syncFlowId, List<String> filters, SyncSettingEnum syncSettingEnum)
             throws SyncDuoException {

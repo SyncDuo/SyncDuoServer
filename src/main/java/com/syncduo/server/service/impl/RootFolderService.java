@@ -76,7 +76,7 @@ public class RootFolderService
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Pair<RootFolderEntity, RootFolderEntity> createSourceFolder(
-            String sourceFolderFullPath) throws SyncDuoException  {
+            String sourceFolderFullPath) throws SyncDuoException {
         // 幂等, 判断 source folder 是否已创建
         RootFolderEntity sourceFolderEntity = this.getByFolderFullPath(sourceFolderFullPath);
         if (ObjectUtils.isEmpty(sourceFolderEntity)) {

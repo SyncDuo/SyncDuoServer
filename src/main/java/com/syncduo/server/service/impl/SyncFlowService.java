@@ -15,7 +15,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
-
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;

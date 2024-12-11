@@ -51,7 +51,7 @@ public class CustomMetaObjectHandler implements MetaObjectHandler {
     @Override
     public MetaObjectHandler strictFillStrategy(MetaObject metaObject, String fieldName, Supplier<?> fieldVal) {
         Object obj = fieldVal.get();
-        if (Objects.nonNull(obj)){
+        if (Objects.nonNull(obj)) {
             metaObject.setValue(fieldName, obj);
         }
         return this;

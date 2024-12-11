@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -76,7 +75,8 @@ public class ContentFolderHandler implements DisposableBean {
                             switch (fileEvent.getRootFolderTypeEnum()) {
                                 case INTERNAL_FOLDER -> this.onFileCreateFromInternalFolder(fileEvent);
                                 case CONTENT_FOLDER -> this.onFileCreateFromContentFolder(fileEvent);
-                            }}
+                            }
+                        }
                         case FILE_CHANGED -> {
                             switch (fileEvent.getRootFolderTypeEnum()) {
                                 case INTERNAL_FOLDER -> this.onFileChangeFromInternalFolder(fileEvent);
@@ -85,7 +85,8 @@ public class ContentFolderHandler implements DisposableBean {
                         }
                         case FILE_DESYNCED -> this.onFileDeSynced(fileEvent);
                         case FILE_DELETED -> this.onFileDeleteFromContentFolder(fileEvent);
-                        default -> throw new SyncDuoException("content 文件夹的文件事件:%s 不识别".formatted(fileEvent));
+                        default ->
+                                throw new SyncDuoException("content 文件夹的文件事件:%s 不识别".formatted(fileEvent));
                     }
                 } catch (SyncDuoException e) {
                     log.error("content 文件夹的文件事件:{} 处理失败", fileEvent, e);

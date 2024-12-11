@@ -45,7 +45,8 @@ public class SyncFlowController {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final TypeReference<List<String>> LIST_STRING_TYPE_REFERENCE = new TypeReference<>(){};
+    private static final TypeReference<List<String>> LIST_STRING_TYPE_REFERENCE = new TypeReference<>() {
+    };
 
     @Autowired
     public SyncFlowController(
