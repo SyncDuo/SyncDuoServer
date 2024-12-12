@@ -264,7 +264,7 @@ class SyncDuoServerApplicationTests {
         log.info(syncFlowResponse.toString());
         // Add a sleep to allow time for manual break-point inspection
         try {
-            Thread.sleep(1000 * 20);  // 1000 millisecond * sec
+            Thread.sleep(1000 * 10);  // 1000 millisecond * sec
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

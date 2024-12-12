@@ -45,7 +45,6 @@ public class CustomMetaObjectHandler implements MetaObjectHandler {
     public void updateFill(MetaObject metaObject) {
         this.strictUpdateFill(metaObject, "lastUpdatedUser", String.class, "System");
         this.strictUpdateFill(metaObject, "lastUpdatedTime", Timestamp.class, this.getUTCTimestamp());
-        System.out.println(1);
     }
 
     @Override
