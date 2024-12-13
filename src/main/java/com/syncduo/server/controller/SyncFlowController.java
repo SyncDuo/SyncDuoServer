@@ -68,21 +68,30 @@ public class SyncFlowController {
         try {
             this.isSyncFlowRequestValid(syncFlowRequest);
         } catch (SyncDuoException e) {
-            return SyncFlowResponse.onError("参数检查不合法" + e.getMessage());
+            return SyncFlowResponse.onError("addSource2ContentSyncFlow failed, IllegalArgument " + e.getMessage());
         }
         // 检查过滤条件
         List<String> filters = new ArrayList<>();
-        if (StringUtils.isNoneBlank(syncFlowRequest.getFilterCriteria())) {
+        String filterCriteria = syncFlowRequest.getFilterCriteria();
+        if (StringUtils.isNoneBlank(filterCriteria)) {
             try {
-                filters = OBJECT_MAPPER.readValue(syncFlowRequest.getFilterCriteria(), LIST_STRING_TYPE_REFERENCE);
+                filters = OBJECT_MAPPER.readValue(filterCriteria, LIST_STRING_TYPE_REFERENCE);
             } catch (JsonProcessingException e) {
-                return SyncFlowResponse.onError("无法反序列化过滤条件 " + e.getMessage());
+                SyncFlowResponse syncFlowResponse = SyncFlowResponse.onError(
+                        "addSource2ContentSyncFlow failed. can't deserialize string to list. " +
+                        "string is %s".formatted(filterCriteria) + " error is " + e.getMessage());
+                log.error(syncFlowResponse.toString());
+                return syncFlowResponse;
             }
         }
 
         // 判断 source folder 和 dest folder 是否相同
         if (syncFlowRequest.getSourceFolderFullPath().equals(syncFlowRequest.getDestFolderFullPath())) {
-            return SyncFlowResponse.onError("source folder 和 dest folder 路径相同. %s".formatted(syncFlowRequest));
+            SyncFlowResponse syncFlowResponse = SyncFlowResponse.onError(("addSource2ContentSyncFlow failed. " +
+                    "source folder and dest folder is the same path. " +
+                    "they are %s").formatted(syncFlowRequest.getSourceFolderFullPath()));
+            log.error(syncFlowResponse.toString());
+            return syncFlowResponse;
         }
         // 判断 sync-flow 是否已经存在
         try {
@@ -90,19 +99,27 @@ public class SyncFlowController {
             switch (resultCode) {
                 case 0 -> {
                     firstTimeCreateSourceFolder(syncFlowRequest, filters);
-                    return SyncFlowResponse.onSuccess("sync-flow 创建成功");
+                    SyncFlowResponse syncFlowResponse = SyncFlowResponse.onSuccess("sync-flow created successes");
+                    log.info(syncFlowResponse.toString());
+                    return syncFlowResponse;
                 }
                 case 1 -> {
                     this.createContentSyncFlow(syncFlowRequest, filters);
-                    return SyncFlowResponse.onSuccess("sync-flow 创建成功");
+                    SyncFlowResponse syncFlowResponse = SyncFlowResponse.onSuccess("sync-flow created successes");
+                    log.info(syncFlowResponse.toString());
+                    return syncFlowResponse;
                 }
                 case 2 -> {
-                    return SyncFlowResponse.onSuccess("sync-flow 已存在");
+                    SyncFlowResponse syncFlowResponse = SyncFlowResponse.onSuccess("sync-flow exist");
+                    log.info(syncFlowResponse.toString());
+                    return syncFlowResponse;
                 }
-                default -> throw new SyncDuoException("不识别的 result code : " + resultCode);
+                default -> throw new SyncDuoException("addSource2ContentSyncFlow failed. " +
+                        "unrecognized result code : " + resultCode);
             }
         } catch (SyncDuoException e) {
-            return SyncFlowResponse.onError("检查 sync-flow 失败" + e.getMessage());
+            log.error("addSource2ContentSyncFlow failed.", e);
+            return SyncFlowResponse.onError("create sync-flow failed " + e.getMessage());
         }
     }
 
@@ -187,7 +204,8 @@ public class SyncFlowController {
             if (ObjectUtils.isEmpty(destFolderEntity)) {
                 return 0;
             } else {
-                throw new SyncDuoException("source 和 internal folder 为空, 但是 dest folder 不为空");
+                throw new SyncDuoException("isSyncFlowExist failed. " +
+                        "source and internal folder not exist, but dest folder exist");
             }
         }
         // source, internal 存在, 则判断 dest folder 是否存在, 不存在说明 sync-flow 也不存在
@@ -208,10 +226,13 @@ public class SyncFlowController {
 
     private void isSyncFlowRequestValid(SyncFlowRequest syncFlowRequest) throws SyncDuoException {
         if (ObjectUtils.isEmpty(syncFlowRequest)) {
-            throw new SyncDuoException("SyncFlowRequest 检查失败,为空");
+            throw new SyncDuoException("isSyncFlowRequestValid failed. " +
+                    "syncFlowRequest is null");
         }
         if (ObjectUtils.anyNull(syncFlowRequest.getConcatDestFolderPath(), syncFlowRequest.getFlattenFolder())) {
-            throw new SyncDuoException("SyncFlowRequest 检查失败, concatDestFolderPath 或 flattenFolder 为空");
+            throw new SyncDuoException(
+                    "isSyncFlowRequestValid failed. " +
+                            "concatDestFolderPath or flattenFolder is null");
         }
         String sourceFolderFullPath = syncFlowRequest.getSourceFolderFullPath();
         String destFolderFullPath = syncFlowRequest.getDestFolderFullPath();
@@ -219,7 +240,8 @@ public class SyncFlowController {
                 sourceFolderFullPath,
                 destFolderFullPath)) {
             throw new SyncDuoException(
-                    "SyncFlowRequest 检查失败, sourceFolderFullPath, 或 destFolderFullPath 为空");
+                    "isSyncFlowRequestValid failed. " +
+                            "sourceFolderFullPath or destFolderFullPath is null");
         }
         // 检查 sourceFolderPath 路径是否正确
         Path sourceFolder = FileOperationUtils.isFolderPathValid(syncFlowRequest.getSourceFolderFullPath());
@@ -232,7 +254,9 @@ public class SyncFlowController {
         }
         if (FileOperationUtils.endsWithSeparator(destFolderFullPath)) {
             throw new SyncDuoException(
-                    "destFolderFullPath 格式不规范, 使用分隔符结尾. %s".formatted(destFolderFullPath));
+                    ("isSyncFlowRequestValid failed. " +
+                            "destFolderFullPath ends with '/'. " +
+                            "destFolderFullPath is %s").formatted(destFolderFullPath));
         }
     }
 }
