@@ -35,12 +35,14 @@ public class FileOperationUtils {
 
     private static final Random RANDOM = new Random();
 
+    private static final FileSystem FILE_SYSTEM = FileSystems.getDefault();
+
 
     public static boolean endsWithSeparator(String path) throws SyncDuoException {
         if (StringUtils.isEmpty(path)) {
-            throw new SyncDuoException("path is empty");
+            throw new SyncDuoException("get path separator failed, path is empty");
         }
-        return path.endsWith(FileSystems.getDefault().getSeparator());
+        return path.endsWith(getPathSeparator());
     }
 
     public static Path createContentFolder(
@@ -50,6 +52,7 @@ public class FileOperationUtils {
         Path contentFolderParent = isParentFolderPathValid(contentFolderFullPath);
         Path contentFolder = contentFolderParent.resolve(sourceFolder.getFileName());
         if (Files.exists(contentFolder)) {
+            log.warn("the content folder already exist");
             return contentFolder;
         }
         return createFolder(contentFolder);
@@ -68,7 +71,7 @@ public class FileOperationUtils {
         try {
             Files.createDirectories(folder);
         } catch (IOException e) {
-            throw new SyncDuoException("创建文件夹失败 %s".formatted(folderFullPath), e);
+            throw new SyncDuoException("createFolder failed. folderFullPath is %s".formatted(folderFullPath), e);
         }
         return folder;
     }
@@ -77,7 +80,7 @@ public class FileOperationUtils {
         try {
             Files.createDirectories(folder);
         } catch (IOException e) {
-            throw new SyncDuoException("创建文件夹失败 %s".formatted(folder), e);
+            throw new SyncDuoException("createFolder failed. folder is %s".formatted(folder), e);
         }
         return folder;
     }
@@ -101,9 +104,9 @@ public class FileOperationUtils {
                 }
             });
         } catch (IOException e) {
-            throw new SyncDuoException("遍历删除文件夹失败 ", e);
+            throw new SyncDuoException("delete folder recursively failed. folder is %s".formatted(folder), e);
         }
-        log.info("All folders and files have been deleted successfully.");
+        log.debug("All folders and files have been deleted successfully.");
     }
 
     public static void walkFilesTree(
@@ -113,12 +116,12 @@ public class FileOperationUtils {
         try {
             Files.walkFileTree(folder, simpleFileVisitor);
         } catch (IOException e) {
-            throw new SyncDuoException("遍历文件失败", e);
+            throw new SyncDuoException("walkFilesTree failed. folderFullPath is %s".formatted(folderFullPath), e);
         }
     }
 
     public static String getPathSeparator() {
-        return FileSystems.getDefault().getSeparator();
+        return FILE_SYSTEM.getSeparator();
     }
 
     // 拼接字符串 <rootFolderId><relativePath><fileFullName>
@@ -126,11 +129,12 @@ public class FileOperationUtils {
     public static String getUUID4(Long rootFolderId, String rootFolderFullPath, Path file)
             throws SyncDuoException {
         if (ObjectUtils.anyNull(rootFolderId, file)) {
-            throw new SyncDuoException("获取 uuid4 失败, rootFolderId 或 file 为空");
+            throw new SyncDuoException("getUUID4 failed, rootFolderId or file 为空");
         }
         Path rootFolder = isFolderPathValid(rootFolderFullPath);
         if (!file.startsWith(rootFolder)) {
-            throw new SyncDuoException("文件路径不包含 rootFolderFullPath");
+            throw new SyncDuoException("getUUID4 failed. file's path doesn't contain rootFolderFullPath." +
+                    "rootFolderFullPath is %s, file is %s".formatted(rootFolderFullPath, file));
         }
         String relativizePath = getRelativePath(rootFolderFullPath, file);
         byte[] hash = DigestUtils.sha256(rootFolderId + relativizePath + file.getFileName());
@@ -140,19 +144,20 @@ public class FileOperationUtils {
     public static String getUUID4(Long rootFolderId, String fileRelativePath, String fileFullName)
             throws SyncDuoException {
         if (ObjectUtils.anyNull(rootFolderId)) {
-            throw new SyncDuoException("获取 uuid4 失败, rootFolderId 为空");
+            throw new SyncDuoException("getUUID4 failed, rootFolderId is null");
         }
         if (StringUtils.isAnyBlank(fileRelativePath, fileFullName)) {
-            throw new SyncDuoException("获取 uuid4 失败, fileRelativePath 或 fileFullName 为空");
+            throw new SyncDuoException("getUUID4 failed, fileRelativePath or fileFullName is null." +
+                    "fileRelativePath is %s, fileFullName is %s".formatted(fileRelativePath, fileFullName));
         }
         byte[] hash = DigestUtils.sha256(rootFolderId + fileRelativePath + fileFullName);
         return UUID.nameUUIDFromBytes(hash).toString();
     }
 
     public static Pair<Timestamp, Timestamp> getFileCrTimeAndMTime(Path file) throws SyncDuoException {
-        log.info("正在读取文件:{} 的元数据", file.toAbsolutePath());
+        log.debug("reading file:{} 's metadata", file.toAbsolutePath());
         if (!Files.exists(file) && Files.isRegularFile(file)) {
-            throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
+            throw new SyncDuoException("file: %s doesn't exist".formatted(file.toAbsolutePath()));
         }
         BasicFileAttributes basicFileAttributes;
         ReentrantReadWriteLock lock = null;
@@ -163,7 +168,7 @@ public class FileOperationUtils {
             long lastModifiedTimeStamp = basicFileAttributes.lastModifiedTime().toMillis();
             return new ImmutablePair<>(new Timestamp(createTimeStamp), new Timestamp(lastModifiedTimeStamp));
         } catch (SyncDuoException | IOException e) {
-            throw new SyncDuoException("无法读取文件:%s 的元数据", e);
+            throw new SyncDuoException("getFileCrTimeAndMTime failed, file is %s".formatted(file), e);
         } finally {
             if (ObjectUtils.isNotEmpty(lock)) {
                 lock.readLock().unlock();
@@ -175,10 +180,11 @@ public class FileOperationUtils {
         // 检查 rootFolderPath 参数
         Path rootFolder = isFolderPathValid(rootFolderPath);
         if (ObjectUtils.anyNull(file)) {
-            throw new SyncDuoException("无法计算相对路径, file 为空");
+            throw new SyncDuoException("getRelativePath failed, file is null");
         }
         if (!file.startsWith(rootFolder)) {
-            throw new SyncDuoException("文件路径不包含 rootFolderFullPath");
+            throw new SyncDuoException("getRelativePath failed, file's path doesn't contain rootFolderPath." +
+                    "file is %s, rootFolderPath is %s".formatted(file, rootFolderPath));
         }
         Path relativizePath = rootFolder.relativize(file.getParent());
         return StringUtils.isEmpty(relativizePath.toString()) ?
@@ -188,7 +194,7 @@ public class FileOperationUtils {
 
     public static Pair<String, String> getFileNameAndExtension(Path file) throws SyncDuoException {
         if (ObjectUtils.isEmpty(file)) {
-            throw new SyncDuoException("无法获取文件名, file 为空");
+            throw new SyncDuoException("getFileNameAndExtension failed, file is null");
         }
         // 获取文件名和文件格式
         String fileName = file.getFileName().toString();
@@ -203,10 +209,10 @@ public class FileOperationUtils {
     }
 
     public static String getMD5Checksum(Path file) throws SyncDuoException {
-        log.info("正在读取文件:{} 的 MD5 Checksum", file.toAbsolutePath());
+        log.debug("reading file:{} 's MD5 checksum", file.toAbsolutePath());
 
         if (!Files.exists(file) && Files.isRegularFile(file)) {
-            throw new SyncDuoException("文件: %s 不存在".formatted(file.toAbsolutePath()));
+            throw new SyncDuoException("getMD5Checksum failed. file: %s doesn't exist".formatted(file));
         }
 
         ReentrantReadWriteLock lock = null;
@@ -216,7 +222,7 @@ public class FileOperationUtils {
                 return DigestUtils.md5Hex(is);
             }
         } catch (SyncDuoException | IOException e) {
-            throw new SyncDuoException("无法读取文件:%s 的 MD5 checksum".formatted(file.toAbsolutePath()));
+            throw new SyncDuoException("getMD5Checksum failed. file is %s".formatted(file));
         } finally {
             if (ObjectUtils.isNotEmpty(lock)) {
                 lock.readLock().unlock();
@@ -225,7 +231,7 @@ public class FileOperationUtils {
     }
 
     public static Path copyFile(String sourcePath, String destPath) throws SyncDuoException {
-        log.info("执行文件复制操作. 源文件 {}, 目的文件 {}", sourcePath, destPath);
+        log.debug("copying file. source file is {}, dest file is {}", sourcePath, destPath);
 
         // 检查源文件是否存在
         Path sourceFile = isFilePathValid(sourcePath);
@@ -236,13 +242,14 @@ public class FileOperationUtils {
             try {
                 Files.createDirectories(destFile.getParent());
             } catch (IOException e) {
-                throw new SyncDuoException("文件夹递归创建失败. 源文件 %s, 目的文件 %s".formatted(sourcePath, destPath), e);
+                throw new SyncDuoException("createDirectories failed. source file is %s, dest file is %s".
+                        formatted(sourcePath, destPath), e);
             }
             // 创建一个空的文件, 用于获取 write lock
             try {
                 Files.createFile(destFile);
             } catch (IOException e) {
-                throw new SyncDuoException("创建空的文件 %s 失败".formatted(destFile), e);
+                throw new SyncDuoException("createFile failed. file is %s".formatted(destFile), e);
             }
         }
         // 初始化锁
@@ -253,7 +260,8 @@ public class FileOperationUtils {
             destLock = tryLockWithRetries(destFile, false);
             return Files.copy(sourceFile, destFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | SyncDuoException e) {
-            throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
+            throw new SyncDuoException("copyFile failed. source file is %s, dest file is %s".
+                    formatted(sourceFile, destFile), e);
         } finally {
             if (ObjectUtils.isNotEmpty(sourceLock)) {
                 sourceLock.readLock().unlock();
@@ -276,7 +284,8 @@ public class FileOperationUtils {
             destLock = tryLockWithRetries(destFile, false);
             return Files.copy(sourceFile, destFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | SyncDuoException e) {
-            throw new SyncDuoException("文件复制失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
+            throw new SyncDuoException("updateFileByCopy failed. source file is %s, dest file is %s".
+                    formatted(sourceFile, destFile), e);
         } finally {
             if (ObjectUtils.isNotEmpty(sourceLock)) {
                 sourceLock.readLock().unlock();
@@ -288,18 +297,21 @@ public class FileOperationUtils {
     }
 
     public static Path hardlinkFile(String sourcePath, String destPath) throws SyncDuoException {
-        log.info("执行文件hardlink操作. 源文件 {}, 目的文件 {}", sourcePath, destPath);
+        log.debug("doing hardlinkFile. source file is {}, dest file is {}", sourcePath, destPath);
 
         Path sourceFile = isFilePathValid(sourcePath);
         Path destFile = Paths.get(destPath);
         if (!sourceFile.getRoot().equals(destFile.getRoot())) {
-            throw new SyncDuoException("源文件路径:%s 和目标文件路径:%s 不在一个磁盘上".formatted(sourcePath, destPath));
+            throw new SyncDuoException(("hardlinkFile failed. " +
+                    "source file and dest file doesn't located on the same disk. " +
+                    "source file is %s, dest file is %s").formatted(sourcePath, destPath));
         }
         // 保证目的地文件夹存在
         try {
             Files.createDirectories(destFile.getParent());
         } catch (IOException e) {
-            throw new SyncDuoException("文件夹递归创建失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
+            throw new SyncDuoException("createDirectories failed. source file is %s, dest file is %s"
+                    .formatted(sourceFile, destFile), e);
         }
         // hardlink file
         ReentrantReadWriteLock lock = null;
@@ -309,7 +321,8 @@ public class FileOperationUtils {
             // 执行文件 hardlink
             return Files.createLink(destFile, sourceFile);
         } catch (IOException | SyncDuoException e) {
-            throw new SyncDuoException("文件hardlink失败. 源文件 %s, 目的文件 %s".formatted(sourceFile, destFile), e);
+            throw new SyncDuoException("hardlinkFile failed. source file is %s, dest file is %s"
+                    .formatted(sourceFile, destFile), e);
         } finally {
             if (ObjectUtils.isNotEmpty(lock)) {
                 lock.readLock().unlock();
@@ -320,20 +333,19 @@ public class FileOperationUtils {
     public static Path isFilePathValid(String filePath)
             throws SyncDuoException {
         if (StringUtils.isBlank(filePath)) {
-            throw new SyncDuoException("文件路径:%s 为空".formatted(filePath));
+            throw new SyncDuoException("isFilePathValid failed. filePath is null");
         }
-
-        Path sourceFile = Paths.get(filePath);
-        if (!Files.exists(sourceFile)) {
-            throw new SyncDuoException("文件路径:%s 不存在".formatted(filePath));
+        if (isFilePathExist(filePath)) {
+            return Paths.get(filePath);
+        } else {
+            throw new SyncDuoException("isFilePathExist failed. filePath is %s".formatted(filePath));
         }
-        return sourceFile;
     }
 
     public static boolean isFilePathExist(String filePath)
             throws SyncDuoException {
         if (StringUtils.isBlank(filePath)) {
-            throw new SyncDuoException("文件路径:%s 为空".formatted(filePath));
+            throw new SyncDuoException("isFilePathExist failed. filePath is null");
         }
         Path sourceFile = Paths.get(filePath);
         return Files.exists(sourceFile);
@@ -341,36 +353,38 @@ public class FileOperationUtils {
 
     private static void isFileValid(Path file) throws SyncDuoException {
         if (!Files.exists(file)) {
-            throw new SyncDuoException("文件路径:%s 不存在".formatted(file));
+            throw new SyncDuoException("isFileValid failed. file is null");
         }
     }
 
     public static Path isFolderPathValid(String path) throws SyncDuoException {
         if (StringUtils.isBlank(path)) {
-            throw new SyncDuoException("文件夹路径为空");
+            throw new SyncDuoException("isFolderPathValid failed. path is null");
         }
         Path folderPath = Paths.get(path);
         if (Files.exists(folderPath) && Files.isDirectory(folderPath)) {
             return folderPath;
         } else {
-            throw new SyncDuoException("文件夹路径:%s 不存在或不是文件夹".formatted(path));
+            throw new SyncDuoException(("isFolderPathValid failed. path doesn't exist or is not folder." +
+                    "path is %s").formatted(path));
         }
     }
 
     public static Path isFolderPathValid(Path folderPath) throws SyncDuoException {
         if (ObjectUtils.isEmpty(folderPath)) {
-            throw new SyncDuoException("folderPath 为空");
+            throw new SyncDuoException("isFolderPathValid failed. folderPath is null");
         }
         if (Files.exists(folderPath) && Files.isDirectory(folderPath)) {
             return folderPath;
         } else {
-            throw new SyncDuoException("文件夹路径:%s 不存在或不是文件夹".formatted(folderPath));
+            throw new SyncDuoException(("isFolderPathValid failed. path doesn't exist or is not folder. " +
+                    "folderPath is %s").formatted(folderPath));
         }
     }
 
     public static Path isParentFolderPathValid(String path) throws SyncDuoException {
         if (StringUtils.isBlank(path)) {
-            throw new SyncDuoException("文件夹路径为空");
+            throw new SyncDuoException("isParentFolderPathValid failed. path is null");
         }
         Path folderPath = Paths.get(path);
         return isFolderPathValid(folderPath.getParent());
@@ -392,20 +406,20 @@ public class FileOperationUtils {
                     locked = lock.writeLock().tryLock(waitTime, TimeUnit.SECONDS);
                 }
                 if (locked) {
-                    log.info("{} Lock acquired on attempt {}", lockType, retryCount);
+                    log.debug("{} Lock acquired on attempt {}", lockType, retryCount);
                     return lock;
                 } else {
-                    log.info("{} Lock attempt failed, retrying in {} seconds...", lockType, waitTime);
+                    log.debug("{} Lock attempt failed, retrying in {} seconds...", lockType, waitTime);
                     retryCount++;
                 }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.info("线程被打断");
+            log.error("tryLockWithRetries thread get interrupted. current thread is {}", Thread.currentThread());
         } catch (NullPointerException e) {
             throw new SyncDuoException(
-                    "Exception occurred while attempting to acquire %s file lock".formatted(lockType), e);
+                    "tryLockWithRetries failed. lockType is %s, file is %s".formatted(lockType, file), e);
         }
-        throw new SyncDuoException("获取锁超时");
+        throw new SyncDuoException("tryLockWithRetries failed. acquire lock timeout");
     }
 }
