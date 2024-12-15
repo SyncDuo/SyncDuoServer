@@ -3,7 +3,7 @@ package com.syncduo.server.model.dto.http;
 import lombok.Data;
 
 @Data
-public class SyncFlowRequest {
+public class CreateSyncFlowRequest {
 
     private String sourceFolderFullPath;
 

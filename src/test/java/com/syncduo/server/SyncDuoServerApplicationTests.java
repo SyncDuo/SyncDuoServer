@@ -2,7 +2,7 @@ package com.syncduo.server;
 
 import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.dto.http.SyncFlowRequest;
+import com.syncduo.server.model.dto.http.CreateSyncFlowRequest;
 import com.syncduo.server.model.dto.http.SyncFlowResponse;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.service.impl.*;
@@ -255,12 +255,12 @@ class SyncDuoServerApplicationTests {
 
     @Test
     void testSyncFlowController() {
-        SyncFlowRequest syncFlowRequest = new SyncFlowRequest();
-        syncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        syncFlowRequest.setDestFolderFullPath(contentFolderPath);
-        syncFlowRequest.setConcatDestFolderPath(true);
-        syncFlowRequest.setFlattenFolder(false);
-        SyncFlowResponse syncFlowResponse = syncFlowController.addSource2ContentSyncFlow(syncFlowRequest);
+        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
+        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
+        createSyncFlowRequest.setDestFolderFullPath(contentFolderPath);
+        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setFlattenFolder(false);
+        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
         log.info(syncFlowResponse.toString());
         // Add a sleep to allow time for manual break-point inspection
         try {

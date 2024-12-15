@@ -12,6 +12,8 @@ import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,20 +43,13 @@ public class RootFolderEventProducer implements DisposableBean {
     // source folder 监听所有文件事件
     // content folder 监听文件删除事件, 其他事件通过 full scan, compare 触发
     public void addWatcher(RootFolderEntity rootFolderEntity) throws SyncDuoException {
-        if (ObjectUtils.anyNull(rootFolderEntity)) {
-            throw new SyncDuoException("创建 watcher 失败, rootFolderEntity 为空");
-        }
-        // 只有 source 和 content folder 可以添加 watcher
-        RootFolderTypeEnum rootFolderTypeEnum = RootFolderTypeEnum.getByString(rootFolderEntity.getRootFolderType());
-        if (ObjectUtils.isEmpty(rootFolderTypeEnum) || rootFolderTypeEnum.equals(RootFolderTypeEnum.INTERNAL_FOLDER)) {
-            throw new SyncDuoException("无效 rootFolderTypeEnum %s".formatted(rootFolderTypeEnum));
-        }
-        // 获取 root folder full path, 并添加 observer
-        Path folder = FileOperationUtils.isFolderPathValid(rootFolderEntity.getRootFolderFullPath());
-        FileAlterationObserver observer =
-                new FileAlterationObserver(folder.toFile());
+        // 获取 root folder, 添加 observer
+        Pair<Path, RootFolderTypeEnum> rootFolderAndType = isRootFolderEntityValid(rootFolderEntity);
+        Path folder = rootFolderAndType.getLeft();
+        FileAlterationObserver observer = new FileAlterationObserver(folder.toFile());
         // 获取 root folder id 和 root folder type
         Long rootFolderId = rootFolderEntity.getRootFolderId();
+        RootFolderTypeEnum rootFolderTypeEnum = rootFolderAndType.getRight();
         // 添加 listener
         if (rootFolderTypeEnum.equals(RootFolderTypeEnum.SOURCE_FOLDER)) {
             observer.addListener(new FileAlterationListenerAdaptor() {
@@ -116,7 +111,7 @@ public class RootFolderEventProducer implements DisposableBean {
                                 .destFolderTypeEnum(rootFolderTypeEnum)
                                 .build());
                     } catch (SyncDuoException e) {
-                        log.error("source 文件夹发送 file event 失败", e);
+                        log.error("source folder watcher send file event failed", e);
                     }
                 }
             });
@@ -127,8 +122,42 @@ public class RootFolderEventProducer implements DisposableBean {
             monitor.start();
             this.map.put(rootFolderId, monitor);
         } catch (Exception e) {
-            throw new SyncDuoException("启动文件夹 monitor 失败", e);
+            throw new SyncDuoException("addWatcher failed. rootFolderEntity is %s".formatted(rootFolderEntity), e);
         }
+    }
+
+    public void stopWatcher(Long rootFolderId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(rootFolderId)) {
+            throw new SyncDuoException("stopWatcher failed. rootFolderId is null");
+        }
+        FileAlterationMonitor fileAlterationMonitor = this.map.get(rootFolderId);
+        if (ObjectUtils.isNotEmpty(fileAlterationMonitor)) {
+            try {
+                fileAlterationMonitor.stop();
+            } catch (Exception e) {
+                log.error("stopWatcher failed. monitor is {}, rootFolderId is {}",
+                        fileAlterationMonitor,
+                        rootFolderId,
+                        e);
+            }
+        } else {
+            log.warn("stopWatcher failed. can't find monitor with rootFolderId {}", rootFolderId);
+        }
+    }
+
+    private static Pair<Path, RootFolderTypeEnum> isRootFolderEntityValid(RootFolderEntity rootFolderEntity)
+            throws SyncDuoException {
+        if (ObjectUtils.anyNull(rootFolderEntity)) {
+            throw new SyncDuoException("isRootFolderEntityValid failed. rootFolderEntity is null");
+        }
+        // 只有 source 和 content folder 可以添加 watcher
+        RootFolderTypeEnum rootFolderTypeEnum = RootFolderTypeEnum.getByString(rootFolderEntity.getRootFolderType());
+        if (ObjectUtils.isEmpty(rootFolderTypeEnum) || rootFolderTypeEnum.equals(RootFolderTypeEnum.INTERNAL_FOLDER)) {
+            throw new SyncDuoException(("isRootFolderEntityValid failed. " +
+                    "illegal rootFolderTypeEnum %s").formatted(rootFolderTypeEnum));
+        }
+        Path folder = FileOperationUtils.isFolderPathValid(rootFolderEntity.getRootFolderFullPath());
+        return new ImmutablePair<>(folder, rootFolderTypeEnum);
     }
 
     @Override
@@ -136,7 +165,7 @@ public class RootFolderEventProducer implements DisposableBean {
         this.map.forEach((k, v) -> {
             try {
                 v.stop();
-                log.info("shutdown monitor. rootFolderId is {}", k);
+                log.debug("shutdown monitor. rootFolderId is {}", k);
             } catch (Exception e) {
                 log.error("failed to shutdown monitor. rootFolder is {}", k, e);
             }
