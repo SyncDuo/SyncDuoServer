@@ -71,7 +71,7 @@ public class SourceFolderHandler implements DisposableBean {
     public void startHandle() {
         while (RUNNING) {
             FileEventDto fileEvent = systemQueue.pollSourceFolderEvent();
-            if (ObjectUtils.isEmpty(fileEvent) || fileAccessValidator.isFileEventValid(fileEvent.getRootFolderId())) {
+            if (ObjectUtils.isEmpty(fileEvent) || !fileAccessValidator.isFileEventValid(fileEvent.getRootFolderId())) {
                 continue;
             }
             this.threadPoolTaskExecutor.submit(() -> {
