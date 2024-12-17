@@ -12,6 +12,7 @@ import com.syncduo.server.model.dto.http.SyncFlowResponse;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SyncSettingEntity;
+import com.syncduo.server.mq.FileAccessValidator;
 import com.syncduo.server.mq.producer.RootFolderEventProducer;
 import com.syncduo.server.service.impl.AdvancedFileOpService;
 import com.syncduo.server.service.impl.RootFolderService;
@@ -44,6 +45,8 @@ public class SyncFlowController {
 
     private final RootFolderEventProducer rootFolderEventProducer;
 
+    private final FileAccessValidator fileAccessValidator;
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final TypeReference<List<String>> LIST_STRING_TYPE_REFERENCE = new TypeReference<>() {};
@@ -54,12 +57,14 @@ public class SyncFlowController {
             SyncFlowService syncFlowService,
             AdvancedFileOpService fileOpService,
             SyncSettingService syncSettingService,
-            RootFolderEventProducer rootFolderEventProducer) {
+            RootFolderEventProducer rootFolderEventProducer,
+            FileAccessValidator fileAccessValidator) {
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.fileOpService = fileOpService;
         this.syncSettingService = syncSettingService;
         this.rootFolderEventProducer = rootFolderEventProducer;
+        this.fileAccessValidator = fileAccessValidator;
     }
 
     @PostMapping("/add-sync-flow")
@@ -145,8 +150,11 @@ public class SyncFlowController {
                     "can't find the syncFlowEntity by id %s".formatted(internal2ContentSyncFlow));
         }
         try {
+            // delete sync-flow
             this.deleteSyncFlow(source2InternalSyncFlowId);
             this.deleteSyncFlow(internal2ContentSyncFlowId);
+            // 去除 FileAccessValidator
+            this.fileAccessValidator.removeWhitelist(source2InternalSyncFlowId, internal2ContentSyncFlowId);
         } catch (SyncDuoException e) {
             log.error("deleteSyncFlow failed. deleteSyncFlowRequest is {}.", deleteSyncFlowRequest, e);
             return SyncFlowResponse.onError("deleteSyncFlow failed. exception is %s".formatted(e));
@@ -164,7 +172,9 @@ public class SyncFlowController {
             throw new SyncDuoException(("deletedSyncFlow failed. " +
                     "can't get syncFlowType by syncFlowEntity %s").formatted(syncFlowEntity));
         }
+        // 删除数据库记录
         this.syncFlowService.deleteSyncFlow(syncFlowEntity);
+        // 根据 sync-flow, 停止 watcher
         if (syncFlowType.equals(SyncFlowTypeEnum.SOURCE_TO_INTERNAL)) {
             this.rootFolderEventProducer.stopWatcher(syncFlowEntity.getSourceFolderId());
         } else if (syncFlowType.equals(SyncFlowTypeEnum.INTERNAL_TO_CONTENT)) {
@@ -198,6 +208,8 @@ public class SyncFlowController {
                 contentFolderEntity.getRootFolderId(),
                 SyncFlowTypeEnum.INTERNAL_TO_CONTENT
         );
+        // 添加 FileAccessValidator 白名单
+        this.fileAccessValidator.addWhitelist(sourceFolderEntity, internalFolderEntity, contentFolderEntity);
         // 创建 sync setting
         SyncSettingEntity syncSettingEntity = this.syncSettingService.createSyncSetting(
                 internal2ContentSyncFlow.getSyncFlowId(),
@@ -227,6 +239,8 @@ public class SyncFlowController {
                 contentFolderEntity.getRootFolderId(),
                 SyncFlowTypeEnum.INTERNAL_TO_CONTENT
         );
+        // 添加 FileAccessValidator 白名单
+        this.fileAccessValidator.addWhitelist(contentFolderEntity);
         // 创建 sync setting
         SyncSettingEntity syncSettingEntity = this.syncSettingService.createSyncSetting(
                 internal2ContentSyncFlow.getSyncFlowId(),

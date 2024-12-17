@@ -9,12 +9,12 @@ import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.model.entity.FileEventEntity;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
+import com.syncduo.server.mq.FileAccessValidator;
 import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.service.impl.FileEventService;
 import com.syncduo.server.service.impl.FileService;
 import com.syncduo.server.service.impl.RootFolderService;
 import com.syncduo.server.service.impl.SyncFlowService;
-import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -43,7 +43,9 @@ public class SourceFolderHandler implements DisposableBean {
 
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    private volatile boolean running = true;  // Flag to control the event loop
+    private final FileAccessValidator fileAccessValidator;
+
+    private volatile boolean RUNNING = true;  // Flag to control the event loop
 
     @Autowired
     public SourceFolderHandler(SystemQueue systemQueue,
@@ -51,13 +53,15 @@ public class SourceFolderHandler implements DisposableBean {
                                RootFolderService rootFolderService,
                                SyncFlowService syncFlowService,
                                FileEventService fileEventService,
-                               ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+                               ThreadPoolTaskExecutor threadPoolTaskExecutor,
+                               FileAccessValidator fileAccessValidator) {
         this.systemQueue = systemQueue;
         this.fileService = fileService;
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.fileEventService = fileEventService;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
+        this.fileAccessValidator = fileAccessValidator;
     }
 
     // source watcher 触发
@@ -65,9 +69,9 @@ public class SourceFolderHandler implements DisposableBean {
     // source 和 internal folder compare 触发
     @Async("threadPoolTaskExecutor")
     public void startHandle() {
-        while (running) {
+        while (RUNNING) {
             FileEventDto fileEvent = systemQueue.pollSourceFolderEvent();
-            if (ObjectUtils.isEmpty(fileEvent)) {
+            if (ObjectUtils.isEmpty(fileEvent) || fileAccessValidator.isFileEventValid(fileEvent.getRootFolderId())) {
                 continue;
             }
             this.threadPoolTaskExecutor.submit(() -> {
@@ -195,7 +199,11 @@ public class SourceFolderHandler implements DisposableBean {
                 sourceFileEntity
         );
         // hardlink file
-        Path internalFile = FileOperationUtils.hardlinkFile(sourceFileFullPath, destFileFullPath);
+        Path internalFile = fileAccessValidator.hardlinkFile(
+                sourceFolderEntity.getRootFolderId(),
+                sourceFileFullPath,
+                internalFolderEntity.getRootFolderId(),
+                destFileFullPath);
         // 填充 internal file entity
         FileEntity internalFileEntity = this.fileService.fillFileEntityForCreate(
                 internalFile,
@@ -243,6 +251,6 @@ public class SourceFolderHandler implements DisposableBean {
     @Override
     public void destroy() {
         log.info("stop source handler");
-        running = false;
+        RUNNING = false;
     }
 }

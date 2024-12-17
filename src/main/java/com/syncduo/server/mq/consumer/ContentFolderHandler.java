@@ -6,6 +6,7 @@ import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
+import com.syncduo.server.mq.FileAccessValidator;
 import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.service.impl.*;
 import com.syncduo.server.util.FileOperationUtils;
@@ -34,9 +35,11 @@ public class ContentFolderHandler implements DisposableBean {
 
     private final SyncSettingService syncSettingService;
 
+    private final FileAccessValidator fileAccessValidator;
+
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    private volatile boolean running = true;
+    private volatile boolean RUNNING = true;
 
     public ContentFolderHandler(
             SystemQueue systemQueue,
@@ -44,12 +47,14 @@ public class ContentFolderHandler implements DisposableBean {
             RootFolderService rootFolderService,
             SyncFlowService syncFlowService,
             SyncSettingService syncSettingService,
+            FileAccessValidator fileAccessValidator,
             ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         this.systemQueue = systemQueue;
         this.fileService = fileService;
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.syncSettingService = syncSettingService;
+        this.fileAccessValidator = fileAccessValidator;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
 
@@ -58,9 +63,9 @@ public class ContentFolderHandler implements DisposableBean {
     // internal 和 content folder compare 触发, root folder type = internal folder, 需要 file copy
     @Async("threadPoolTaskExecutor")
     public void startHandle() {
-        while (running) {
+        while (RUNNING) {
             FileEventDto fileEvent = this.systemQueue.pollContentFolderEvent();
-            if (ObjectUtils.isEmpty(fileEvent)) {
+            if (ObjectUtils.isEmpty(fileEvent)|| fileAccessValidator.isFileEventValid(fileEvent.getRootFolderId())) {
                 continue;
             }
             this.threadPoolTaskExecutor.submit(() -> {
@@ -164,8 +169,11 @@ public class ContentFolderHandler implements DisposableBean {
                 continue;
             }
             // file copy
-            Path contentFile =
-                    FileOperationUtils.copyFile(internalFile.toAbsolutePath().toString(), contentFileFullPath);
+            Path contentFile = fileAccessValidator.copyFile(
+                    internalFolderEntity.getRootFolderId(),
+                    internalFile.toAbsolutePath().toString(),
+                    contentFolderEntity.getRootFolderId(),
+                    contentFileFullPath);
             // create record
             FileEntity contentFileEntity = this.fileService.fillFileEntityForCreate(
                     contentFile,
@@ -209,7 +217,11 @@ public class ContentFolderHandler implements DisposableBean {
             if (ObjectUtils.isNotEmpty(contentFile)) {
                 // 找到文件则 update with copy, 找不到文件说明已经过滤了, 则不需要 update with copy
                 // 找到了则 file update copy
-                contentFile = FileOperationUtils.updateFileByCopy(internalFile, contentFile);
+                contentFile = fileAccessValidator.updateFileByCopy(
+                        internalFolderEntity.getRootFolderId(),
+                        internalFile,
+                        contentFolderEntity.getRootFolderId(),
+                        contentFile);
                 this.fileService.updateFileEntityByFile(contentFileEntity, contentFile);
                 // 记录 file event
             }
@@ -254,6 +266,6 @@ public class ContentFolderHandler implements DisposableBean {
     @Override
     public void destroy() {
         log.info("stop content handler");
-        running = false;
+        RUNNING = false;
     }
 }
