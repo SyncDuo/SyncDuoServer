@@ -40,6 +40,10 @@ public class SyncFlowService
     private final ConcurrentHashMap<Long, EventCount> internalEventCountMap =
             new ConcurrentHashMap<>(1000);
 
+    public void initialEventCountMap(Long folderId) {
+        this.eventCountMap.putIfAbsent(folderId, new ArrayList<>(1));
+    }
+
     public void incrSource2InternalCount(Long sourceFolderId) throws SyncDuoException {
         if (ObjectUtils.isEmpty(sourceFolderId)) {
             throw new SyncDuoException("sourceFolderId is null");
@@ -259,13 +263,13 @@ public class SyncFlowService
         try {
             SyncFlowTypeEnum syncFlowTypeEnum = SyncFlowTypeEnum.valueOf(syncFlowType);
             switch (syncFlowTypeEnum) {
-                case SOURCE_TO_INTERNAL: {
+                case SOURCE_TO_INTERNAL -> {
                     // source -> internal 删除, internal event map 删除, internal to content map 删除
                     this.eventCountMap.remove(syncFlowEntity.getSourceFolderId());
                     this.internalEventCountMap.remove(syncFlowEntity.getDestFolderId());
                     this.eventCountMap.remove(syncFlowEntity.getDestFolderId());
                 }
-                case INTERNAL_TO_CONTENT: {
+                case INTERNAL_TO_CONTENT -> {
                     List<EventCount> eventCounts = this.eventCountMap.get(syncFlowEntity.getSourceFolderId());
                     eventCounts.removeIf(eventCount ->
                             eventCount.getDestFolderId().equals(syncFlowEntity.getDestFolderId()));

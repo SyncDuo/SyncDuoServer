@@ -4,6 +4,7 @@ import com.syncduo.server.enums.FileDesyncEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.FileEntity;
+import com.syncduo.server.model.entity.FileEventEntity;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.mq.FileAccessValidator;
@@ -35,6 +36,8 @@ public class ContentFolderHandler implements DisposableBean {
 
     private final SyncSettingService syncSettingService;
 
+    private final FileEventService fileEventService;
+
     private final FileAccessValidator fileAccessValidator;
 
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -47,6 +50,7 @@ public class ContentFolderHandler implements DisposableBean {
             RootFolderService rootFolderService,
             SyncFlowService syncFlowService,
             SyncSettingService syncSettingService,
+            FileEventService fileEventService,
             FileAccessValidator fileAccessValidator,
             ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         this.systemQueue = systemQueue;
@@ -54,6 +58,7 @@ public class ContentFolderHandler implements DisposableBean {
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.syncSettingService = syncSettingService;
+        this.fileEventService = fileEventService;
         this.fileAccessValidator = fileAccessValidator;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
@@ -113,6 +118,8 @@ public class ContentFolderHandler implements DisposableBean {
             this.fileService.createFileRecord(contentFileEntity);
         }
         // 记录 file event
+        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, contentFileEntity);
+        this.fileEventService.save(fileEventEntity);
     }
 
     private void onFileCreateFromInternalFolder(FileEventDto fileEvent) throws SyncDuoException {
@@ -184,6 +191,8 @@ public class ContentFolderHandler implements DisposableBean {
             // 减少 pending event count
             this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
             // 记录 file event
+            FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, contentFileEntity);
+            this.fileEventService.save(fileEventEntity);
         }
     }
 
@@ -224,6 +233,8 @@ public class ContentFolderHandler implements DisposableBean {
                         contentFile);
                 this.fileService.updateFileEntityByFile(contentFileEntity, contentFile);
                 // 记录 file event
+                FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, contentFileEntity);
+                this.fileEventService.save(fileEventEntity);
             }
             // 减少 pending event count
             this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
@@ -238,6 +249,8 @@ public class ContentFolderHandler implements DisposableBean {
                 this.fileService.getFileEntityFromFile(rootFolderId, rootFolderEntity.getRootFolderFullPath(), file);
         this.fileService.updateFileEntityByFile(contentFileEntity, file);
         // 记录 file event
+        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, contentFileEntity);
+        this.fileEventService.save(fileEventEntity);
     }
 
     private void onFileDeSynced(FileEventDto fileEvent) throws SyncDuoException {
@@ -250,6 +263,8 @@ public class ContentFolderHandler implements DisposableBean {
         contentFileEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
         this.fileService.updateFileEntityByFile(contentFileEntity, file);
         // 记录 file event
+        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, contentFileEntity);
+        this.fileEventService.save(fileEventEntity);
     }
 
     private void onFileDeleteFromContentFolder(FileEventDto fileEvent) throws SyncDuoException {
@@ -261,6 +276,21 @@ public class ContentFolderHandler implements DisposableBean {
         contentFileEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
         this.fileService.deleteBatchByFileEntity(Collections.singletonList(contentFileEntity));
         // 记录 file event
+        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, contentFileEntity);
+        this.fileEventService.save(fileEventEntity);
+    }
+
+    private FileEventEntity fillFileEventEntityFromFileEvent(
+            FileEventDto fileEvent, FileEntity fileEntity) throws SyncDuoException {
+        if (ObjectUtils.anyNull(fileEvent, fileEntity)) {
+            throw new SyncDuoException("fillFileEventEntityFromFileEvent failed." +
+                    " fileEventDto or fileEntity is null");
+        }
+        FileEventEntity fileEventEntity = new FileEventEntity();
+        fileEventEntity.setRootFolderId(fileEntity.getRootFolderId());
+        fileEventEntity.setFileId(fileEntity.getFileId());
+        fileEventEntity.setFileEventType(fileEvent.getFileEventTypeEnum().name());
+        return fileEventEntity;
     }
 
     @Override

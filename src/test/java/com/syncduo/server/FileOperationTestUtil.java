@@ -6,7 +6,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Stream;
 
 public class FileOperationTestUtil {
 
@@ -93,10 +95,9 @@ public class FileOperationTestUtil {
     }
 
     // pair<Txt File, Binary File>
-    public static Pair<Path, Path> createTxtAndBinFile(
-            Path folderPath) throws IOException {
+    public static Pair<Path, Path> createTxtAndBinFile(Path folderPath) throws IOException {
         // Create .txt file with the naming convention
-        Path txtFile = folderPath.resolve("1" + ".txt");
+        Path txtFile = folderPath.resolve("justText" + ".txt");
         if (!Files.exists(txtFile)) {
             Files.createFile(txtFile);
         }
@@ -105,7 +106,7 @@ public class FileOperationTestUtil {
         Files.write(txtFile, generateNumbers(), StandardOpenOption.WRITE);
 
         // Create .bin file with the naming convention
-        Path binFile = folderPath.resolve("1" + ".bin");
+        Path binFile = folderPath.resolve("justBinary" + ".bin");
         if (!Files.exists(binFile)) {
             Files.createFile(binFile);
         }
@@ -114,6 +115,17 @@ public class FileOperationTestUtil {
         writeRandomBinaryData(binFile);
 
         return new ImmutablePair<>(txtFile, binFile);
+    }
+
+    public static List<Path> getAllFile(Path folder) throws IOException {
+        try(Stream<Path> list = Files.list(folder)) {
+           return list.filter(Files::isRegularFile).toList();
+        }
+    }
+
+    public static void writeToTextFile(Path file) throws IOException {
+        byte[] content = generateNumbers();
+        Files.write(file, content, StandardOpenOption.WRITE);
     }
 
     private static byte[] generateNumbers() {
@@ -129,7 +141,7 @@ public class FileOperationTestUtil {
         return sb.toString().getBytes();
     }
 
-    private static void writeRandomBinaryData(Path binFile) throws IOException {
+    public static void writeRandomBinaryData(Path binFile) throws IOException {
         byte[] randomBytes = new byte[1024]; // Generate 1 KB of random data
         random.nextBytes(randomBytes);
         Files.write(binFile, randomBytes, StandardOpenOption.WRITE);

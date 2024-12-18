@@ -141,9 +141,6 @@ public class SourceFolderHandler implements DisposableBean {
         );
         // 更新  md5 checksum, last_modified_time
         this.fileService.updateFileEntityByFile(sourceFileEntity, file);
-        // 记录 file event, 表示 source folder 发生的文件事件
-        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, sourceFileEntity);
-        this.fileEventService.save(fileEventEntity);
         // 更新 internal file entity
         Pair<Path, FileEntity> fileAndEntityPair = this.updateInternalFileFromSourceFileEntity(sourceFileEntity);
         // 发送 event 到 content 队列
@@ -156,6 +153,9 @@ public class SourceFolderHandler implements DisposableBean {
                 .build());
         // 减少 source -> internal pending event
         this.syncFlowService.decrSource2InternalCount(sourceFolderEntity.getRootFolderId());
+        // 记录 file event, 表示 source folder 发生的文件事件
+        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, sourceFileEntity);
+        this.fileEventService.save(fileEventEntity);
     }
 
     private void onFileDelete(FileEventDto fileEvent) throws SyncDuoException {
@@ -176,6 +176,9 @@ public class SourceFolderHandler implements DisposableBean {
         sourceFileEntity.setFileDeleted(DeletedEnum.DELETED.getCode());
         // 更新数据库
         this.fileService.updateById(sourceFileEntity);
+        // 记录 file event, 表示 source folder 发生的文件事件
+        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, sourceFileEntity);
+        this.fileEventService.save(fileEventEntity);
     }
 
     // Pair<>(internalFile, internalFileEntity);

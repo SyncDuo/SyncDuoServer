@@ -6,11 +6,17 @@ import com.syncduo.server.mq.consumer.ContentFolderHandler;
 import com.syncduo.server.mq.consumer.SourceFolderHandler;
 import com.syncduo.server.service.impl.AdvancedFileOpService;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@Slf4j
 public class ApplicationLifeCycleConfig {
+
+    @Value("${spring.profiles.active:prod}")
+    private String activeProfile;
 
     private final AdvancedFileOpService advancedFileOpService;
 
@@ -30,11 +36,13 @@ public class ApplicationLifeCycleConfig {
 
     @PostConstruct
     public void startUp() throws SyncDuoException {
-        // 检查全部 sync-flow 是否同步
-        // @PostConstruct 在 @BeforeEach 前面, 会导致在 "旧的folder" 上添加 watcher
-        // "旧的folder" 在 @BeforeEach 中删除, 后续触发的事件会发生异常
-        // 具体为不存在的 rootFolderId 事件频发发出, 这些异常都可以忽略
-        this.advancedFileOpService.systemStartUp();
+        if ("prod".equals(activeProfile)) {
+            // 检查全部 sync-flow 是否同步
+            // @PostConstruct 在 @BeforeEach 前面, 会导致在 "旧的folder" 上添加 watcher
+            // "旧的folder" 在 @BeforeEach 中删除, 后续触发的事件会发生异常
+            // 所以需要判断当前 profile 是否为 test, 不为 test 才执行 systemStartUp
+            this.advancedFileOpService.systemStartUp();
+        }
         // 启动 handler
         this.sourceFolderHandler.startHandle();
         this.contentFolderHandler.startHandle();

@@ -167,7 +167,7 @@ public class RootFolderEventProducer implements DisposableBean {
                 v.stop();
                 log.debug("shutdown monitor. rootFolderId is {}", k);
             } catch (Exception e) {
-                log.error("failed to shutdown monitor. rootFolder is {}", k, e);
+                log.warn("failed to shutdown monitor. rootFolder is {}", k, e);
             }
         });
     }

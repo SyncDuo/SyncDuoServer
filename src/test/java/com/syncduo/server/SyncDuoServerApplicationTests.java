@@ -1,21 +1,25 @@
 package com.syncduo.server;
 
 import com.syncduo.server.controller.SyncFlowController;
+import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.http.CreateSyncFlowRequest;
+import com.syncduo.server.model.dto.http.DeleteSyncFlowRequest;
 import com.syncduo.server.model.dto.http.SyncFlowResponse;
 import com.syncduo.server.model.entity.*;
+import com.syncduo.server.mq.producer.RootFolderEventProducer;
 import com.syncduo.server.service.impl.*;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,6 +30,7 @@ import java.util.stream.Collectors;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@TestPropertySource(properties = "spring.profiles.active=test")
 @Slf4j
 class SyncDuoServerApplicationTests {
 
@@ -43,18 +48,19 @@ class SyncDuoServerApplicationTests {
 
     private final SyncSettingService syncSettingService;
 
-    private final FileOperationService fileOperationService;
-
-    @Autowired
-    private ThreadPoolTaskScheduler taskScheduler;
+    private final RootFolderEventProducer rootFolderEventProducer;
 
     private static final String testParentPath = "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/resources";
 
-    private static final String sourceFolderPath = testParentPath + "/sourceFolder";
+    private static final String sourceFolderName = "sourceFolder";
 
-    private static final String internalFolderPath = testParentPath + "/.sourceFolder";
+    private static final String sourceFolderPath = testParentPath + "/" + sourceFolderName;
 
-    private static final String contentFolderPath = testParentPath + "/contentParentFolder";
+    private static final String internalFolderPath = testParentPath + "/." + sourceFolderName;
+
+    private static final String contentFolderParentPath = testParentPath + "/contentParentFolder";
+
+    private static final String contentFolderPath = contentFolderParentPath + "/" + sourceFolderName;
 
     @Autowired
     SyncDuoServerApplicationTests(
@@ -65,7 +71,7 @@ class SyncDuoServerApplicationTests {
             RootFolderService rootFolderService,
             FileEventService fileEventService,
             SyncSettingService syncSettingService,
-            FileOperationService fileOperationService) {
+            RootFolderEventProducer rootFolderEventProducer) {
         this.syncFlowController = syncFlowController;
         this.fileService = fileService;
         this.syncFlowService = syncFlowService;
@@ -73,7 +79,7 @@ class SyncDuoServerApplicationTests {
         this.rootFolderService = rootFolderService;
         this.fileEventService = fileEventService;
         this.syncSettingService = syncSettingService;
-        this.fileOperationService = fileOperationService;
+        this.rootFolderEventProducer = rootFolderEventProducer;
     }
 
     @BeforeEach
@@ -96,7 +102,7 @@ class SyncDuoServerApplicationTests {
             // 删除 source folder 全部内容, 但是不包括 source folder 本身
             FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
             FileOperationUtils.deleteFolder(Path.of(internalFolderPath));
-            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(contentFolderPath));
+            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(contentFolderParentPath));
         } catch (SyncDuoException | IOException e) {
             log.error("删除文件夹失败.", e);
         }
@@ -136,15 +142,6 @@ class SyncDuoServerApplicationTests {
         if (CollectionUtils.isNotEmpty(syncSettingEntities)) {
             this.syncSettingService.removeBatchByIds(
                     syncSettingEntities.stream().map(SyncSettingEntity::getSyncSettingId).collect(Collectors.toList())
-            );
-        }
-        // file operation truncate
-        List<FileOperationEntity> fileOperationEntities = this.fileOperationService.list();
-        if (CollectionUtils.isNotEmpty(fileOperationEntities)) {
-            this.fileOperationService.removeBatchByIds(
-                    fileOperationEntities.stream()
-                            .map(FileOperationEntity::getFileOperationId)
-                            .collect(Collectors.toList())
             );
         }
         log.info("truncate all table");
@@ -254,19 +251,135 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void testSyncFlowController() {
+    void shouldReturnTrueWhenSourceFolderChangeFile() throws IOException, InterruptedException, SyncDuoException {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderPath);
+        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
         createSyncFlowRequest.setConcatDestFolderPath(true);
         createSyncFlowRequest.setFlattenFolder(false);
         SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
-        log.info(syncFlowResponse.toString());
-        // Add a sleep to allow time for manual break-point inspection
-        try {
-            Thread.sleep(1000 * 10);  // 1000 millisecond * sec
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        // Add a sleep to allow time for handler handling
+        Thread.sleep(1000 * 5);  // 1000 millisecond * sec
+        // get source folder entity
+        RootFolderEntity sourceFolderEntity = this.rootFolderService.getByFolderFullPath(sourceFolderPath);
+        // get content folder entity
+        RootFolderEntity contentFolderEntity = this.rootFolderService.getByFolderFullPath(contentFolderPath);
+        // manual change file in source folder
+        List<Path> allFile = FileOperationTestUtil.getAllFile(Path.of(sourceFolderPath));
+        for (Path file : allFile) {
+            if (file.getFileName().toString().contains("txt")) {
+                FileOperationTestUtil.writeToTextFile(file);
+                Thread.sleep(1000 * 5);  // 1000 millisecond * sec
+                FileEntity sourceFileEntity = this.fileService.getFileEntityFromFile(
+                        sourceFolderEntity.getRootFolderId(),
+                        sourceFolderEntity.getRootFolderFullPath(),
+                        file
+                );
+                List<FileEventEntity> sourceFileEventList = fileEventService.getByFileEventTypeAndFileId(
+                        FileEventTypeEnum.FILE_CHANGED,
+                        sourceFileEntity.getFileId());
+                assert CollectionUtils.isNotEmpty(sourceFileEventList);
+                List<FileEventEntity> contentFileEventList = this.fileEventService.getByFileTypeAndRootFolderId(
+                        FileEventTypeEnum.FILE_CHANGED,
+                        contentFolderEntity.getRootFolderId());
+                assert CollectionUtils.isNotEmpty(contentFileEventList);
+            } else {
+                FileOperationTestUtil.writeRandomBinaryData(file);
+                Thread.sleep(1000 * 5);  // 1000 millisecond * sec
+                FileEntity sourceFileEntity = this.fileService.getFileEntityFromFile(
+                        sourceFolderEntity.getRootFolderId(),
+                        sourceFolderEntity.getRootFolderFullPath(),
+                        file
+                );
+                List<FileEventEntity> fileEventEntityList = fileEventService.getByFileEventTypeAndFileId(
+                        FileEventTypeEnum.FILE_CHANGED,
+                        sourceFileEntity.getFileId());
+                assert CollectionUtils.isNotEmpty(fileEventEntityList);
+                List<FileEventEntity> contentFileEventList = this.fileEventService.getByFileTypeAndRootFolderId(
+                        FileEventTypeEnum.FILE_CHANGED,
+                        contentFolderEntity.getRootFolderId());
+                assert CollectionUtils.isNotEmpty(contentFileEventList);
+            }
         }
+    }
+
+    @Test
+    void shouldReturnTrueWhenSourceFolderCreateFile() throws SyncDuoException, IOException, InterruptedException {
+        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
+        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
+        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
+        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setFlattenFolder(false);
+        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        // Add a sleep to allow time for handler handling
+        Thread.sleep(1000 * 5);  // 1000 millisecond * sec
+        // manual add file to source folder
+        Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
+        Path txtFile = txtAndBinFile.getLeft();
+        Path binFile = txtAndBinFile.getRight();
+        // Add a sleep to allow time for handler handling
+        Thread.sleep(1000 * 2);  // 1000 millisecond * sec
+        // source folder event handle check
+        RootFolderEntity sourceFolderEntity = this.rootFolderService.getByFolderFullPath(sourceFolderPath);
+        FileEntity txtFileEntity = this.fileService.getFileEntityFromFile(
+                sourceFolderEntity.getRootFolderId(),
+                sourceFolderPath,
+                txtFile);
+        FileEntity binFileEntity = this.fileService.getFileEntityFromFile(
+                sourceFolderEntity.getRootFolderId(),
+                sourceFolderPath,
+                binFile);
+        assert ObjectUtils.allNotNull(txtFileEntity, binFileEntity);
+        // internal folder handle check
+        RootFolderEntity internalFolderEntity = this.rootFolderService.getByFolderFullPath(internalFolderPath);
+        FileEntity txtFileEntity2 = this.fileService.getInternalFileEntityFromSourceEntity(
+                internalFolderEntity.getRootFolderId(),
+                txtFileEntity
+        );
+        FileEntity binFileEntity2 = this.fileService.getInternalFileEntityFromSourceEntity(
+                internalFolderEntity.getRootFolderId(),
+                binFileEntity
+        );
+        assert ObjectUtils.allNotNull(txtFileEntity2, binFileEntity2);
+        // content folder handle check
+        RootFolderEntity contentFolderEntity = this.rootFolderService.getByFolderFullPath(contentFolderPath);
+        FileEntity txtFileEntity3 = this.fileService.getInternalFileEntityFromSourceEntity(
+                contentFolderEntity.getRootFolderId(),
+                txtFileEntity2
+        );
+        FileEntity binFileEntity3 = this.fileService.getInternalFileEntityFromSourceEntity(
+                contentFolderEntity.getRootFolderId(),
+                binFileEntity2
+        );
+        assert ObjectUtils.allNotNull(txtFileEntity3, binFileEntity3);
+    }
+
+    @Test
+    void shouldReturn200WhenDeleteSyncFlow() {
+        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
+        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
+        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
+        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setFlattenFolder(false);
+        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        assert  syncFlowResponse.getCode().equals(200);
+
+        DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
+        deleteSyncFlowRequest.setSource2InternalSyncFlowId(syncFlowResponse.getData().get(0));
+        deleteSyncFlowRequest.setInternal2ContentSyncFlowId(syncFlowResponse.getData().get(1));
+        SyncFlowResponse syncFlowResponse1 = syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
+
+        assert  syncFlowResponse1.getCode().equals(200);
+    }
+
+    @Test
+    void shouldReturn200WhenCreateSyncFlow() {
+        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
+        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
+        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
+        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setFlattenFolder(false);
+        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        assert  syncFlowResponse.getCode().equals(200);
     }
 }
