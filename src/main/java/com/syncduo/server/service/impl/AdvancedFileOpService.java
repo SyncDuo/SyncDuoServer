@@ -8,6 +8,7 @@ import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SyncSettingEntity;
+import com.syncduo.server.mq.FileAccessValidator;
 import com.syncduo.server.mq.SystemQueue;
 import com.syncduo.server.mq.producer.RootFolderEventProducer;
 import com.syncduo.server.util.FileOperationUtils;
@@ -45,6 +46,8 @@ public class AdvancedFileOpService {
 
     private final RootFolderEventProducer rootFolderEventProducer;
 
+    private final FileAccessValidator fileAccessValidator;
+
     @Autowired
     public AdvancedFileOpService(
             FileService fileService,
@@ -52,16 +55,19 @@ public class AdvancedFileOpService {
             RootFolderService rootFolderService,
             SyncFlowService syncFlowService,
             SyncSettingService syncSettingService,
-            RootFolderEventProducer rootFolderEventProducer) {
+            RootFolderEventProducer rootFolderEventProducer,
+            FileAccessValidator fileAccessValidator) {
         this.fileService = fileService;
         this.systemQueue = systemQueue;
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.syncSettingService = syncSettingService;
         this.rootFolderEventProducer = rootFolderEventProducer;
+        this.fileAccessValidator = fileAccessValidator;
     }
 
-    @Scheduled(fixedDelayString = "${syncduo.server.check.folder.insync.interval:1800000}")
+    // initial delay 5 minutes, fixDelay 30 minutes. unit is millisecond
+    @Scheduled(initialDelay = 1000 * 60 * 5, fixedDelayString = "${syncduo.server.check.folder.insync.interval:1800000}")
     public void checkFolderInSync() {
         try {
             List<SyncFlowEntity> syncFlowEntityList =
@@ -83,7 +89,7 @@ public class AdvancedFileOpService {
                 }
             }
         } catch (SyncDuoException e) {
-            log.error("checkFolderInSync 失败", e);
+            log.error("checkFolderInSync failed", e);
         }
     }
 
@@ -106,8 +112,13 @@ public class AdvancedFileOpService {
                 case INTERNAL_TO_CONTENT -> folderIdToAddWatcher = syncFlowEntity.getDestFolderId();
                 default -> throw new SyncDuoException("不支持的 sync-flow type. " + syncFlowType);
             }
+            // 添加 watcher
             RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(folderIdToAddWatcher);
             rootFolderEventProducer.addWatcher(rootFolderEntity);
+            // 初始化 sync-flow map
+            this.syncFlowService.initialEventCountMap(folderIdToAddWatcher);
+            // 添加 FileAccessValidator 白名单
+            this.fileAccessValidator.addWhitelist(rootFolderEntity);
             log.info("sync-flow {} sync status: {}", syncFlowEntity, isSynced);
         }
     }
