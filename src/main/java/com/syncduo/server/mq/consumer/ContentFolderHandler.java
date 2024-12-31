@@ -85,7 +85,7 @@ public class ContentFolderHandler implements DisposableBean {
                         case FILE_CHANGED -> {
                             switch (fileEvent.getRootFolderTypeEnum()) {
                                 case INTERNAL_FOLDER -> this.onFileChangeFromInternalFolder(fileEvent);
-                                case CONTENT_FOLDER -> this.onFileChangeFromContentFolder(fileEvent);
+                                case CONTENT_FOLDER -> this.onFileDeSynced(fileEvent);
                             }
                         }
                         case FILE_DESYNCED -> this.onFileDeSynced(fileEvent);
@@ -115,6 +115,8 @@ public class ContentFolderHandler implements DisposableBean {
                     file,
                     rootFolderId,
                     rootFolderEntity.getRootFolderFullPath());
+            // file created from content folder, is desynced already
+            contentFileEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
             this.fileService.createFileRecord(contentFileEntity);
         }
         // 记录 file event
@@ -241,18 +243,6 @@ public class ContentFolderHandler implements DisposableBean {
         }
     }
 
-    private void onFileChangeFromContentFolder(FileEventDto fileEvent) throws SyncDuoException {
-        Path file = fileEvent.getFile();
-        Long rootFolderId = fileEvent.getRootFolderId();
-        RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(rootFolderId);
-        FileEntity contentFileEntity =
-                this.fileService.getFileEntityFromFile(rootFolderId, rootFolderEntity.getRootFolderFullPath(), file);
-        this.fileService.updateFileEntityByFile(contentFileEntity, file);
-        // 记录 file event
-        FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, contentFileEntity);
-        this.fileEventService.save(fileEventEntity);
-    }
-
     private void onFileDeSynced(FileEventDto fileEvent) throws SyncDuoException {
         Path file = fileEvent.getFile();
         Long rootFolderId = fileEvent.getRootFolderId();
@@ -271,8 +261,10 @@ public class ContentFolderHandler implements DisposableBean {
         Path file = fileEvent.getFile();
         Long rootFolderId = fileEvent.getRootFolderId();
         RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(rootFolderId);
-        FileEntity contentFileEntity =
-                this.fileService.getFileEntityFromFile(rootFolderId, rootFolderEntity.getRootFolderFullPath(), file);
+        FileEntity contentFileEntity = this.fileService.getFileEntityFromFile(
+                rootFolderId,
+                rootFolderEntity.getRootFolderFullPath(),
+                file);
         contentFileEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
         this.fileService.deleteBatchByFileEntity(Collections.singletonList(contentFileEntity));
         // 记录 file event

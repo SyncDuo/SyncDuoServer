@@ -71,7 +71,7 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
             throw new SyncDuoException("rootFolderId %s 或 file %s 为空".formatted(rootFolderId, file));
         }
         String uuid4 = FileOperationUtils.getUUID4(rootFolderId, rootFolderFullPath, file);
-        return this.getByUuid4(uuid4);
+        return this.getByUUID4(uuid4);
     }
 
     public FileEntity getInternalFileEntityFromSourceEntity(Long destFolderId, FileEntity sourceFileEntity)
@@ -88,7 +88,17 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
                 sourceFileEntity.getRelativePath(),
                 fileName
         );
-        return this.getByUuid4(uuid4);
+        return this.getByUUID4(uuid4);
+    }
+
+    public FileEntity getContentFileEntityFromInternalEntity(
+            Long destFolderId,
+            FileEntity internalFileEntity,
+            SyncSettingEnum syncSetting)
+            throws SyncDuoException {
+        String uuid4 = getContentFileUUID4FromInternalFileEntity(destFolderId, internalFileEntity, syncSetting);
+        FileEntity contentFileEntity = this.getByUUID4(uuid4);
+        return ObjectUtils.isEmpty(contentFileEntity) ? null : contentFileEntity;
     }
 
     public FileEntity getContentFileEntityFromInternalEntityIgnoreDeleted(
@@ -96,18 +106,32 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
             FileEntity sourceFileEntity,
             SyncSettingEnum syncSetting)
             throws SyncDuoException {
-        if (ObjectUtils.anyNull(destFolderId, sourceFileEntity, syncSetting)) {
-            throw new SyncDuoException("获取 file entity 失败, destFolderId, sourceFileEntity 或 syncSetting 为空");
+        String uuid4 = getContentFileUUID4FromInternalFileEntity(destFolderId, sourceFileEntity, syncSetting);
+        List<FileEntity> contentFileEntityList = this.getByUuid4IgnoredDelete(uuid4);
+        if (CollectionUtils.isEmpty(contentFileEntityList)) {
+            return null;
         }
-        String fileName = sourceFileEntity.getFileName();
-        if (StringUtils.isNotBlank(sourceFileEntity.getFileExtension())) {
-            fileName = fileName + "." + sourceFileEntity.getFileExtension();
+        contentFileEntityList.sort(
+                (o1, o2) -> o2.getLastUpdatedTime().compareTo(o1.getLastUpdatedTime()));
+        return contentFileEntityList.get(0);
+    }
+
+    private String getContentFileUUID4FromInternalFileEntity(
+            Long destFolderId,
+            FileEntity internalFileEntity,
+            SyncSettingEnum syncSetting) throws SyncDuoException {
+        if (ObjectUtils.anyNull(destFolderId, internalFileEntity, syncSetting)) {
+            throw new SyncDuoException("获取 file entity 失败, destFolderId, internalFileEntity 或 syncSetting 为空");
+        }
+        String fileName = internalFileEntity.getFileName();
+        if (StringUtils.isNotBlank(internalFileEntity.getFileExtension())) {
+            fileName = fileName + "." + internalFileEntity.getFileExtension();
         }
         String uuid4;
         if (syncSetting.equals(SyncSettingEnum.MIRROR)) {
             uuid4 = FileOperationUtils.getUUID4(
                     destFolderId,
-                    sourceFileEntity.getRelativePath(),
+                    internalFileEntity.getRelativePath(),
                     fileName
             );
         } else {
@@ -117,13 +141,7 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
                     fileName
             );
         }
-        List<FileEntity> contentFileEntityList = this.getByUuid4IgnoredDelete(uuid4);
-        if (CollectionUtils.isEmpty(contentFileEntityList)) {
-            return null;
-        }
-        contentFileEntityList.sort(
-                (o1, o2) -> o2.getLastUpdatedTime().compareTo(o1.getLastUpdatedTime()));
-        return contentFileEntityList.get(0);
+        return uuid4;
     }
 
     public Path getFileFromFileEntity(String rootFolderFullPath, FileEntity fileEntity) throws SyncDuoException {
@@ -167,9 +185,9 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         return filePath;
     }
 
-    public FileEntity getByUuid4(String uuid4) throws SyncDuoException {
+    public FileEntity getByUUID4(String uuid4) throws SyncDuoException {
         if (StringUtils.isEmpty(uuid4)) {
-            throw new SyncDuoException("获取文件记录失败, uuid4 为空");
+            throw new SyncDuoException("getByUUID4 failed. uuid4 is null");
         }
         LambdaQueryWrapper<FileEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(FileEntity::getFileUuid4, uuid4);

@@ -114,7 +114,7 @@ public class AdvancedFileOpService {
             }
             // 添加 watcher
             RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(folderIdToAddWatcher);
-            rootFolderEventProducer.addWatcher(rootFolderEntity);
+            rootFolderEventProducer.addMonitor(rootFolderEntity);
             // 初始化 sync-flow map
             this.syncFlowService.initialEventCountMap(folderIdToAddWatcher);
             // 添加 FileAccessValidator 白名单
@@ -188,7 +188,7 @@ public class AdvancedFileOpService {
     }
 
     public boolean fullScan(RootFolderEntity rootFolder) throws SyncDuoException {
-        final boolean[] isSync = {true};
+        AtomicBoolean isSync = new AtomicBoolean(true);
         // 检查参数
         Long rootFolderId = rootFolder.getRootFolderId();
         RootFolderTypeEnum rootFolderType = RootFolderTypeEnum.valueOf(rootFolder.getRootFolderType());
@@ -232,7 +232,7 @@ public class AdvancedFileOpService {
                                     .rootFolderTypeEnum(rootFolderType)
                                     .destFolderTypeEnum(rootFolderType)
                                     .build());
-                            isSync[0] = false;
+                            isSync.set(false);
                         }
                         // 命中了文件表, 则需要从 map 中去掉
                         uuid4FileEntityMap.remove(uuid4);
@@ -246,21 +246,21 @@ public class AdvancedFileOpService {
                                 .rootFolderTypeEnum(rootFolderType)
                                 .destFolderTypeEnum(rootFolderType)
                                 .build());
-                        isSync[0] = false;
+                        isSync.set(false);
                     }
                 } catch (SyncDuoException e) {
-                    log.error("遍历文件失败 {}", file, e);
+                    log.error("fullScan failed. travel all file failed. file is {}", file, e);
                 }
                 return FileVisitResult.CONTINUE;
             }
         });
         // set 中剩下的即为已经从文件系统中删除了, 因为没有命中过
         if (MapUtils.isEmpty(uuid4FileEntityMap)) {
-            return isSync[0];
+            return isSync.get();
         }
         // 数据库更新, full scan 产生的文件删除不需要发送 file event
         this.fileService.deleteBatchByFileEntity(uuid4FileEntityMap.values().stream().toList());
-        return isSync[0];
+        return isSync.get();
     }
 
     public boolean isSource2InternalSyncFlowSynced(SyncFlowEntity syncFlow) throws SyncDuoException {
@@ -332,7 +332,7 @@ public class AdvancedFileOpService {
         // 根据 syncFlow 获得 internal folder entity
         Long internalFolderId = syncFlow.getSourceFolderId();
         RootFolderEntity internalFolderEntity = this.rootFolderService.getByFolderId(internalFolderId);
-        // 根据 syncFlow 获得 content folder Id
+        // 根据 syncFlow 获得 content folder id
         Long contentFolderId = syncFlow.getDestFolderId();
         // 根据 syncFlow 获得 sync setting entity
         SyncSettingEntity syncSettingEntity = this.syncSettingService.getBySyncFlowId(syncFlow.getSyncFlowId());
@@ -372,7 +372,7 @@ public class AdvancedFileOpService {
                         return;
                     }
                     int code = this.isContentFileDesynced(contentFileEntity, internalFileEntity);
-                    // return 0 代表没有改变, 1 代表 changed, 2 代表已经 desynced, 3 代表需要 desynced
+                    // return 0 代表没有改变, 1 代表 changed, 2 代表已经 desynced, 3 代表 content file 需要 desynced
                     switch (code) {
                         case 1 -> {
                             this.systemQueue.sendFileEvent(

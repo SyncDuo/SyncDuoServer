@@ -43,7 +43,7 @@ public class SystemQueue {
             throw new SyncDuoException("发送 file event 失败, fileEvent %s".formatted(fileEvent) +
                     "file, rootFolderId, fileEventType, rootFolderType, destFolderTypeEnum 存在空值");
         }
-        log.info("file event {}", fileEvent);
+        log.debug("file event {}", fileEvent);
         RootFolderTypeEnum rootFolderType = fileEvent.getRootFolderTypeEnum();
         RootFolderTypeEnum destFolderTypeEnum = fileEvent.getDestFolderTypeEnum();
         switch (destFolderTypeEnum) {
@@ -78,9 +78,5 @@ public class SystemQueue {
 
     public FileEventDto pollContentFolderEvent() {
         return this.contentFolderEventQueue.poll();
-    }
-
-    public void pushContentFileEvent(FileEventDto fileEvent) {
-        this.contentFolderEventQueue.offer(fileEvent);
     }
 }

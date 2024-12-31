@@ -177,9 +177,9 @@ public class SyncFlowController {
         this.syncFlowService.deleteSyncFlow(syncFlowEntity);
         // 根据 sync-flow, 停止 watcher
         if (syncFlowType.equals(SyncFlowTypeEnum.SOURCE_TO_INTERNAL)) {
-            this.rootFolderEventProducer.stopWatcher(syncFlowEntity.getSourceFolderId());
+            this.rootFolderEventProducer.stopMonitor(syncFlowEntity.getSourceFolderId());
         } else if (syncFlowType.equals(SyncFlowTypeEnum.INTERNAL_TO_CONTENT)) {
-            this.rootFolderEventProducer.stopWatcher(syncFlowEntity.getDestFolderId());
+            this.rootFolderEventProducer.stopMonitor(syncFlowEntity.getDestFolderId());
         } else {
             throw new SyncDuoException("deleteSyncFlow failed. wrong syncFlowTypeEnum %s".formatted(syncFlowEntity));
         }
@@ -220,8 +220,8 @@ public class SyncFlowController {
         // 执行 init scan 任务
         this.fileOpService.initialScan(sourceFolderEntity);
         // 执行 addWatcher
-        this.rootFolderEventProducer.addWatcher(sourceFolderEntity);
-        this.rootFolderEventProducer.addWatcher(contentFolderEntity);
+        this.rootFolderEventProducer.addMonitor(sourceFolderEntity);
+        this.rootFolderEventProducer.addMonitor(contentFolderEntity);
         // 返回 source2InternalSyncFlowId, internal2ContentSyncFlowId
         return List.of(
                 source2InternalSyncFlow.getSyncFlowId(),
@@ -258,7 +258,7 @@ public class SyncFlowController {
         // 执行 init scan 任务
         this.fileOpService.initialScan(contentFolderEntity);
         // 执行 addWatcher
-        this.rootFolderEventProducer.addWatcher(contentFolderEntity);
+        this.rootFolderEventProducer.addMonitor(contentFolderEntity);
         // 返回 source2InternalSyncFlowId, internal2ContentSyncFlowId
         return List.of(
                 source2InternalSyncFlow.getSyncFlowId(),

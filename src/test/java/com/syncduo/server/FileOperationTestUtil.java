@@ -1,5 +1,6 @@
 package com.syncduo.server;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
 
+@Slf4j
 public class FileOperationTestUtil {
 
     private static final Random random = new Random();
@@ -22,7 +24,7 @@ public class FileOperationTestUtil {
 
     public static void deleteAllFoldersLeaveItSelf(Path path) throws IOException {
         if (!Files.exists(path)) {
-            System.out.println("The specified path does not exist.");
+            log.error("The specified path does not exist.");
             return;
         }
 
@@ -43,7 +45,7 @@ public class FileOperationTestUtil {
                 return super.postVisitDirectory(dir, exc);
             }
         });
-        System.out.println("All folders and files have been deleted successfully.");
+        log.info("All folders and files have been deleted successfully.");
     }
 
     private static void createFoldersRecursive(

@@ -109,6 +109,14 @@ public class FileOperationUtils {
         log.debug("All folders and files have been deleted successfully.");
     }
 
+    public static void deleteFile(Path file) throws SyncDuoException {
+        try {
+            Files.deleteIfExists(file);
+        } catch (IOException e) {
+            throw new SyncDuoException("deleteFile failed. file is %s.".formatted(file), e);
+        }
+    }
+
     public static void walkFilesTree(
             String folderFullPath,
             SimpleFileVisitor<Path> simpleFileVisitor) throws SyncDuoException {
