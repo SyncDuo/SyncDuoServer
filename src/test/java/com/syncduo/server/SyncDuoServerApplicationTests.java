@@ -87,8 +87,7 @@ class SyncDuoServerApplicationTests {
     void shouldReturnTrueWhenContentFolderFullScanAfterChangeFile() throws IOException, SyncDuoException {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
         createSyncFlowRequest.setFlattenFolder(false);
         SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
         assert  syncFlowResponse.getCode().equals(200);
@@ -127,8 +126,7 @@ class SyncDuoServerApplicationTests {
     void shouldReturnTrueWhenContentFolderFullScanAfterCreateFile() throws IOException, SyncDuoException {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
         createSyncFlowRequest.setFlattenFolder(false);
         SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
         assert  syncFlowResponse.getCode().equals(200);
@@ -161,12 +159,11 @@ class SyncDuoServerApplicationTests {
 
     // content folder delete file event only work sometime, which is weird
     // because folder delete file event always work on source folder
-    @RepeatedTest(10)
+    @RepeatedTest(value = 10, failureThreshold = 6)
     void shouldReturnTrueWhenContentFolderDeleteFile() throws IOException, SyncDuoException {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
         createSyncFlowRequest.setFlattenFolder(false);
         SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
         // Add a sleep to allow time for handler handling
@@ -196,12 +193,11 @@ class SyncDuoServerApplicationTests {
         }
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(value = 10, failureThreshold = 6)
     void shouldReturnTrueWhenSourceFolderDeleteFile() throws IOException, SyncDuoException {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
         createSyncFlowRequest.setFlattenFolder(false);
         SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
         // Add a sleep to allow time for handler handling
@@ -262,8 +258,7 @@ class SyncDuoServerApplicationTests {
     void shouldReturnTrueWhenSourceFolderChangeFile() throws IOException, SyncDuoException {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
         createSyncFlowRequest.setFlattenFolder(false);
         SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
         // Add a sleep to allow time for handler handling
@@ -315,8 +310,7 @@ class SyncDuoServerApplicationTests {
     void shouldReturnTrueWhenSourceFolderCreateFile() throws SyncDuoException, IOException {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
         createSyncFlowRequest.setFlattenFolder(false);
         SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
         // Add a sleep to allow time for handler handling
@@ -367,8 +361,7 @@ class SyncDuoServerApplicationTests {
     void shouldReturn200WhenCreateAndDeleteSyncFlow() {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setConcatDestFolderPath(true);
+        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
         createSyncFlowRequest.setFlattenFolder(false);
         SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
         assert  syncFlowResponse.getCode().equals(200);
@@ -415,11 +408,19 @@ class SyncDuoServerApplicationTests {
         this.truncateAllTable();
         // delete folder
         try {
-            // 删除 source folder 全部内容, 但是不包括 source folder 本身
             FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
+        } catch (IOException e) {
+            log.warn("删除文件夹失败.", e);
+        }
+        try {
+            // 删除 source folder 全部内容, 但是不包括 source folder 本身
             FileOperationUtils.deleteFolder(Path.of(internalFolderPath));
+        } catch (SyncDuoException e) {
+            log.error("删除文件夹失败.", e);
+        }
+        try {
             FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(contentFolderParentPath));
-        } catch (SyncDuoException | IOException e) {
+        } catch (IOException e) {
             log.error("删除文件夹失败.", e);
         }
     }

@@ -307,35 +307,32 @@ public class SyncFlowController {
                     "syncFlowRequest is null");
         }
         if (ObjectUtils.anyNull(
-                createSyncFlowRequest.getConcatDestFolderPath(),
                 createSyncFlowRequest.getFlattenFolder())) {
             throw new SyncDuoException(
-                    "isSyncFlowRequestValid failed. " +
-                            "concatDestFolderPath or flattenFolder is null");
+                    "isSyncFlowRequestValid failed. concatDestFolderPath is null");
         }
         String sourceFolderFullPath = createSyncFlowRequest.getSourceFolderFullPath();
-        String destFolderFullPath = createSyncFlowRequest.getDestFolderFullPath();
+        String destParentFolderFullPath = createSyncFlowRequest.getDestParentFolderFullPath();
         if (StringUtils.isAnyBlank(
                 sourceFolderFullPath,
-                destFolderFullPath)) {
-            throw new SyncDuoException(
-                    "isSyncFlowRequestValid failed. " +
-                            "sourceFolderFullPath or destFolderFullPath is null");
+                createSyncFlowRequest.getDestParentFolderFullPath()
+        )) {
+            throw new SyncDuoException("isSyncFlowRequestValid failed. " +
+                    "sourceFolderFullPath or destParentFolderFullPath is null");
         }
         // 检查 sourceFolderPath 路径是否正确
-        Path sourceFolder = FileOperationUtils.isFolderPathValid(createSyncFlowRequest.getSourceFolderFullPath());
-        // 按照输入拼接 destFolderFullPath
-        if (createSyncFlowRequest.getConcatDestFolderPath()) {
-            destFolderFullPath = createSyncFlowRequest.getDestFolderFullPath() +
-                    FileOperationUtils.getPathSeparator() +
-                    sourceFolder.getFileName();
-            createSyncFlowRequest.setDestFolderFullPath(destFolderFullPath);
+        Path sourceFolder = FileOperationUtils.isFolderPathValid(sourceFolderFullPath);
+        // 检查 destParentFolderFullPath 路径是否正确
+        FileOperationUtils.isFolderPathValid(destParentFolderFullPath);
+        // 按要求拼接 destFolderFullPath
+        String destFolderName = createSyncFlowRequest.getDestFolderName();
+        if (StringUtils.isBlank(destFolderName)) {
+            destFolderName = sourceFolder.getFileName().toString();
         }
-        if (FileOperationUtils.endsWithSeparator(destFolderFullPath)) {
-            throw new SyncDuoException(
-                    ("isSyncFlowRequestValid failed. " +
-                            "destFolderFullPath ends with '/'. " +
-                            "destFolderFullPath is %s").formatted(destFolderFullPath));
+        String destFolderFullPath = destParentFolderFullPath + FileOperationUtils.getPathSeparator() + destFolderName;
+        if (FileOperationUtils.isFolderPathExist(destFolderFullPath)) {
+            throw new SyncDuoException("isCreateSyncFlowRequestValid failed. destFolderFullPath already exist");
         }
+        createSyncFlowRequest.setDestFolderFullPath(destFolderFullPath);
     }
 }

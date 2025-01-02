@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -387,6 +388,22 @@ public class FileOperationUtils {
         } else {
             throw new SyncDuoException(("isFolderPathValid failed. path doesn't exist or is not folder. " +
                     "folderPath is %s").formatted(folderPath));
+        }
+    }
+
+    public static boolean isFolderPathExist(String path) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(path)) {
+            throw new SyncDuoException("isFolderPathValid failed. folderPath is null");
+        }
+        Path folderPath = Paths.get(path);
+        if (Files.exists(folderPath)) {
+            try(DirectoryStream<Path> dirStream = Files.newDirectoryStream(folderPath)) {
+                return !dirStream.iterator().hasNext();
+            } catch (IOException e) {
+                throw new SyncDuoException("isFolderPathExist failed. path is %s".formatted(path), e);
+            }
+        } else {
+            return false;
         }
     }
 
