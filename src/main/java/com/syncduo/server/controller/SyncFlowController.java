@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.enums.SyncSettingEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.dto.http.CreateSyncFlowRequest;
-import com.syncduo.server.model.dto.http.DeleteSyncFlowRequest;
-import com.syncduo.server.model.dto.http.SyncFlowResponse;
+import com.syncduo.server.model.dto.http.syncflow.CreateSyncFlowRequest;
+import com.syncduo.server.model.dto.http.syncflow.DeleteSyncFlowRequest;
+import com.syncduo.server.model.dto.http.syncflow.SyncFlowResponse;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SyncSettingEntity;
@@ -26,13 +26,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-@RestController("/sync-flow")
+@RestController
+@RequestMapping("/sync-flow")
 @Slf4j
 public class SyncFlowController {
     private final RootFolderService rootFolderService;

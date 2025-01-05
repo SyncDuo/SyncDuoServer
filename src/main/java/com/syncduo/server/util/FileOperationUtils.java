@@ -14,12 +14,13 @@ import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -405,6 +406,27 @@ public class FileOperationUtils {
         } else {
             return false;
         }
+    }
+
+    public static List<Path> getSubFolders(String path) throws SyncDuoException {
+        if (StringUtils.isBlank(path)) {
+            throw new SyncDuoException("getSubfolders failed. path is null");
+        }
+        Path folder = Paths.get(path);
+        if (!Files.exists(folder) || !Files.isDirectory(folder)) {
+            folder = isFolderPathValid(folder.getParent());
+        }
+        List<Path> result = new ArrayList<>(10);
+        try (DirectoryStream<Path> subFolderStream = Files.newDirectoryStream(folder)) {
+            for (Path subFolder : subFolderStream) {
+                if (Files.isDirectory(subFolder)) {
+                    result.add(subFolder);
+                }
+            }
+        } catch (IOException e) {
+            throw new SyncDuoException("getSubfolders failed. path is %s".formatted(path), e);
+        }
+        return result;
     }
 
     public static Path isParentFolderPathValid(String path) throws SyncDuoException {
