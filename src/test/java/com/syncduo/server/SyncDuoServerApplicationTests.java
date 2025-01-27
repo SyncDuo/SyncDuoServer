@@ -84,12 +84,20 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
+    void shouldReturnTrueWhenQueryAllSyncFLow() {
+        SyncFlowResponse syncFlowResponse = createSyncFlow();
+        assert  syncFlowResponse.getCode().equals(200);
+        this.waitAllFileHandle();
+        this.waitAllFileHandle();
+        SyncFlowResponse allSyncFlow = syncFlowController.getAllSyncFlow();
+        assert CollectionUtils.isNotEmpty(allSyncFlow.getSyncFlowInfoList());
+        assert allSyncFlow.getSyncFlowInfoList().size() == 1;
+        log.info(allSyncFlow.getSyncFlowInfoList().toString());
+    }
+
+    @Test
     void shouldReturnTrueWhenContentFolderFullScanAfterChangeFile() throws IOException, SyncDuoException {
-        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
-        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setFlattenFolder(false);
-        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        SyncFlowResponse syncFlowResponse = createSyncFlow();
         assert  syncFlowResponse.getCode().equals(200);
         this.waitAllFileHandle();
         RootFolderEntity contentFolderEntity = this.rootFolderService.getByFolderFullPath(contentFolderPath);
@@ -101,7 +109,7 @@ class SyncDuoServerApplicationTests {
                 boolean isSynced = this.advancedFileOpService.fullScan(contentFolderEntity);
                 assert !isSynced;
                 this.waitSingleFileHandle(contentFolderEntity.getRootFolderId());
-                SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.getById(syncFlowResponse.getData().get(1));
+                SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.getById(syncFlowResponse.getSyncFlowIds().get(1));
                 isSynced = this.advancedFileOpService.isInternal2ContentSyncFlowSync(internal2ContentSyncFlow);
                 assert isSynced;
                 this.waitSingleFileHandle(contentFolderEntity.getRootFolderId());
@@ -112,7 +120,7 @@ class SyncDuoServerApplicationTests {
                 boolean isSynced = this.advancedFileOpService.fullScan(contentFolderEntity);
                 assert !isSynced;
                 this.waitSingleFileHandle(contentFolderEntity.getRootFolderId());
-                SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.getById(syncFlowResponse.getData().get(1));
+                SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.getById(syncFlowResponse.getSyncFlowIds().get(1));
                 isSynced = this.advancedFileOpService.isInternal2ContentSyncFlowSync(internal2ContentSyncFlow);
                 assert isSynced;
                 this.waitSingleFileHandle(contentFolderEntity.getRootFolderId());
@@ -124,11 +132,7 @@ class SyncDuoServerApplicationTests {
 
     @Test
     void shouldReturnTrueWhenContentFolderFullScanAfterCreateFile() throws IOException, SyncDuoException {
-        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
-        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setFlattenFolder(false);
-        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        SyncFlowResponse syncFlowResponse = createSyncFlow();
         assert  syncFlowResponse.getCode().equals(200);
         this.waitAllFileHandle();
         // manual add file to content folder
@@ -152,7 +156,7 @@ class SyncDuoServerApplicationTests {
         );
         assert ObjectUtils.allNotNull(txtFileEntity, binFileEntity);
         // compare
-        SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.getById(syncFlowResponse.getData().get(1));
+        SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.getById(syncFlowResponse.getSyncFlowIds().get(1));
         isSynced = this.advancedFileOpService.isInternal2ContentSyncFlowSync(internal2ContentSyncFlow);
         assert isSynced;
     }
@@ -161,11 +165,7 @@ class SyncDuoServerApplicationTests {
     // because folder delete file event always work on source folder
     @RepeatedTest(value = 10, failureThreshold = 6)
     void shouldReturnTrueWhenContentFolderDeleteFile() throws IOException, SyncDuoException {
-        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
-        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setFlattenFolder(false);
-        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        SyncFlowResponse syncFlowResponse = createSyncFlow();
         // Add a sleep to allow time for handler handling
         this.waitAllFileHandle();
         // get content folder entity
@@ -195,11 +195,7 @@ class SyncDuoServerApplicationTests {
 
     @RepeatedTest(value = 10, failureThreshold = 6)
     void shouldReturnTrueWhenSourceFolderDeleteFile() throws IOException, SyncDuoException {
-        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
-        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setFlattenFolder(false);
-        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        SyncFlowResponse syncFlowResponse = createSyncFlow();
         // Add a sleep to allow time for handler handling
         this.waitAllFileHandle();
         // get source and internal folder entity
@@ -256,11 +252,7 @@ class SyncDuoServerApplicationTests {
 
     @Test
     void shouldReturnTrueWhenSourceFolderChangeFile() throws IOException, SyncDuoException {
-        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
-        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setFlattenFolder(false);
-        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        SyncFlowResponse syncFlowResponse = createSyncFlow();
         // Add a sleep to allow time for handler handling
         this.waitAllFileHandle();
         // get source folder entity
@@ -308,11 +300,7 @@ class SyncDuoServerApplicationTests {
 
     @Test
     void shouldReturnTrueWhenSourceFolderCreateFile() throws SyncDuoException, IOException {
-        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
-        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setFlattenFolder(false);
-        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        SyncFlowResponse syncFlowResponse = createSyncFlow();
         // Add a sleep to allow time for handler handling
         this.waitAllFileHandle();
         // manual add file to source folder
@@ -359,19 +347,27 @@ class SyncDuoServerApplicationTests {
 
     @Test
     void shouldReturn200WhenCreateAndDeleteSyncFlow() {
-        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
-        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
-        createSyncFlowRequest.setFlattenFolder(false);
-        SyncFlowResponse syncFlowResponse = syncFlowController.addSyncFlow(createSyncFlowRequest);
+        SyncFlowResponse syncFlowResponse = createSyncFlow();
         assert  syncFlowResponse.getCode().equals(200);
 
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
-        deleteSyncFlowRequest.setSource2InternalSyncFlowId(syncFlowResponse.getData().get(0));
-        deleteSyncFlowRequest.setInternal2ContentSyncFlowId(syncFlowResponse.getData().get(1));
+        deleteSyncFlowRequest.setSource2InternalSyncFlowId(syncFlowResponse.getSyncFlowIds().get(0));
+        deleteSyncFlowRequest.setInternal2ContentSyncFlowId(syncFlowResponse.getSyncFlowIds().get(1));
         SyncFlowResponse syncFlowResponse1 = syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
 
         assert  syncFlowResponse1.getCode().equals(200);
+    }
+
+    SyncFlowResponse createSyncFlow() {
+        // create sync flow
+        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
+        createSyncFlowRequest.setSyncFlowName("test sync flow");
+        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
+        createSyncFlowRequest.setDestParentFolderFullPath(contentFolderParentPath);
+        createSyncFlowRequest.setFlattenFolder(false);
+        SyncFlowResponse syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
+        assert syncFlowResponse.getCode() == 200;
+        return syncFlowResponse;
     }
 
     void waitAllFileHandle() {

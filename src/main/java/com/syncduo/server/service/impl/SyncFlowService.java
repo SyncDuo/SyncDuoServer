@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -138,14 +139,21 @@ public class SyncFlowService
     }
 
     public SyncFlowEntity createSyncFlow(
-            Long sourceFolderId, Long destFolderId, SyncFlowTypeEnum syncFlowType) throws SyncDuoException {
+            String syncFlowName,
+            Long sourceFolderId,
+            Long destFolderId,
+            SyncFlowTypeEnum syncFlowType) throws SyncDuoException {
         if (ObjectUtils.anyNull(sourceFolderId, destFolderId, syncFlowType)) {
             throw new SyncDuoException("创建 Sync Flow 失败, sourceFolderId, destFolderId 或 syncFlowType 为空. %s");
+        }
+        if (StringUtils.isBlank(syncFlowName)) {
+            throw new SyncDuoException("createSyncFlow failed. syncFlowName is null");
         }
         SyncFlowEntity dbResult = this.getBySourceFolderIdAndDest(sourceFolderId, destFolderId);
         if (ObjectUtils.isEmpty(dbResult)) {
             // 创建 sync flow
             dbResult = new SyncFlowEntity();
+            dbResult.setSyncFlowName(syncFlowName);
             dbResult.setSourceFolderId(sourceFolderId);
             dbResult.setDestFolderId(destFolderId);
             dbResult.setSyncFlowType(syncFlowType.name());
@@ -200,6 +208,24 @@ public class SyncFlowService
         return dbResult.get(0);
     }
 
+    public SyncFlowEntity getSourceSyncFlowByInternalFolderId(Long folderId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(folderId)) {
+            throw new SyncDuoException("获取 Sync Flow 失败, folderId 为空");
+        }
+        LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SyncFlowEntity::getDestFolderId, folderId);
+        queryWrapper.eq(SyncFlowEntity::getSyncFlowDeleted, DeletedEnum.NOT_DELETED.getCode());
+        queryWrapper.eq(SyncFlowEntity::getSyncFlowType, SyncFlowTypeEnum.SOURCE_TO_INTERNAL);
+        List<SyncFlowEntity> dbResult = this.baseMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(dbResult)) {
+            return null;
+        }
+        if (dbResult.size() > 1) {
+            throw new SyncDuoException("source->internal 出现一对多");
+        }
+        return dbResult.get(0);
+    }
+
     public List<SyncFlowEntity> getInternalSyncFlowByFolderId(Long folderId) throws SyncDuoException {
         if (ObjectUtils.isEmpty(folderId)) {
             throw new SyncDuoException("获取 Sync Flow 失败, folderId 为空");
@@ -226,6 +252,14 @@ public class SyncFlowService
 
     public List<SyncFlowEntity> getAllSyncFlow() {
         LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SyncFlowEntity::getSyncFlowDeleted, DeletedEnum.NOT_DELETED.getCode());
+        List<SyncFlowEntity> dbResult = this.list(queryWrapper);
+        return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
+    }
+
+    public List<SyncFlowEntity> getBySyncFlowType(SyncFlowTypeEnum syncFlowTypeEnum) {
+        LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SyncFlowEntity::getSyncFlowType, syncFlowTypeEnum.name());
         queryWrapper.eq(SyncFlowEntity::getSyncFlowDeleted, DeletedEnum.NOT_DELETED.getCode());
         List<SyncFlowEntity> dbResult = this.list(queryWrapper);
         return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;

@@ -16,4 +16,6 @@ public class CreateSyncFlowRequest {
     private String filterCriteria;
 
     private Boolean flattenFolder;
+
+    private String syncFlowName;
 }

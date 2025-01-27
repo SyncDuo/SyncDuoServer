@@ -23,6 +23,8 @@ public class SyncFlowEntity extends BaseEntity {
     @TableField(fill = FieldFill.INSERT)
     private String syncStatus;
 
+    private String syncFlowName;
+
     private Timestamp lastSyncTime;
 
     @TableField(fill = FieldFill.INSERT)

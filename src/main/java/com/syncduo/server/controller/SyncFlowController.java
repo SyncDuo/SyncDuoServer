@@ -8,6 +8,7 @@ import com.syncduo.server.enums.SyncSettingEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.http.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.dto.http.syncflow.DeleteSyncFlowRequest;
+import com.syncduo.server.model.dto.http.syncflow.SyncFlowInfo;
 import com.syncduo.server.model.dto.http.syncflow.SyncFlowResponse;
 import com.syncduo.server.model.entity.RootFolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
@@ -20,21 +21,22 @@ import com.syncduo.server.service.impl.SyncFlowService;
 import com.syncduo.server.service.impl.SyncSettingService;
 import com.syncduo.server.util.FileOperationUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Path;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/sync-flow")
+@CrossOrigin
 @Slf4j
 public class SyncFlowController {
     private final RootFolderService rootFolderService;
@@ -53,6 +55,16 @@ public class SyncFlowController {
 
     private static final TypeReference<List<String>> LIST_STRING_TYPE_REFERENCE = new TypeReference<>() {};
 
+    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    private static final double GB = 1024.0 * 1024.0 * 1024.0;
+
+    private static final double MB = 1024.0 * 1024.0;
+
+    private static final double KB = 1024.0;
+
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.00");
+
     @Autowired
     public SyncFlowController(
             RootFolderService rootFolderService,
@@ -67,6 +79,24 @@ public class SyncFlowController {
         this.syncSettingService = syncSettingService;
         this.rootFolderEventProducer = rootFolderEventProducer;
         this.fileAccessValidator = fileAccessValidator;
+    }
+
+    @GetMapping("/get-sync-flow")
+    public SyncFlowResponse getAllSyncFlow() {
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getBySyncFlowType(SyncFlowTypeEnum.INTERNAL_TO_CONTENT);
+        if (CollectionUtils.isEmpty(allSyncFlow)) {
+            return SyncFlowResponse.onSuccess("No Active SyncFlow");
+        }
+        try {
+            List<SyncFlowInfo> syncFlowInfoList = new ArrayList<>();
+            for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
+                SyncFlowInfo syncFlowInfo = this.toSyncFlowInfo(syncFlowEntity);
+                syncFlowInfoList.add(syncFlowInfo);
+            }
+            return SyncFlowResponse.onSuccess("success", syncFlowInfoList);
+        } catch (SyncDuoException e) {
+            return SyncFlowResponse.onError("transform to SyncFlowInfo failed. exception is " + e);
+        }
     }
 
     @PostMapping("/add-sync-flow")
@@ -106,14 +136,14 @@ public class SyncFlowController {
                 case 0 -> {
                     List<Long> rootFolderIdList = firstTimeCreateSourceFolder(createSyncFlowRequest, filters);
                     SyncFlowResponse syncFlowResponse = SyncFlowResponse.onSuccess("sync-flow created successes");
-                    syncFlowResponse.setData(rootFolderIdList);
+                    syncFlowResponse.setSyncFlowIds(rootFolderIdList);
                     log.info(syncFlowResponse.toString());
                     return syncFlowResponse;
                 }
                 case 1 -> {
                     List<Long> rootFolderIdList = this.createContentSyncFlow(createSyncFlowRequest, filters);
                     SyncFlowResponse syncFlowResponse = SyncFlowResponse.onSuccess("sync-flow created successes");
-                    syncFlowResponse.setData(rootFolderIdList);
+                    syncFlowResponse.setSyncFlowIds(rootFolderIdList);
                     log.info(syncFlowResponse.toString());
                     return syncFlowResponse;
                 }
@@ -202,11 +232,13 @@ public class SyncFlowController {
                         createSyncFlowRequest.getDestFolderFullPath());
         // 创建 source to internal sync flow
         SyncFlowEntity source2InternalSyncFlow = this.syncFlowService.createSyncFlow(
+                createSyncFlowRequest.getSyncFlowName(),
                 sourceFolderEntity.getRootFolderId(),
                 internalFolderEntity.getRootFolderId(),
                 SyncFlowTypeEnum.SOURCE_TO_INTERNAL);
         // 创建 internal to content sync flow
         SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.createSyncFlow(
+                createSyncFlowRequest.getSyncFlowName(),
                 internalFolderEntity.getRootFolderId(),
                 contentFolderEntity.getRootFolderId(),
                 SyncFlowTypeEnum.INTERNAL_TO_CONTENT
@@ -245,6 +277,7 @@ public class SyncFlowController {
         );
         // 创建 sync-flow
         SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.createSyncFlow(
+                createSyncFlowRequest.getSyncFlowName(),
                 sourceInternalFolderPair.getRight().getRootFolderId(),
                 contentFolderEntity.getRootFolderId(),
                 SyncFlowTypeEnum.INTERNAL_TO_CONTENT
@@ -308,17 +341,17 @@ public class SyncFlowController {
             throw new SyncDuoException("isSyncFlowRequestValid failed. " +
                     "syncFlowRequest is null");
         }
-        if (ObjectUtils.anyNull(
-                createSyncFlowRequest.getFlattenFolder())) {
-            throw new SyncDuoException(
-                    "isSyncFlowRequestValid failed. concatDestFolderPath is null");
+        if (ObjectUtils.anyNull(createSyncFlowRequest.getFlattenFolder())) {
+            throw new SyncDuoException("isSyncFlowRequestValid failed. flattenFolder is null");
+        }
+        if (StringUtils.isBlank(createSyncFlowRequest.getSyncFlowName())) {
+            throw new SyncDuoException("isSyncFlowRequestValid failed. syncFlowName is null");
         }
         String sourceFolderFullPath = createSyncFlowRequest.getSourceFolderFullPath();
         String destParentFolderFullPath = createSyncFlowRequest.getDestParentFolderFullPath();
         if (StringUtils.isAnyBlank(
                 sourceFolderFullPath,
-                createSyncFlowRequest.getDestParentFolderFullPath()
-        )) {
+                createSyncFlowRequest.getDestParentFolderFullPath())) {
             throw new SyncDuoException("isSyncFlowRequestValid failed. " +
                     "sourceFolderFullPath or destParentFolderFullPath is null");
         }
@@ -336,5 +369,66 @@ public class SyncFlowController {
             throw new SyncDuoException("isCreateSyncFlowRequestValid failed. destFolderFullPath already exist");
         }
         createSyncFlowRequest.setDestFolderFullPath(destFolderFullPath);
+    }
+
+    private SyncFlowInfo toSyncFlowInfo(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(syncFlowEntity)) {
+            throw new SyncDuoException("syncFlowEntity is null");
+        }
+        // get folder info
+        // input always is internal->content sync flow
+        SyncFlowEntity sourceToInternalSyncFlow =
+                this.syncFlowService.getSourceSyncFlowByInternalFolderId(syncFlowEntity.getSourceFolderId());
+        RootFolderEntity sourceFolderEntity =
+                this.rootFolderService.getByFolderId(sourceToInternalSyncFlow.getSourceFolderId());
+        RootFolderEntity destFolderEntity = this.rootFolderService.getByFolderId(syncFlowEntity.getDestFolderId());
+        // get sync setting
+        SyncSettingEntity syncSettingEntity = this.syncSettingService.getBySyncFlowId(syncFlowEntity.getSyncFlowId());
+        SyncSettingEnum syncSettingEnum = SyncSettingEnum.getByCode(syncSettingEntity.getFlattenFolder());
+        if (ObjectUtils.isEmpty(syncSettingEnum)) {
+            throw new SyncDuoException("syncFlowEntityToSyncFlowInfo failed. " +
+                    "syncFlowEntity is %s".formatted(syncFlowEntity));
+        }
+        // get dest folder info
+        List<Long> folderInfo = FileOperationUtils.getFolderInfo(destFolderEntity.getRootFolderFullPath());
+        // build result
+        SyncFlowInfo result = SyncFlowInfo.builder()
+                .syncFlowName(syncFlowEntity.getSyncFlowName())
+                .syncFlowId(syncFlowEntity.getSyncFlowId().toString())
+                .sourceFolderPath(sourceFolderEntity.getRootFolderFullPath())
+                .destFolderPath(destFolderEntity.getRootFolderFullPath())
+                .syncSettings(syncSettingEnum.name())
+                .ignorePatten(syncSettingEntity.getFilterCriteria())
+                .syncStatus(syncFlowEntity.getSyncStatus())
+                .build();
+        if (ObjectUtils.isNotEmpty(syncFlowEntity.getLastSyncTime())) {
+           result.setLastSyncTimeStamp(SIMPLE_DATE_FORMAT.format(syncFlowEntity.getLastSyncTime()));
+        }
+        result.setFolderStats(
+                folderInfo.get(0).toString(),
+                folderInfo.get(1).toString(),
+                getSizeInGB(folderInfo.get(2)));
+
+        return result;
+    }
+
+    // Method to calculate size in GB and return only integer part
+    private static String getSizeInGB(long sizeInBytes) {
+        // Convert bytes to the appropriate unit based on size
+        String formattedSize;
+        if (sizeInBytes >= GB) {
+            // Convert to GB if bytes are greater than or equal to 1 GB
+            formattedSize = DECIMAL_FORMAT.format(sizeInBytes / GB) + " GB";
+        } else if (sizeInBytes >= MB) {
+            // Convert to MB if bytes are greater than or equal to 1 MB but less than 1 GB
+            formattedSize = DECIMAL_FORMAT.format(sizeInBytes / MB) + " MB";
+        } else if (sizeInBytes >= KB) {
+            // Convert to KB if bytes are greater than or equal to 1 KB but less than 1 GB
+            formattedSize = DECIMAL_FORMAT.format(sizeInBytes / KB) + " KB";
+        } else {
+            // If bytes are less than 1 MB, keep as bytes
+            formattedSize = DECIMAL_FORMAT.format((double) sizeInBytes) + " Bytes";
+        }
+        return formattedSize;
     }
 }

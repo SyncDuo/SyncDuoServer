@@ -13,12 +13,17 @@ public class FileSystemResponse {
 
     private String message;
 
-    @JsonProperty("folder_list")
+    private String hostName;
+
     private List<Folder> folderList;
 
     private FileSystemResponse(Integer code, String message) {
         this.code = code;
         this.message = message;
+    }
+
+    public static FileSystemResponse onSuccess() {
+        return new FileSystemResponse(200, "success");
     }
 
     public static FileSystemResponse onSuccess(String message) {
@@ -28,6 +33,12 @@ public class FileSystemResponse {
     public static FileSystemResponse onSuccess(String message, List<Folder> folderList) {
         FileSystemResponse response = new FileSystemResponse(200, message);
         response.setFolderList(folderList);
+        return response;
+    }
+
+    public static FileSystemResponse onSuccess(String message, String hostName) {
+        FileSystemResponse response = new FileSystemResponse(200, message);
+        response.setHostName(hostName);
         return response;
     }
 

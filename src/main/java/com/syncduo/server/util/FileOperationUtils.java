@@ -14,12 +14,10 @@ import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
@@ -39,6 +37,35 @@ public class FileOperationUtils {
 
     private static final FileSystem FILE_SYSTEM = FileSystems.getDefault();
 
+
+    public static List<Long> getFolderInfo(String path) throws SyncDuoException {
+        Path folder = FileOperationUtils.isFolderPathValid(path);
+        // 初始化变量
+        AtomicLong fileCount = new AtomicLong(0);
+        AtomicLong subFolderCount = new AtomicLong(0);
+        AtomicLong totalSize = new AtomicLong(0);
+        // 遍历统计
+        try {
+            Files.walkFileTree(folder, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    fileCount.incrementAndGet();
+                    totalSize.addAndGet(attrs.size());
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                    subFolderCount.incrementAndGet();
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new SyncDuoException("getFolderInfo failed. exception is " + e.getMessage());
+        }
+
+        return Arrays.asList(fileCount.get(), subFolderCount.get(), totalSize.get());
+    }
 
     public static boolean endsWithSeparator(String path) throws SyncDuoException {
         if (StringUtils.isEmpty(path)) {

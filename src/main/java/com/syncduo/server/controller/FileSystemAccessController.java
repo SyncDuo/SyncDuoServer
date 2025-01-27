@@ -4,6 +4,7 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.http.filesystem.FileSystemResponse;
 import com.syncduo.server.model.dto.http.filesystem.Folder;
 import com.syncduo.server.util.FileOperationUtils;
+import com.syncduo.server.util.SystemInfoUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -21,6 +21,16 @@ import java.util.List;
 @CrossOrigin
 @Slf4j
 public class FileSystemAccessController {
+
+    @GetMapping("/get-hostname")
+    public FileSystemResponse getHostName() {
+        try {
+            String hostName = SystemInfoUtil.getHostName();
+            return FileSystemResponse.onSuccess("getHostName Success", hostName);
+        } catch (SyncDuoException e) {
+            return FileSystemResponse.onError(e.getMessage());
+        }
+    }
 
     @GetMapping("/get-subfolders")
     public FileSystemResponse getSubfolders(@RequestParam("path") String path) {
