@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -43,8 +44,8 @@ public class FileSystemAccessController {
                 return FileSystemResponse.onSuccess("no subfolders");
             }
             // 最相似的文件夹, 放在最前面
-            subfolders.sort(Comparator.comparingInt(
-                    subfolder -> getSimilarityScore(subfolder.getFileName().toString(), path)));
+            subfolders.sort(Comparator.comparingInt(subfolder -> getSimilarityScore(subfolder, path)));
+            Collections.reverse(subfolders);
             List<Folder> folderList = subfolders.stream().map(Folder::new).toList();
             return FileSystemResponse.onSuccess("getSubfolders success.", folderList);
         } catch (SyncDuoException e) {
@@ -61,15 +62,16 @@ public class FileSystemAccessController {
      * @param inputPath  The input path to compare against.
      * @return An integer score representing the similarity.
      */
-    private static int getSimilarityScore(String subfolder, String inputPath) {
+    private static int getSimilarityScore(Path subfolder, String inputPath) {
         // Return the number of matching characters from the start of both paths
         int score = 0;
-        String subfolderName = Paths.get(subfolder).getFileName().toString();
-        String inputName = Paths.get(inputPath).getFileName().toString();
-
+        String subfolderName = subfolder.toString().toLowerCase();
+        inputPath = inputPath.toLowerCase();
+        // Min length
+        int minLength = Math.min(subfolderName.length(), inputPath.length());
         // Compare both the input path and the subfolder name, character by character
-        for (int i = 0; i < Math.min(subfolderName.length(), inputName.length()); i++) {
-            if (subfolderName.charAt(i) == inputName.charAt(i)) {
+        for (int i = 0; i < minLength; i++) {
+            if (subfolderName.charAt(i) == inputPath.charAt(i)) {
                 score++;
             } else {
                 break;

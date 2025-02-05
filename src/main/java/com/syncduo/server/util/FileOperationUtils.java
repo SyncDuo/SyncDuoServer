@@ -440,6 +440,7 @@ public class FileOperationUtils {
             throw new SyncDuoException("getSubfolders failed. path is null");
         }
         Path folder = Paths.get(path);
+        // 如果输入的路径不存在, 则寻找它的父路径, 如果父路径也不存在, 则抛出异常
         if (!Files.exists(folder) || !Files.isDirectory(folder)) {
             folder = isFolderPathValid(folder.getParent());
         }

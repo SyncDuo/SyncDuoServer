@@ -359,7 +359,7 @@ public class SyncFlowController {
         Path sourceFolder = FileOperationUtils.isFolderPathValid(sourceFolderFullPath);
         // 检查 destParentFolderFullPath 路径是否正确
         FileOperationUtils.isFolderPathValid(destParentFolderFullPath);
-        // 按要求拼接 destFolderFullPath
+        // 如果 destFolderFullPath 没有填写, 则使用 sourceFolderName
         String destFolderName = createSyncFlowRequest.getDestFolderName();
         if (StringUtils.isBlank(destFolderName)) {
             destFolderName = sourceFolder.getFileName().toString();
