@@ -1190,6 +1190,9 @@
         <mxCell id="dceXoeoUDlbQm4ziimY0-2" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;系统需要开发/集成的东西&lt;/h1&gt;&lt;p&gt;1. Syncthing: Syncthing 是用户手机侧需要安装的应用, 用于设置需要增量同步到云端的文件夹&lt;/p&gt;&lt;p&gt;2.&amp;nbsp;Restic:&amp;nbsp;Restic 是用于备份同步到云端的文件夹&lt;/p&gt;&lt;p&gt;3. UI: 一个端到端的 UI 界面, 可以进行以下动作&lt;/p&gt;&lt;p&gt;3.1 管理 Syncthing&lt;br&gt;&lt;/p&gt;&lt;p&gt;3.2 管理 Restic&lt;/p&gt;&lt;p&gt;3.3 查看系统中存在的增量同步&lt;/p&gt;&lt;p&gt;3.4 管理系统中存在的增量同步流&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
           <mxGeometry x="1598" y="320" width="442" height="250" as="geometry" />
         </mxCell>
+        <mxCell id="dceXoeoUDlbQm4ziimY0-3" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;系统中关键的设计&lt;/h1&gt;&lt;p&gt;1. Syncthing 同步到云端的文件夹, 如何进行增量备份, 以及如何存储?&lt;/p&gt;&lt;p&gt;1.1 增加一个&quot;影子&quot;文件夹, 用于存储 Syncthing 同步到云端的所有数据, 是 Syncthing 同步的文件夹的 &quot;Ignore Delete&quot; 版本. 该影子文件夹与 Syncthing 同步的文件夹同名, 存储在用户指定的存储空间, 这个存储空间与 Syncthing 同步的文件夹处于同一个 filesystem&lt;br&gt;&lt;/p&gt;&lt;p&gt;1.2 对 Syncthing 设置 watcher + 定期扫描的策略, 有变化同步到&quot;影子&quot;文件夹&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="2080" y="320" width="442" height="250" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
