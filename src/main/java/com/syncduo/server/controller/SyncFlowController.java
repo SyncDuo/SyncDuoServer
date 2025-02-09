@@ -268,7 +268,7 @@ public class SyncFlowController {
         Pair<RootFolderEntity, RootFolderEntity> sourceInternalFolderPair =
                 this.rootFolderService.getFolderPairByPath(createSyncFlowRequest.getSourceFolderFullPath());
         // 获取 source2Internal sync-flow
-        SyncFlowEntity source2InternalSyncFlow = this.syncFlowService.getSourceSyncFlowByFolderId(
+        SyncFlowEntity source2InternalSyncFlow = this.syncFlowService.getSource2InternalSyncFlowByFolderId(
                 sourceInternalFolderPair.getLeft().getRootFolderId());
         // 创建 content folder
         RootFolderEntity contentFolderEntity = this.rootFolderService.createContentFolder(
@@ -290,8 +290,8 @@ public class SyncFlowController {
                 filters,
                 createSyncFlowRequest.getFlattenFolder() ? SyncSettingEnum.FLATTEN_FOLDER : SyncSettingEnum.MIRROR
         );
-        // 执行 init scan 任务
-        this.fileOpService.initialScan(contentFolderEntity);
+        // 执行 compare 任务
+        this.fileOpService.isInternal2ContentSyncFlowSync(internal2ContentSyncFlow);
         // 执行 addWatcher
         this.rootFolderEventProducer.addMonitor(contentFolderEntity);
         // 返回 source2InternalSyncFlowId, internal2ContentSyncFlowId
@@ -325,13 +325,10 @@ public class SyncFlowController {
             return 1;
         }
         // 判断对应的 sync flow 是否已存在
-        RootFolderEntity internalFolderEntity = sourceInternalFolderEntityPair.getRight();
-        List<SyncFlowEntity> internalSyncFlowList =
-                this.syncFlowService.getInternalSyncFlowByFolderId(internalFolderEntity.getRootFolderId());
-        for (SyncFlowEntity internalSyncFlowEntity : internalSyncFlowList) {
-            if (internalSyncFlowEntity.getDestFolderId().equals(destFolderEntity.getRootFolderId())) {
-                return 2;
-            }
+        SyncFlowEntity internal2ContentSyncFlow =
+                this.syncFlowService.getInternal2ContentSyncFlowByFolderId(destFolderEntity.getRootFolderId());
+        if (ObjectUtils.isNotEmpty(internal2ContentSyncFlow)) {
+            return 2;
         }
         return 1;
     }
@@ -359,7 +356,7 @@ public class SyncFlowController {
         Path sourceFolder = FileOperationUtils.isFolderPathValid(sourceFolderFullPath);
         // 检查 destParentFolderFullPath 路径是否正确
         FileOperationUtils.isFolderPathValid(destParentFolderFullPath);
-        // 如果 destFolderFullPath 没有填写, 则使用 sourceFolderName
+        // 如果 destFolderName 没有填写, 则使用 sourceFolderName
         String destFolderName = createSyncFlowRequest.getDestFolderName();
         if (StringUtils.isBlank(destFolderName)) {
             destFolderName = sourceFolder.getFileName().toString();
@@ -378,7 +375,7 @@ public class SyncFlowController {
         // get folder info
         // input always is internal->content sync flow
         SyncFlowEntity sourceToInternalSyncFlow =
-                this.syncFlowService.getSourceSyncFlowByInternalFolderId(syncFlowEntity.getSourceFolderId());
+                this.syncFlowService.getSource2InternalSyncFlowByFolderId(syncFlowEntity.getSourceFolderId());
         RootFolderEntity sourceFolderEntity =
                 this.rootFolderService.getByFolderId(sourceToInternalSyncFlow.getSourceFolderId());
         RootFolderEntity destFolderEntity = this.rootFolderService.getByFolderId(syncFlowEntity.getDestFolderId());

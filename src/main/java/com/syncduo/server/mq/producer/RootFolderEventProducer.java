@@ -55,13 +55,11 @@ public class RootFolderEventProducer implements DisposableBean {
         if (rootFolderTypeEnum.equals(RootFolderTypeEnum.SOURCE_FOLDER)) {
             observer = this.addListenerForSourceFolder(
                     rootFolderEntity,
-                    rootFolderTypeEnum,
                     folder
             );
         } else {
             observer = this.addListenerForContentFolder(
                     rootFolderEntity,
-                    rootFolderTypeEnum,
                     folder
             );
         }
@@ -117,10 +115,7 @@ public class RootFolderEventProducer implements DisposableBean {
         return baseInterval + randomAddition;
     }
 
-    private FileAlterationObserver addListenerForSourceFolder(
-            RootFolderEntity rootFolderEntity,
-            RootFolderTypeEnum rootFolderTypeEnum,
-            Path folder) {
+    private FileAlterationObserver addListenerForSourceFolder(RootFolderEntity rootFolderEntity, Path folder) {
         Long rootFolderId = rootFolderEntity.getRootFolderId();
         FileAlterationObserver observer = new FileAlterationObserver(folder.toFile());
         observer.addListener(new FileAlterationListenerAdaptor() {
@@ -131,8 +126,8 @@ public class RootFolderEventProducer implements DisposableBean {
                             .file(file.toPath())
                             .rootFolderId(rootFolderId)
                             .fileEventTypeEnum(FileEventTypeEnum.FILE_CREATED)
-                            .rootFolderTypeEnum(rootFolderTypeEnum)
-                            .destFolderTypeEnum(rootFolderTypeEnum)
+                            .rootFolderTypeEnum(RootFolderTypeEnum.SOURCE_FOLDER)
+                            .destFolderTypeEnum(RootFolderTypeEnum.SOURCE_FOLDER)
                             .build());
                 } catch (SyncDuoException e) {
                     log.error("source 文件夹发送 file event 失败", e);
@@ -146,8 +141,8 @@ public class RootFolderEventProducer implements DisposableBean {
                             .file(file.toPath())
                             .rootFolderId(rootFolderId)
                             .fileEventTypeEnum(FileEventTypeEnum.FILE_DELETED)
-                            .rootFolderTypeEnum(rootFolderTypeEnum)
-                            .destFolderTypeEnum(rootFolderTypeEnum)
+                            .rootFolderTypeEnum(RootFolderTypeEnum.SOURCE_FOLDER)
+                            .destFolderTypeEnum(RootFolderTypeEnum.SOURCE_FOLDER)
                             .build());
                 } catch (SyncDuoException e) {
                     log.error("source 文件夹发送 file event 失败", e);
@@ -161,8 +156,8 @@ public class RootFolderEventProducer implements DisposableBean {
                             .file(file.toPath())
                             .rootFolderId(rootFolderId)
                             .fileEventTypeEnum(FileEventTypeEnum.FILE_CHANGED)
-                            .rootFolderTypeEnum(rootFolderTypeEnum)
-                            .destFolderTypeEnum(rootFolderTypeEnum)
+                            .rootFolderTypeEnum(RootFolderTypeEnum.SOURCE_FOLDER)
+                            .destFolderTypeEnum(RootFolderTypeEnum.SOURCE_FOLDER)
                             .build());
                 } catch (SyncDuoException e) {
                     log.error("source 文件夹发送 file event 失败", e);
@@ -174,7 +169,6 @@ public class RootFolderEventProducer implements DisposableBean {
 
     private FileAlterationObserver addListenerForContentFolder(
             RootFolderEntity rootFolderEntity,
-            RootFolderTypeEnum rootFolderTypeEnum,
             Path folder) {
         Long rootFolderId = rootFolderEntity.getRootFolderId();
         FileAlterationObserver observer = new FileAlterationObserver(folder.toFile());
@@ -186,8 +180,8 @@ public class RootFolderEventProducer implements DisposableBean {
                             .file(file.toPath())
                             .rootFolderId(rootFolderId)
                             .fileEventTypeEnum(FileEventTypeEnum.FILE_DELETED)
-                            .rootFolderTypeEnum(rootFolderTypeEnum)
-                            .destFolderTypeEnum(rootFolderTypeEnum)
+                            .rootFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
+                            .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
                             .build());
                 } catch (SyncDuoException e) {
                     log.error("source 文件夹发送 file event 失败", e);

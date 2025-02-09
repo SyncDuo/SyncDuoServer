@@ -26,10 +26,10 @@ public class SystemQueue {
         this.syncFlowService = syncFlowService;
     }
 
-    // source folder watcher
-    // content folder watcher
-    // source folder full scan
-    // dest folder full scan
+    // source folder watcher : source to source, internal -> content,
+    // content folder watcher : content -> content,
+    // source folder full scan : source to source, internal -> content,
+    // dest folder full scan : content -> content
     public void sendFileEvent(FileEventDto fileEvent) throws SyncDuoException {
         if (ObjectUtils.isEmpty(fileEvent)) {
             throw new SyncDuoException("发送 file event 失败, file event 为空");
@@ -44,31 +44,25 @@ public class SystemQueue {
                     "file, rootFolderId, fileEventType, rootFolderType, destFolderTypeEnum 存在空值");
         }
         log.debug("file event {}", fileEvent);
+        this.sourceFolderEventQueue.offer(fileEvent);
+        // 只有两种事件会发出
+        // 1. source -> source, 此类事件发出表示 source->internal 不同步
+        // 2. internal -> content, 此类事件发出表示 internal->content 不同步
+        // * 其中 1 如果是 FILE_DELETE 则排除
         RootFolderTypeEnum rootFolderType = fileEvent.getRootFolderTypeEnum();
         RootFolderTypeEnum destFolderTypeEnum = fileEvent.getDestFolderTypeEnum();
-        switch (destFolderTypeEnum) {
-            // source -> source, source -> internal 都会增加 event count
-            // 因为两种流向的事件都会导致同一条 sync-flow 为 NOT_SYNC
-            // 但是 FILE_DELETE 不会导致 NOT_SYNC
-            // 因为 source folder delete 是正常的, 整个系统设计就是 ignore source folder file delete
-            // 然后 internal folder delete 是正常的, 是用户自行选择删除无用的 file
-            // 所以 FILE_DELETE 事件发生在 source 和 internal folder 不会增加 event count
-            case SOURCE_FOLDER, INTERNAL_FOLDER -> {
-                this.sourceFolderEventQueue.offer(fileEvent);
-                if (fileEvent.getFileEventTypeEnum().equals(FileEventTypeEnum.FILE_DELETED)) {
-                    break;
-                }
-                this.syncFlowService.incrSource2InternalCount(fileEvent.getRootFolderId());
-            }
-            case CONTENT_FOLDER -> {
-                // 传递事件
-                this.contentFolderEventQueue.offer(fileEvent);
-                // 如果是 internal -> content, 则增加 pending event count
-                if (rootFolderType.equals(RootFolderTypeEnum.INTERNAL_FOLDER)) {
-                    this.syncFlowService.incrInternal2ContentCount(fileEvent.getRootFolderId());
+        switch (rootFolderType) {
+            case SOURCE_FOLDER -> {
+                if (destFolderTypeEnum.equals(RootFolderTypeEnum.SOURCE_FOLDER) &&
+                        !fileEvent.getFileEventTypeEnum().equals(FileEventTypeEnum.FILE_DELETED)) {
+                    this.syncFlowService.incrSource2InternalEventCount(fileEvent.getRootFolderId());
                 }
             }
-            default -> throw new SyncDuoException("不支持的 rootFolderType %s".formatted(destFolderTypeEnum));
+            case INTERNAL_FOLDER -> {
+                if (destFolderTypeEnum.equals(RootFolderTypeEnum.CONTENT_FOLDER)) {
+                    this.syncFlowService.incrInternal2ContentEventCount(fileEvent.getRootFolderId());
+                }
+            }
         }
     }
 

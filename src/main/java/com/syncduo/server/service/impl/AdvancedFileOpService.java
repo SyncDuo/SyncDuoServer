@@ -116,7 +116,7 @@ public class AdvancedFileOpService {
             RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(folderIdToAddWatcher);
             rootFolderEventProducer.addMonitor(rootFolderEntity);
             // 初始化 sync-flow map
-            this.syncFlowService.initialEventCountMap(folderIdToAddWatcher);
+            this.syncFlowService.initEventCountMap(syncFlowEntity.getSyncFlowId());
             // 添加 FileAccessValidator 白名单
             this.fileAccessValidator.addWhitelist(rootFolderEntity);
             log.info("sync-flow {} sync status: {}", syncFlowEntity, isSynced);
@@ -340,7 +340,7 @@ public class AdvancedFileOpService {
         if (ObjectUtils.isEmpty(syncSetting)) {
             throw new SyncDuoException("找不到对应的 sync setting");
         }
-        // page helper 查询 folder 下所有的 file, 并执行 compare 操作
+        // page helper 查询 internal folder 下所有的 file, 并执行 compare 操作
         this.pageHelper(
                 (startPage, pageSize) ->
                         this.fileService.getByRootFolderIdPaged(internalFolderId, startPage, pageSize),

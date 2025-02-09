@@ -77,9 +77,9 @@ public class FileOperationUtils {
     public static Path createContentFolder(
             String sourceFolderFullPath,
             String contentFolderFullPath) throws SyncDuoException {
-        Path sourceFolder = isFolderPathValid(sourceFolderFullPath);
-        Path contentFolderParent = isParentFolderPathValid(contentFolderFullPath);
-        Path contentFolder = contentFolderParent.resolve(sourceFolder.getFileName());
+        isFolderPathValid(sourceFolderFullPath);
+        isParentFolderPathValid(contentFolderFullPath);
+        Path contentFolder = Path.of(contentFolderFullPath);
         if (Files.exists(contentFolder)) {
             log.warn("the content folder already exist");
             return contentFolder;

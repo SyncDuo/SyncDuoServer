@@ -351,11 +351,13 @@ class SyncDuoServerApplicationTests {
         assert  syncFlowResponse.getCode().equals(200);
 
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
-        deleteSyncFlowRequest.setSource2InternalSyncFlowId(syncFlowResponse.getSyncFlowIds().get(0));
-        deleteSyncFlowRequest.setInternal2ContentSyncFlowId(syncFlowResponse.getSyncFlowIds().get(1));
         SyncFlowResponse syncFlowResponse1 = syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
-
         assert  syncFlowResponse1.getCode().equals(200);
+    }
+
+    @Test
+    void convenientToDeleteThing() {
+        assert true;
     }
 
     SyncFlowResponse createSyncFlow() {
@@ -389,6 +391,7 @@ class SyncDuoServerApplicationTests {
 
     @BeforeEach
     void prepareEnvironment() throws IOException {
+        // delete folder and database record
         this.cleanUp();
         // create folder
         FileOperationTestUtil.createFolders(

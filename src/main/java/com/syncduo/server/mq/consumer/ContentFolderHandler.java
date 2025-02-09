@@ -135,7 +135,7 @@ public class ContentFolderHandler implements DisposableBean {
         );
         // 根据 internalFolderId -> sync-flow -> contentFolderEntity
         List<SyncFlowEntity> syncFlowList =
-                this.syncFlowService.getInternalSyncFlowByFolderId(fileEvent.getRootFolderId());
+                this.syncFlowService.getInternal2ContentSyncFlowListByFolderId(fileEvent.getRootFolderId());
         if (CollectionUtils.isEmpty(syncFlowList)) {
             throw new SyncDuoException(
                     "创建 content file 失败,没有找到对应的 sync flow. fileEvent 是 %s".formatted(fileEvent));
@@ -150,7 +150,7 @@ public class ContentFolderHandler implements DisposableBean {
             // 每个文件都不管历史有没有过滤, 都要从重新走一遍, 就是想让 filter 修改后可以生效
             if (this.syncSettingService.isFilter(syncFlowId, internalFile)) {
                 // 减少 pending event count
-                this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
+                this.syncFlowService.decrInternal2ContentEventCount(syncFlowEntity.getDestFolderId());
                 continue;
             }
             boolean flattenFolder = this.syncSettingService.isFlattenFolder(syncFlowId);
@@ -174,7 +174,7 @@ public class ContentFolderHandler implements DisposableBean {
             // 如果 contentFileFullPath 已存在文件, 说明 create file event 重复了, 则直接返回
             if (FileOperationUtils.isFilePathExist(contentFileFullPath)) {
                 // 减少 pending event count
-                this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
+                this.syncFlowService.decrInternal2ContentEventCount(syncFlowEntity.getDestFolderId());
                 continue;
             }
             // file copy
@@ -191,7 +191,7 @@ public class ContentFolderHandler implements DisposableBean {
             );
             this.fileService.createFileRecord(contentFileEntity);
             // 减少 pending event count
-            this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
+            this.syncFlowService.decrInternal2ContentEventCount(syncFlowEntity.getDestFolderId());
             // 记录 file event
             FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, contentFileEntity);
             this.fileEventService.save(fileEventEntity);
@@ -209,7 +209,7 @@ public class ContentFolderHandler implements DisposableBean {
         );
         // 根据 internalFolderId -> sync-flow -> contentFolderEntity
         List<SyncFlowEntity> syncFlowList =
-                this.syncFlowService.getInternalSyncFlowByFolderId(fileEvent.getRootFolderId());
+                this.syncFlowService.getInternal2ContentSyncFlowListByFolderId(fileEvent.getRootFolderId());
         if (CollectionUtils.isEmpty(syncFlowList)) {
             throw new SyncDuoException(
                     "创建 content file 失败,没有找到对应的 sync flow. fileEvent 是 %s".formatted(fileEvent));
@@ -239,7 +239,7 @@ public class ContentFolderHandler implements DisposableBean {
                 this.fileEventService.save(fileEventEntity);
             }
             // 减少 pending event count
-            this.syncFlowService.decrInternal2ContentCount(syncFlowEntity);
+            this.syncFlowService.decrInternal2ContentEventCount(syncFlowEntity.getDestFolderId());
         }
     }
 

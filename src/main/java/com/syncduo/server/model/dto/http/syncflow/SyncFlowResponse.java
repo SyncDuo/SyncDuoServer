@@ -15,8 +15,8 @@ public class SyncFlowResponse {
 
     private List<SyncFlowInfo> syncFlowInfoList;
 
-    // todo: what is this used for? can it be erased?
     // source2InternalSyncFlowId, internal2ContentSyncFlowId
+    // used for test case to run
     @JsonIgnore
     private List<Long> syncFlowIds;
 

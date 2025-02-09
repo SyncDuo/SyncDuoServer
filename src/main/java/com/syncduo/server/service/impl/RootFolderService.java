@@ -46,7 +46,7 @@ public class RootFolderService
                 FileOperationUtils.getInternalFolderFullPath(folderFullPath);
         RootFolderEntity internalFolderEntity = this.getByFolderFullPath(internalFolderFullPath);
         if (ObjectUtils.isEmpty(internalFolderEntity)) {
-            throw new SyncDuoException("存在 sourceFolder %s, 但是没有 internalFolder".formatted(sourceFolderEntity));
+            throw new SyncDuoException("sourceFolder %s found, missing internalFolder".formatted(sourceFolderEntity));
         }
         return new ImmutablePair<>(sourceFolderEntity, internalFolderEntity);
     }

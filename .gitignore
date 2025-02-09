@@ -34,3 +34,4 @@ build/
 /src/test/resources/.sourceFolder-internal/
 /src/test/resources/contentWarehouse/
 /logs/
+/.mvn/

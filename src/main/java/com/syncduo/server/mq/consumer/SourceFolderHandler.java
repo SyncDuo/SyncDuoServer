@@ -123,7 +123,7 @@ public class SourceFolderHandler implements DisposableBean {
                     .build());
         }
         // 减少 source -> internal pending event
-        this.syncFlowService.decrSource2InternalCount(sourceFolderEntity.getRootFolderId());
+        this.syncFlowService.decrSource2InternalEventCount(fileEvent.getRootFolderId());
         // 记录 file event, 表示 source folder 发生的文件事件
         FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, sourceFileEntity);
         this.fileEventService.save(fileEventEntity);
@@ -152,7 +152,7 @@ public class SourceFolderHandler implements DisposableBean {
                 .destFolderTypeEnum(RootFolderTypeEnum.CONTENT_FOLDER)
                 .build());
         // 减少 source -> internal pending event
-        this.syncFlowService.decrSource2InternalCount(sourceFolderEntity.getRootFolderId());
+        this.syncFlowService.decrSource2InternalEventCount(fileEvent.getRootFolderId());
         // 记录 file event, 表示 source folder 发生的文件事件
         FileEventEntity fileEventEntity = this.fillFileEventEntityFromFileEvent(fileEvent, sourceFileEntity);
         this.fileEventService.save(fileEventEntity);
@@ -193,7 +193,7 @@ public class SourceFolderHandler implements DisposableBean {
         String sourceFileFullPath = sourceFile.toAbsolutePath().toString();
         // 获取 internal folder 信息
         SyncFlowEntity source2InternalSyncFlow =
-                this.syncFlowService.getSourceSyncFlowByFolderId(sourceFileEntity.getRootFolderId());
+                this.syncFlowService.getSource2InternalSyncFlowByFolderId(sourceFileEntity.getRootFolderId());
         RootFolderEntity internalFolderEntity =
                 this.rootFolderService.getByFolderId(source2InternalSyncFlow.getDestFolderId());
         // 拼接目标文件 full path
@@ -222,7 +222,7 @@ public class SourceFolderHandler implements DisposableBean {
             throws SyncDuoException {
         // 获取 internal folder 信息
         SyncFlowEntity source2InternalSyncFlow =
-                this.syncFlowService.getSourceSyncFlowByFolderId(sourceFileEntity.getRootFolderId());
+                this.syncFlowService.getSource2InternalSyncFlowByFolderId(sourceFileEntity.getRootFolderId());
         RootFolderEntity internalFolderEntity =
                 this.rootFolderService.getByFolderId(source2InternalSyncFlow.getDestFolderId());
         // 获取 internal file entity
