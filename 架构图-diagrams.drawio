@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="25.0.3">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36" version="26.0.11">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
     <mxGraphModel dx="1066" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
@@ -1183,6 +1183,9 @@
         </mxCell>
         <mxCell id="AM-4zYK793EFqpcI2_eK-19" value="checksum 是否一致" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1454" y="4060" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="dceXoeoUDlbQm4ziimY0-1" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;系统的目的&lt;/h1&gt;&lt;p&gt;1. 增量同步: 用户通过在手机使用 APP 设置需要同步的文件夹, 即可增量地将文件夹内的所有数据同步到云端, 并且在本地删除后,云端的文件也不会删除.&lt;/p&gt;&lt;p&gt;2. 整合: 同步到云端之后的文件夹, 同样可以增量的整合到一个文件夹内. 整合方式包括平铺(flatten) 和镜像(mirror)&lt;/p&gt;&lt;p&gt;3. 备份: 同步到云端的文件夹, 定期会做备份&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1239" y="320" width="331" height="170" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
