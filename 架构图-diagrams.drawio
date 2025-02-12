@@ -262,7 +262,7 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-15" value="" style="group" parent="1" vertex="1" connectable="0">
           <mxGeometry x="280" y="1920" width="200" height="190" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-16" value="root_folder" style="rounded=0;whiteSpace=wrap;html=1;" parent="IIC6WvYA1fez5i_vmn7t-15" vertex="1">
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-16" value="folder" style="rounded=0;whiteSpace=wrap;html=1;" parent="IIC6WvYA1fez5i_vmn7t-15" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-17" value="&lt;div&gt;long: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_full_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;date: &lt;b&gt;folder_create_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;date: &lt;b&gt;folder_last_update_time&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-15" vertex="1">
