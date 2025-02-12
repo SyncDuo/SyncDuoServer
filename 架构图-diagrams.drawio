@@ -1229,6 +1229,15 @@
             <mxPoint x="990" y="1855" as="targetPoint" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-9" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="2000" y="1920" width="200" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-10" value="foder_history" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-9">
+          <mxGeometry width="200" height="29.23076923076923" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-11" value="&lt;div&gt;long: &lt;b&gt;folder_history_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_original_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_full_path&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-9">
+          <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
