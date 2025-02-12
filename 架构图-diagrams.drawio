@@ -281,7 +281,7 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-35" value="file_operation" style="rounded=0;whiteSpace=wrap;html=1;" parent="IIC6WvYA1fez5i_vmn7t-34" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-36" value="&lt;div&gt;long: &lt;b&gt;file_operation_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;operation_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; dest_root_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt;&amp;nbsp;sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; operation_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;error_message&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long：&lt;b&gt;execute_count&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-34" vertex="1">
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-36" value="&lt;div&gt;long: &lt;b&gt;file_operation_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;operation_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; operation_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;operation_message&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;error_message&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-34" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="IIC6WvYA1fez5i_vmn7t-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
@@ -1192,6 +1192,24 @@
         </mxCell>
         <mxCell id="dceXoeoUDlbQm4ziimY0-3" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;关键的设计&lt;/h1&gt;&lt;p&gt;&lt;b&gt;1. Syncthing 同步到云端的文件夹, 如何进行增量备份, 以及如何存储?&lt;/b&gt;&lt;/p&gt;&lt;p&gt;1.1 增加一个&quot;影子&quot;文件夹, 用于存储 Syncthing 同步到云端的所有数据, 是 Syncthing 同步的文件夹的 &quot;Ignore Delete&quot; 版本. 该影子文件夹与 Syncthing 同步的文件夹同名, 存储在用户指定的存储空间, 这个存储空间与 Syncthing 同步的文件夹处于同一个 filesystem&lt;br&gt;&lt;/p&gt;&lt;p&gt;1.2 对 Syncthing 设置 watcher + 定期扫描的策略, 有变化同步到&quot;影子&quot;文件夹&lt;/p&gt;&lt;p&gt;1.3 同步到影子文件夹, 优先使用 hardlink, 降级使用 copy&lt;/p&gt;&lt;p&gt;2. 一个文件, 同时会存在于 syncthing 文件夹, 影子文件夹 和 目的地文件夹, 并且目的地文件夹可能目录结构和文件名称发生更改, 怎么确认是同一个文件夹?&lt;/p&gt;&lt;p&gt;2.1 使用文件的绝对路径作为唯一标识符, 如果目的地文件夹的目录结果和文件名称会发生更改, 则记录一个 mapping 关系&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
           <mxGeometry x="1723" y="240" width="657" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-1" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="1480" y="1920" width="200" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-2" value="file_history" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-1">
+          <mxGeometry width="200" height="29.23076923076923" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-3" value="&lt;div&gt;long: &lt;b&gt;file_history_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;file_name&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;relative_path&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;version_number&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-1">
+          <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="IIC6WvYA1fez5i_vmn7t-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1583" y="1855" />
+            </Array>
+            <mxPoint x="1583" y="1920" as="sourcePoint" />
+            <mxPoint x="993" y="1855" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
