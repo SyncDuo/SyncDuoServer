@@ -1247,6 +1247,24 @@
             <mxPoint x="1030" y="1855" as="targetPoint" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-13" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="2280" y="1920" width="200" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-14" value="desync_file" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-13">
+          <mxGeometry width="200" height="29.23076923076923" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-15" value="&lt;div&gt;long: &lt;b&gt;desync_file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;file_id&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-13">
+          <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="IIC6WvYA1fez5i_vmn7t-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2393" y="1855" />
+            </Array>
+            <mxPoint x="2393" y="1920" as="sourcePoint" />
+            <mxPoint x="1040" y="1855" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
