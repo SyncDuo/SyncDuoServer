@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.11">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="875" dy="543" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1075" dy="543" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -305,7 +305,7 @@
         <mxCell id="IcKSqmq6yABAYZnoPidn-7" value="sync_flow" style="rounded=0;whiteSpace=wrap;html=1;" parent="IcKSqmq6yABAYZnoPidn-6" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IcKSqmq6yABAYZnoPidn-8" value="&lt;div&gt;long: &lt;b&gt;sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; flow_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; sync_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;timestamp:&lt;b&gt;&amp;nbsp;last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IcKSqmq6yABAYZnoPidn-6" vertex="1">
+        <mxCell id="IcKSqmq6yABAYZnoPidn-8" value="&lt;div&gt;long: &lt;b&gt;sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;source_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;dest_folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; sync_status&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;timestamp:&lt;b&gt;&amp;nbsp;last_sync_time&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IcKSqmq6yABAYZnoPidn-6" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="IcKSqmq6yABAYZnoPidn-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="IcKSqmq6yABAYZnoPidn-7" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
