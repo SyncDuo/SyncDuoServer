@@ -324,7 +324,7 @@
         <mxCell id="IIC6WvYA1fez5i_vmn7t-27" value="sync_setting" style="rounded=0;whiteSpace=wrap;html=1;" parent="IIC6WvYA1fez5i_vmn7t-26" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="IIC6WvYA1fez5i_vmn7t-28" value="&lt;div&gt;long: &lt;b&gt;sync_setting_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;filter_&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;b&gt;criteria&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;boolean:&lt;b&gt; flatten_folder&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-26" vertex="1">
+        <mxCell id="IIC6WvYA1fez5i_vmn7t-28" value="&lt;div&gt;long: &lt;b&gt;sync_setting_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long: &lt;b&gt;sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt;&amp;nbsp;filter_&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;b&gt;criteria&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;sync_mode&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="IIC6WvYA1fez5i_vmn7t-26" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="2OahrU1iOWOdpbc31MzJ-9" value="" style="group" parent="1" vertex="1" connectable="0">
