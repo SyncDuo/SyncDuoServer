@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.11">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="2345" dy="1185" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1313" dy="815" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -505,7 +505,7 @@
         <mxCell id="VL8HydnOHBOMeqPfS8mZ-6" value="system_config" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-5">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-7" value="&lt;div&gt;long: &lt;b&gt;system_config_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;shadow_folder_storage_path&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-5">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-7" value="&lt;div&gt;long: &lt;b&gt;system_config_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;system_config_key&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; system_config_value&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-5">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
         <mxCell id="VL8HydnOHBOMeqPfS8mZ-9" value="" style="group" vertex="1" connectable="0" parent="1">
