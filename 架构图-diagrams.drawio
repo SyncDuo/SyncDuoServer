@@ -641,6 +641,9 @@
         <mxCell id="VL8HydnOHBOMeqPfS8mZ-76" value="source folder 监控文件新建和修改" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
           <mxGeometry x="375" y="2540" width="175" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-127" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-78" target="VL8HydnOHBOMeqPfS8mZ-126">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="VL8HydnOHBOMeqPfS8mZ-78" value="dest folder 监控文件删除" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
           <mxGeometry x="630" y="2540" width="230" height="60" as="geometry" />
         </mxCell>
@@ -735,6 +738,9 @@
         </mxCell>
         <mxCell id="VL8HydnOHBOMeqPfS8mZ-124" value="发送消息" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
           <mxGeometry x="1302.5" y="2215" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-126" value="发送消息" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="995" y="2540" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
