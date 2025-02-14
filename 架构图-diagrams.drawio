@@ -526,6 +526,9 @@
             <mxPoint x="1148.5" y="1770" as="targetPoint" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-41" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-26" target="VL8HydnOHBOMeqPfS8mZ-40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="VL8HydnOHBOMeqPfS8mZ-26" value="比较数据库和文件系统" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="2200" width="210" height="90" as="geometry" />
         </mxCell>
@@ -543,6 +546,27 @@
         </mxCell>
         <mxCell id="VL8HydnOHBOMeqPfS8mZ-38" value="folderPath" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-36">
           <mxGeometry y="60" width="210" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-43" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-40" target="VL8HydnOHBOMeqPfS8mZ-42">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-40" value="读取 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="375" y="2215" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-45" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-42" target="VL8HydnOHBOMeqPfS8mZ-44">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-42" value="读取文件系统" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="575" y="2215" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-47" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-44" target="VL8HydnOHBOMeqPfS8mZ-46">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-44" value="比较获取右外集" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="775" y="2215" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-46" value="返回新增,修改,删除的文件列表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="975" y="2215" width="205" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
