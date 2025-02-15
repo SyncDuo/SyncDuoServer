@@ -1,10 +1,10 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.11">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" version="26.0.13">
   <diagram name="Page-1" id="c7558073-3199-34d8-9f00-42111426c3f3">
-    <mxGraphModel dx="1105" dy="686" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1050" dy="652" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="826" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-92" value="" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-92" value="" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="359" y="2530" width="511" height="120" as="geometry" />
         </mxCell>
         <mxCell id="N8TZfUtTnZYkTw5RphFN-41" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
@@ -493,296 +493,302 @@
         <mxCell id="dceXoeoUDlbQm4ziimY0-3" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;关键的设计&lt;/h1&gt;&lt;p&gt;&lt;b&gt;1. Syncthing 同步到云端的文件夹, 如何进行增量备份, 以及如何存储?&lt;/b&gt;&lt;/p&gt;&lt;p&gt;1.1 增加一个&quot;增量&quot;文件夹, 用于存储 Syncthing 同步到云端的所有数据, 是 Syncthing 同步的文件夹的 &quot;Ignore Delete&quot; 版本. 该增量文件夹与 Syncthing 同步的文件夹同名, 存储在用户指定的存储空间, 这个存储空间与 Syncthing 同步的文件夹处于同一个 filesystem&lt;br&gt;&lt;/p&gt;&lt;p&gt;1.2 对 Syncthing 设置 watcher + 定期扫描的策略, 有变化同步到&quot;增量&quot;文件夹&lt;/p&gt;&lt;p&gt;1.3 同步到增量文件夹, 优先使用 hardlink, 降级使用 copy&lt;/p&gt;&lt;p&gt;&lt;b&gt;2. 一个文件, 同时会存在于 syncthing 文件夹, 增量文件夹 和 目的地文件夹, 并且目的地文件夹可能目录结构和文件名称发生更改, 怎么确认是同一个文件夹?&lt;/b&gt;&lt;/p&gt;&lt;p&gt;2.1 使用文件的绝对路径作为唯一标识符, 如果目的地文件夹的目录结果和文件名称会发生更改, 则记录原来的文件/文件夹信息&lt;/p&gt;&lt;p&gt;&lt;b&gt;3. 用户的使用流程是怎么样的?&lt;/b&gt;&lt;/p&gt;&lt;p&gt;3.1 用户打开 UI 界面, Syncthing 的目录已经自动生成&quot;增量&quot;文件夹. 用户可以选择增量文件夹,定义转换和过滤规则,生成一条从&quot;增量&quot;文件夹到目的地文件夹的 sync flow. 此时系统就会启动 watcher 和定期扫描的策略&lt;/p&gt;&lt;p&gt;3.2 用户可以看到完整的看板,显示已经添加的 syncflow 的情况,包括是否完成同步,同步时间,文件和文件夹的数量 etc&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
           <mxGeometry x="1723" y="240" width="657" height="490" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-1" value="" style="group" vertex="1" connectable="0" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-1" value="" style="group" parent="1" vertex="1" connectable="0">
           <mxGeometry x="1241" y="1920" width="200" height="190" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-2" value="file_sync_mapping" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-2" value="file_sync_mapping" style="rounded=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-1" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-3" value="&lt;div&gt;long: &lt;b&gt;file_sync_mapping_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; source_file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; dest_file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_desync&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-3" value="&lt;div&gt;long: &lt;b&gt;file_sync_mapping_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; source_file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;long:&lt;b&gt; dest_file_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;file_desync&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="VL8HydnOHBOMeqPfS8mZ-1" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-5" value="" style="group" vertex="1" connectable="0" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-5" value="" style="group" parent="1" vertex="1" connectable="0">
           <mxGeometry x="1481" y="1920" width="200" height="190" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-6" value="system_config" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-5">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-6" value="system_config" style="rounded=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-5" vertex="1">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-7" value="&lt;div&gt;long: &lt;b&gt;system_config_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;system_config_key&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; system_config_value&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-5">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-7" value="&lt;div&gt;long: &lt;b&gt;system_config_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;system_config_key&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str:&lt;b&gt; system_config_value&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="VL8HydnOHBOMeqPfS8mZ-5" vertex="1">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="t_K3pcmBi-geYfmrzG9U-2" target="IIC6WvYA1fez5i_vmn7t-13">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="t_K3pcmBi-geYfmrzG9U-2" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="1116" y="1905" as="sourcePoint" />
             <mxPoint x="1006" y="1840" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-2" target="IIC6WvYA1fez5i_vmn7t-13">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-2" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="1350" y="1877.27" as="sourcePoint" />
             <mxPoint x="1000" y="1812.27" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-6" target="IIC6WvYA1fez5i_vmn7t-13">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-6" target="IIC6WvYA1fez5i_vmn7t-13" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="1739.5" y="1835" as="sourcePoint" />
             <mxPoint x="1148.5" y="1770" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-41" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-26" target="VL8HydnOHBOMeqPfS8mZ-40">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-41" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-26" target="VL8HydnOHBOMeqPfS8mZ-40" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-26" value="比较数据库和文件系统" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-26" value="比较数据库和文件系统" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="2215" width="210" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-27" value="folderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-26">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-27" value="folderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-26" vertex="1">
           <mxGeometry y="30" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-49" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-36" target="VL8HydnOHBOMeqPfS8mZ-48">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-49" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-36" target="VL8HydnOHBOMeqPfS8mZ-48" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-36" value="检查SyncFlow是否Sync" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-36" value="检查SyncFlow是否Sync" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="2338" width="210" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-37" value="SyncFlowId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-36">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-37" value="SyncFlowId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-36" vertex="1">
           <mxGeometry y="30" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-43" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-40" target="VL8HydnOHBOMeqPfS8mZ-42">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-43" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-40" target="VL8HydnOHBOMeqPfS8mZ-42" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-40" value="读取 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-40" value="读取 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="375" y="2215" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-45" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-42" target="VL8HydnOHBOMeqPfS8mZ-44">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-45" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-42" target="VL8HydnOHBOMeqPfS8mZ-44" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-42" value="读取文件系统" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-42" value="读取文件系统" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="575" y="2215" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-47" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-44" target="VL8HydnOHBOMeqPfS8mZ-46">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-47" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-44" target="VL8HydnOHBOMeqPfS8mZ-46" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-44" value="比较获取右外集" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-44" value="比较获取右外集" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="775" y="2215" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-46" value="返回新增,修改,删除的文件列表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-46" value="返回新增,修改,删除的文件列表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="975" y="2215" width="205" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-48" value="读取 source file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-48" value="读取 source file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="375" y="2338" width="175" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-53" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" target="VL8HydnOHBOMeqPfS8mZ-52">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-53" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" target="VL8HydnOHBOMeqPfS8mZ-52" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="550" y="2368" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-55" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-52" target="VL8HydnOHBOMeqPfS8mZ-54">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-55" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-52" target="VL8HydnOHBOMeqPfS8mZ-54" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-52" value="读取 file_sync_mapping 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-52" value="读取 file_sync_mapping 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="630" y="2338" width="232.5" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-57" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-54" target="VL8HydnOHBOMeqPfS8mZ-56">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-57" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-54" target="VL8HydnOHBOMeqPfS8mZ-56" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-54" value="根据 source_file_id,获取左外集" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-54" value="根据 source_file_id,获取左外集" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="960" y="2338" width="190" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-56" value="不为空则 not_synced" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="0emeD43EDLuA4eRprJi3-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-56" target="0emeD43EDLuA4eRprJi3-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-56" value="不为空则 not_synced" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="1265" y="2338" width="165" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-58" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-59">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-58" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-59" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="375" y="2470" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-59" value="系统启动" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-59" value="系统启动" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="2455" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-77" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-72" target="VL8HydnOHBOMeqPfS8mZ-76">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-77" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-72" target="VL8HydnOHBOMeqPfS8mZ-76" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-72" value="添加 watcher" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-72" value="添加 watcher" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="2540" width="210" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-74" value="syncFlowId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-72">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-74" value="syncFlowId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-72" vertex="1">
           <mxGeometry y="30" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-79" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-76" target="VL8HydnOHBOMeqPfS8mZ-78">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-79" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-76" target="VL8HydnOHBOMeqPfS8mZ-78" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-76" value="source folder 监控文件新建和修改" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-76" value="source folder 监控文件新建和修改" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="375" y="2540" width="175" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-127" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-78" target="VL8HydnOHBOMeqPfS8mZ-126">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-127" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-78" target="VL8HydnOHBOMeqPfS8mZ-126" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-78" value="dest folder 监控文件删除" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-78" value="dest folder 监控文件删除" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="630" y="2540" width="230" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-113" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-80" target="VL8HydnOHBOMeqPfS8mZ-112">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-113" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-80" target="VL8HydnOHBOMeqPfS8mZ-112" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-80" value="文件新建和修改处理逻辑" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-80" value="文件新建和修改处理逻辑" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="2681" width="210" height="180" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-81" value="syncFlowId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-80">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-81" value="syncFlowId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-80" vertex="1">
           <mxGeometry y="30" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-82" value="sourceFolderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-80">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-82" value="sourceFolderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-80" vertex="1">
           <mxGeometry y="60" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-83" value="destFolderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-80">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-83" value="destFolderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-80" vertex="1">
           <mxGeometry y="90" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-88" value="file" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-80">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-88" value="file" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-80" vertex="1">
           <mxGeometry y="120" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-89" value="alterationType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-80">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-89" value="alterationType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-80" vertex="1">
           <mxGeometry y="150" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-93" value="一个文件夹一个 watcher, 通过维护两个列表, 发送多个事件" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-93" value="一个文件夹一个 watcher, 通过维护两个列表, 发送多个事件" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="370" y="2610" width="490" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-94" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-95" target="VL8HydnOHBOMeqPfS8mZ-101">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-94" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-95" target="VL8HydnOHBOMeqPfS8mZ-101" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-95" value="文件删除处理逻辑" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-95" value="文件删除处理逻辑" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="2923" width="210" height="180" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-96" value="syncFlowId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-95">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-96" value="syncFlowId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-95" vertex="1">
           <mxGeometry y="30" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-97" value="sourceFolderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-95">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-97" value="sourceFolderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-95" vertex="1">
           <mxGeometry y="60" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-98" value="destFolderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-95">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-98" value="destFolderId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-95" vertex="1">
           <mxGeometry y="90" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-99" value="file" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-95">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-99" value="file" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-95" vertex="1">
           <mxGeometry y="120" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-100" value="alterationType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="VL8HydnOHBOMeqPfS8mZ-95">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-100" value="alterationType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="VL8HydnOHBOMeqPfS8mZ-95" vertex="1">
           <mxGeometry y="150" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-109" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-101" target="VL8HydnOHBOMeqPfS8mZ-108">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-109" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-101" target="VL8HydnOHBOMeqPfS8mZ-108" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-101" value="读取 file 表,获取数据库的记录" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-101" value="读取 file 表,获取数据库的记录" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="375" y="2983" width="185" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-111" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-108" target="VL8HydnOHBOMeqPfS8mZ-110">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-111" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-108" target="VL8HydnOHBOMeqPfS8mZ-110" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-108" value="更新 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-108" value="更新 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="672.5" y="2983" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-110" value="更新 file_sync_mapping 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-110" value="更新 file_sync_mapping 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="872.5" y="2983" width="207.5" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-112" value="读取 sync_setting 表,没有过滤则执行" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-112" value="读取 sync_setting 表,没有过滤则执行" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="375" y="2741" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-116" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" target="VL8HydnOHBOMeqPfS8mZ-118">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-116" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" target="VL8HydnOHBOMeqPfS8mZ-118" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="495" y="2771" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-117" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-118" target="VL8HydnOHBOMeqPfS8mZ-120">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-117" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-118" target="VL8HydnOHBOMeqPfS8mZ-120" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-118" value="文件 copy/hardlink 到 dest folder" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-118" value="文件 copy/hardlink 到 dest folder" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="620" y="2741" width="185" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-119" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-120" target="VL8HydnOHBOMeqPfS8mZ-122">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-119" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-120" target="VL8HydnOHBOMeqPfS8mZ-122" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-120" value="更新 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-120" value="更新 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="917.5" y="2741" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-121" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-122" target="VL8HydnOHBOMeqPfS8mZ-123">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-121" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-122" target="VL8HydnOHBOMeqPfS8mZ-123" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-122" value="更新 file event 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-122" value="更新 file event 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="1117.5" y="2741" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-123" value="如果是文件新建&lt;div&gt;则更新 file_sync_mapping 表&lt;/div&gt;" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-123" value="如果是文件新建&lt;div&gt;则更新 file_sync_mapping 表&lt;/div&gt;" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="1317.5" y="2741" width="217.5" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-126" value="发送消息" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-126" value="发送消息" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="995" y="2540" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-164" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-129" target="VL8HydnOHBOMeqPfS8mZ-163">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-164" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-129" target="VL8HydnOHBOMeqPfS8mZ-163" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-129" value="定期扫描" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-129" value="定期扫描" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="3160" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-148" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-146" target="VL8HydnOHBOMeqPfS8mZ-147">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-148" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-146" target="VL8HydnOHBOMeqPfS8mZ-147" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-146" value="读取 folder 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-146" value="读取 folder 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="375" y="2440" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-150" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-147" target="VL8HydnOHBOMeqPfS8mZ-149">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-150" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-147" target="VL8HydnOHBOMeqPfS8mZ-149" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-147" value="比较数据库和文件系统" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-147" value="比较数据库和文件系统" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="575" y="2440" width="145" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-152" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-149" target="VL8HydnOHBOMeqPfS8mZ-151">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-152" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-149" target="VL8HydnOHBOMeqPfS8mZ-151" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-149" value="更新 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-149" value="更新 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="812.5" y="2440" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-154" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-151" target="VL8HydnOHBOMeqPfS8mZ-153">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-154" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-151" target="VL8HydnOHBOMeqPfS8mZ-153" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-151" value="读取 sync_flow 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-151" value="读取 sync_flow 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="1012.5" y="2440" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-156" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-153" target="VL8HydnOHBOMeqPfS8mZ-155">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-156" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-153" target="VL8HydnOHBOMeqPfS8mZ-155" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-153" value="读取 source folder 和 dest folder 的 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-153" value="读取 source folder 和 dest folder 的 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="1212.5" y="2440" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-158" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-155" target="VL8HydnOHBOMeqPfS8mZ-157">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-158" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-155" target="VL8HydnOHBOMeqPfS8mZ-157" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-155" value="获取左外集" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-155" value="获取左外集" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="1412.5" y="2440" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-160" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-157" target="VL8HydnOHBOMeqPfS8mZ-159">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-160" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-157" target="VL8HydnOHBOMeqPfS8mZ-159" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-157" value="读取 file_sync_mapping" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-157" value="读取 file_sync_mapping" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="1612.5" y="2440" width="157.5" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-159" value="没有 desync, 则发送消息" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-159" value="没有 desync, 则发送消息" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="1868.75" y="2440" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-166" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-163" target="VL8HydnOHBOMeqPfS8mZ-165">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-166" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-163" target="VL8HydnOHBOMeqPfS8mZ-165" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-163" value="读取 folder 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-163" value="读取 folder 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="375" y="3145" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-168" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-165" target="VL8HydnOHBOMeqPfS8mZ-167">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-168" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-165" target="VL8HydnOHBOMeqPfS8mZ-167" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-165" value="比较数据库和文件系统" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-165" value="比较数据库和文件系统" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="575" y="3145" width="145" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-170" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="VL8HydnOHBOMeqPfS8mZ-167" target="VL8HydnOHBOMeqPfS8mZ-169">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-170" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="VL8HydnOHBOMeqPfS8mZ-167" target="VL8HydnOHBOMeqPfS8mZ-169" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-167" value="更新 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-167" value="更新 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="800" y="3145" width="145" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="VL8HydnOHBOMeqPfS8mZ-169" value="检查SyncFlow是否Sync" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+        <mxCell id="VL8HydnOHBOMeqPfS8mZ-169" value="检查SyncFlow是否Sync" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" parent="1" vertex="1">
           <mxGeometry x="1037.5" y="3145" width="172.5" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="0emeD43EDLuA4eRprJi3-1" value="发送消息到 bus" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="1532.5" y="2338" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
