@@ -713,7 +713,7 @@
         <mxCell id="0emeD43EDLuA4eRprJi3-42" value="file_message" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="0emeD43EDLuA4eRprJi3-41">
           <mxGeometry width="200" height="29.23076923076923" as="geometry" />
         </mxCell>
-        <mxCell id="0emeD43EDLuA4eRprJi3-43" value="&lt;div&gt;long: &lt;b&gt;sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;file: &lt;b&gt;file&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="0emeD43EDLuA4eRprJi3-41">
+        <mxCell id="0emeD43EDLuA4eRprJi3-43" value="&lt;div&gt;long: &lt;b&gt;sync_flow_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;str: &lt;b&gt;folder_id&lt;/b&gt;&lt;/div&gt;&lt;div&gt;path: &lt;b&gt;file&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;str: operation_type&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="0emeD43EDLuA4eRprJi3-41">
           <mxGeometry y="29.23076923076923" width="200" height="160.7692307692308" as="geometry" />
         </mxCell>
       </root>
