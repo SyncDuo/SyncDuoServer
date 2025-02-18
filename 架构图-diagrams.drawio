@@ -640,8 +640,10 @@
         <mxCell id="nWyqpSWoFEDPYsxoO16W-20" value="封装成 pub message, 发送到 pub" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
           <mxGeometry x="731.63" y="2640" width="238.38" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="nWyqpSWoFEDPYsxoO16W-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="nWyqpSWoFEDPYsxoO16W-23" target="nWyqpSWoFEDPYsxoO16W-26">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="nWyqpSWoFEDPYsxoO16W-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="nWyqpSWoFEDPYsxoO16W-23">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="376.75" y="2790" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="nWyqpSWoFEDPYsxoO16W-23" value="pub" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="2760" width="210" height="60" as="geometry" />
@@ -649,14 +651,14 @@
         <mxCell id="nWyqpSWoFEDPYsxoO16W-24" value="pubMessage" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="nWyqpSWoFEDPYsxoO16W-23">
           <mxGeometry y="30" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="nWyqpSWoFEDPYsxoO16W-25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="nWyqpSWoFEDPYsxoO16W-26" target="nWyqpSWoFEDPYsxoO16W-27">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="nWyqpSWoFEDPYsxoO16W-32" value="文件创建" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="375" y="2760" width="223.25" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="nWyqpSWoFEDPYsxoO16W-26" value="创建/修改/删除 file 表" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
-          <mxGeometry x="376.75" y="2760" width="223.25" height="60" as="geometry" />
+        <mxCell id="nWyqpSWoFEDPYsxoO16W-33" value="文件修改" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="375" y="2880" width="223.25" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="nWyqpSWoFEDPYsxoO16W-27" value="封装成 pubMessage, 发送到 pub" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
-          <mxGeometry x="731.63" y="2760" width="238.38" height="60" as="geometry" />
+        <mxCell id="nWyqpSWoFEDPYsxoO16W-34" value="文件删除" style="whiteSpace=wrap;html=1;fontStyle=0;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="376.75" y="3000" width="223.25" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
