@@ -17,6 +17,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
@@ -66,6 +67,35 @@ public class FilesystemUtil {
     }
 
 
+    public static List<Long> getFolderInfo(String path) throws SyncDuoException {
+        Path folder = FileOperationUtils.isFolderPathValid(path);
+        // 初始化变量
+        AtomicLong fileCount = new AtomicLong(0);
+        AtomicLong subFolderCount = new AtomicLong(0);
+        AtomicLong totalSize = new AtomicLong(0);
+        // 遍历统计
+        try {
+            Files.walkFileTree(folder, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    fileCount.incrementAndGet();
+                    totalSize.addAndGet(attrs.size());
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                    subFolderCount.incrementAndGet();
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new SyncDuoException("getFolderInfo failed. exception is " + e.getMessage());
+        }
+
+        return Arrays.asList(fileCount.get(), subFolderCount.get(), totalSize.get());
+    }
+
     public static boolean endsWithSeparator(String path) throws SyncDuoException {
         if (StringUtils.isEmpty(path)) {
             throw new SyncDuoException("get path separator failed, path is empty");
@@ -76,9 +106,9 @@ public class FilesystemUtil {
     public static Path createContentFolder(
             String sourceFolderFullPath,
             String contentFolderFullPath) throws SyncDuoException {
-        Path sourceFolder = isFolderPathValid(sourceFolderFullPath);
-        Path contentFolderParent = isParentFolderPathValid(contentFolderFullPath);
-        Path contentFolder = contentFolderParent.resolve(sourceFolder.getFileName());
+        isFolderPathValid(sourceFolderFullPath);
+        isParentFolderPathValid(contentFolderFullPath);
+        Path contentFolder = Path.of(contentFolderFullPath);
         if (Files.exists(contentFolder)) {
             log.warn("the content folder already exist");
             return contentFolder;
@@ -427,6 +457,7 @@ public class FilesystemUtil {
             throw new SyncDuoException("getSubfolders failed. path is null");
         }
         Path folder = Paths.get(path);
+        // 如果输入的路径不存在, 则寻找它的父路径, 如果父路径也不存在, 则抛出异常
         if (!Files.exists(folder) || !Files.isDirectory(folder)) {
             folder = isFolderPathValid(folder.getParent());
         }
