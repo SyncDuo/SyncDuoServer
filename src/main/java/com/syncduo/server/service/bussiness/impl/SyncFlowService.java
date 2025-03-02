@@ -91,18 +91,30 @@ public class SyncFlowService
         // 找到 folder id 为 source id, 对应的 syncFlowId
         List<SyncFlowStatus> syncFlowStatusList = this.doubleQueryCache(folderId);
         for (SyncFlowStatus syncFlowStatus : syncFlowStatusList) {
-            syncFlowStatus.addPendingEventCount();
+            boolean statusChanged = syncFlowStatus.addPendingEventCount();
+            if (statusChanged) {
+                this.updateSyncFlowStatus(
+                        syncFlowStatus.getSyncFlowEntity(),
+                        SyncFlowStatusEnum.NOT_SYNC
+                );
+            }
         }
     }
 
-    public void decrPendingEventCount(Long folderId) {
+    public void decrPendingEventCount(Long folderId) throws SyncDuoException {
         // 找到 folder id 为 source id, 对应的 syncFlowId
         List<SyncFlowStatus> syncFlowStatusList = this.cacheMap.get(folderId);
         if (CollectionUtils.isEmpty(syncFlowStatusList)) {
             return;
         }
         for (SyncFlowStatus syncFlowStatus : syncFlowStatusList) {
-            syncFlowStatus.decrPendingEventCount();
+            boolean statusChanged = syncFlowStatus.decrPendingEventCount();
+            if (statusChanged) {
+                this.updateSyncFlowStatus(
+                        syncFlowStatus.getSyncFlowEntity(),
+                        SyncFlowStatusEnum.SYNC
+                );
+            }
         }
     }
 
@@ -237,12 +249,16 @@ public class SyncFlowService
 
         private Integer pendingEventCount;
 
-        public void addPendingEventCount() {
+        // 如果 pending event count 从 0->1 跳变, 则返回 true, 否则返回 false
+        public boolean addPendingEventCount() {
             this.pendingEventCount++;
+            return pendingEventCount == 1;
         }
 
-        public void decrPendingEventCount() {
+        // 如果 pending event count 从 1->0 跳变, 则返回 true, 否则返回 false
+        public boolean decrPendingEventCount() {
             this.pendingEventCount--;
+            return pendingEventCount == 0;
         }
     }
 }

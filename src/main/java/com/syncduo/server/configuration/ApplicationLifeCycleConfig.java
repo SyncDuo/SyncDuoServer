@@ -3,7 +3,6 @@ package com.syncduo.server.configuration;
 
 import com.syncduo.server.bus.FileEventHandler;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.service.facade.FileOperationService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

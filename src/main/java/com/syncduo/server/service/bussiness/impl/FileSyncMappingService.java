@@ -22,7 +22,20 @@ public class FileSyncMappingService
         extends ServiceImpl<FileSyncMappingMapper, FileSyncMappingEntity>
         implements IFileSyncMappingService {
 
-    public void desyncByFileId(Long fileId) throws SyncDuoException {
+    public void desyncBySourceFileId(Long fileId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(fileId)) {
+            throw new SyncDuoException("desyncByFileId failed. fileId is null");
+        }
+        LambdaUpdateWrapper<FileSyncMappingEntity> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(FileSyncMappingEntity::getSourceFileId, fileId);
+        updateWrapper.set(FileSyncMappingEntity::getFileDesync, FileDesyncEnum.FILE_DESYNC.getCode());
+        boolean update = this.update(updateWrapper);
+        if (!update) {
+            throw new SyncDuoException("desyncByFileId failed. can't not update database");
+        }
+    }
+
+    public void desyncByDestFileId(Long fileId) throws SyncDuoException {
         if (ObjectUtils.isEmpty(fileId)) {
             throw new SyncDuoException("desyncByFileId failed. fileId is null");
         }
@@ -60,13 +73,15 @@ public class FileSyncMappingService
         }
     }
 
-    public List<FileSyncMappingEntity> getBySyncFlowId(Long syncFlowId) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(syncFlowId)) {
-            throw new SyncDuoException("getBySyncFlowId failed. syncFlowId is null");
+    public void deleteRecord(FileSyncMappingEntity fileSyncMappingEntity) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(fileSyncMappingEntity.getFileSyncMappingId())) {
+            return;
         }
-        LambdaQueryWrapper<FileSyncMappingEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(FileSyncMappingEntity::getSyncFlowId, syncFlowId);
-        return this.list(queryWrapper);
+        fileSyncMappingEntity.setRecordDeleted(DeletedEnum.DELETED.getCode());
+        boolean save = this.updateById(fileSyncMappingEntity);
+        if (!save) {
+            throw new SyncDuoException("deleteRecord failed. can't write to database!");
+        }
     }
 
     public FileSyncMappingEntity getBySyncFlowIdAndFileId(Long syncFlowId, Long fileId) throws SyncDuoException {

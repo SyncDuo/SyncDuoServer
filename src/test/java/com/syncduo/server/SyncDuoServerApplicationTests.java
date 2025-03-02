@@ -9,7 +9,6 @@ import com.syncduo.server.model.dto.http.syncflow.DeleteSyncFlowRequest;
 import com.syncduo.server.model.dto.http.syncflow.SyncFlowResponse;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
-import com.syncduo.server.service.facade.FileOperationService;
 import com.syncduo.server.service.bussiness.impl.*;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;

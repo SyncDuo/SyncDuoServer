@@ -74,8 +74,12 @@ public class FileEventHandler implements DisposableBean {
                         default -> throw new SyncDuoException("文件夹的文件事件:%s 不识别".formatted(fileEvent));
                     }
                 } catch (SyncDuoException e) {
-                    log.error("文件夹的文件事件:{} 处理失败", fileEvent, e);
-                    this.syncFlowService.decrPendingEventCount(fileEvent.getFolderId());
+                    log.error("startHandle failed. fileEvent:{} failed!", fileEvent, e);
+                    try {
+                        this.syncFlowService.decrPendingEventCount(fileEvent.getFolderId());
+                    } catch (SyncDuoException ex) {
+                        log.error("startHandle failed. pending event count can't decrease", e);
+                    }
                 }
             });
         }
@@ -141,8 +145,8 @@ public class FileEventHandler implements DisposableBean {
         }
         // 删除 file entity
         this.fileService.deleteBatchByFileEntity(Collections.singletonList(fileEntity));
-        // 判断是否 desynced
-        this.fileSyncMappingService.desyncByFileId(fileEntity.getFileId());
+        // 判断是否 desynced, 如果删除的文件在 file_sync_mapping 中, 则标记为 desynced
+        this.fileSyncMappingService.desyncByDestFileId(fileEntity.getFileId());
         durationAndDownStream(fileEvent, folderEntity, fileEntity);
     }
 
@@ -152,7 +156,7 @@ public class FileEventHandler implements DisposableBean {
             FileEntity fileEntity) throws SyncDuoException {
         // 创建 fileEvent
         this.fileEventService.createFileEvent(
-                fileEvent.getFileEventTypeEnum().name(),
+                fileEvent.getFileEventTypeEnum(),
                 folderEntity.getFolderId(),
                 fileEntity.getFileId()
         );

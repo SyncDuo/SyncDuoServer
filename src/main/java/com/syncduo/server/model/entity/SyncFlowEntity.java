@@ -24,7 +24,5 @@ public class SyncFlowEntity extends BaseEntity {
 
     private String syncStatus;
 
-    private String syncFlowName;
-
     private Timestamp lastSyncTime;
 }

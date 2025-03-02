@@ -21,12 +21,12 @@ public class FileEventService
         implements IFileEventService {
 
     public FileEventEntity createFileEvent(
-            String fileEventType,
+            FileEventTypeEnum fileEventType,
             Long folderId,
             Long fileId
     ) throws SyncDuoException {
         FileEventEntity fileEventEntity = new FileEventEntity();
-        fileEventEntity.setFileEventType(fileEventType);
+        fileEventEntity.setFileEventType(fileEventType.name());
         fileEventEntity.setFileId(fileId);
         fileEventEntity.setFolderId(folderId);
         return this.createFileEvent(fileEventEntity);

@@ -14,7 +14,6 @@ import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SyncSettingEntity;
 import com.syncduo.server.bus.FileAccessValidator;
 import com.syncduo.server.bus.FolderWatcher;
-import com.syncduo.server.service.facade.FileOperationService;
 import com.syncduo.server.service.bussiness.impl.FolderService;
 import com.syncduo.server.service.bussiness.impl.SyncFlowService;
 import com.syncduo.server.service.bussiness.impl.SyncSettingService;

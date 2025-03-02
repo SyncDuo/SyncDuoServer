@@ -115,19 +115,19 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         return this.getByUniqueHash(uniqueHash);
     }
 
-    public Path getFileFromFileEntity(String rootFolderFullPath, FileEntity fileEntity) throws SyncDuoException {
-        return FilesystemUtil.isFilePathValid(concatPathStringFromFolderAndFile(rootFolderFullPath, fileEntity));
+    public Path getFileFromFileEntity(String folderFullPath, FileEntity fileEntity) throws SyncDuoException {
+        return FilesystemUtil.isFilePathValid(concatPathStringFromFolderAndFile(folderFullPath, fileEntity));
     }
 
-    public String concatPathStringFromFolderAndFile(String rootFolderFullPath, FileEntity fileEntity)
+    public String concatPathStringFromFolderAndFile(String folderFullPath, FileEntity fileEntity)
             throws SyncDuoException {
-        if (StringUtils.isBlank(rootFolderFullPath)) {
-            throw new SyncDuoException("rootFolderFullPath 为空");
+        if (StringUtils.isBlank(folderFullPath)) {
+            throw new SyncDuoException("folderFullPath 为空");
         }
         if (ObjectUtils.isEmpty(fileEntity)) {
             throw new SyncDuoException("fileEntity 为空");
         }
-        String filePath = rootFolderFullPath +
+        String filePath = folderFullPath +
                 fileEntity.getRelativePath() +
                 FilesystemUtil.getPathSeparator() +
                 fileEntity.getFileName();

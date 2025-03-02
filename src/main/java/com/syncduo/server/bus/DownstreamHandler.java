@@ -1,15 +1,19 @@
 package com.syncduo.server.bus;
 
 import com.syncduo.server.enums.FileDesyncEnum;
+import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.model.internal.DownStreamEvent;
+import com.syncduo.server.model.internal.FileEvent;
 import com.syncduo.server.service.bussiness.impl.*;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -80,9 +84,13 @@ public class DownstreamHandler implements DisposableBean {
                         default -> throw new SyncDuoException("下游事件:%s 不识别".formatted(downStreamEvent));
                     }
                 } catch (SyncDuoException e) {
-                    log.error("下游事件:{} 处理失败", downStreamEvent, e);
+                    log.error("startHandle failed. downStreamEvent:{} failed!", downStreamEvent, e);
                 } finally {
-                    this.syncFlowService.decrPendingEventCount(downStreamEvent.getFolderEntity().getFolderId());
+                    try {
+                        this.syncFlowService.decrPendingEventCount(downStreamEvent.getFolderEntity().getFolderId());
+                    } catch (SyncDuoException e) {
+                        log.error("startHandle failed. pending event count can't decrease", e);
+                    }
                 }
             });
         }
@@ -134,6 +142,12 @@ public class DownstreamHandler implements DisposableBean {
                     fileEntity.getFileId(),
                     destFileEntity.getFileId()
             );
+            // 记录 fileEvent
+            this.fileEventService.createFileEvent(
+                    downStreamEvent.getFileEventTypeEnum(),
+                    destFolderEntity.getFolderId(),
+                    destFileEntity.getFileId()
+            );
         }
     }
 
@@ -154,51 +168,74 @@ public class DownstreamHandler implements DisposableBean {
                 log.error("folder entity is null. syncflow is {}", syncFlowEntity);
                 continue;
             }
-            FileSyncMappingEntity fileSyncMappingEntity = this.fileSyncMappingService.getBySyncFlowIdAndFileId(
-                    syncFlowEntity.getSyncFlowId(),
-                    fileEntity.getFileId()
+            // 获取 destFile
+            Pair<FileEntity, Path> destFileEntityAndFile = this.getDestFileOnFileChange(
+                    fileEntity,
+                    destFolderEntity,
+                    file,
+                    syncFlowEntity
             );
-            if (ObjectUtils.isEmpty(fileSyncMappingEntity)) {
-                // 如果没有找到 fileSyncMapping, 则不需要更新文件
+            if (ObjectUtils.isEmpty(destFileEntityAndFile)) {
                 continue;
             }
-            // 文件更新
-            this.fileService.getById(fileSyncMappingEntity.getDestFileId())
-            // 文件记录更新
+            // 更新文件
+            Path destFile = this.fileAccessValidator.updateFileByCopy(
+                    folderEntity.getFolderId(),
+                    file,
+                    destFolderEntity.getFolderId(),
+                    destFileEntityAndFile.getRight()
+            );
+            // 更新文件记录
+            this.fileService.updateFileEntityByFile(
+                    destFileEntityAndFile.getLeft(),
+                    destFile
+            );
+            // 记录 fileEvent
+            this.fileEventService.createFileEvent(
+                    downStreamEvent.getFileEventTypeEnum(),
+                    destFolderEntity.getFolderId(),
+                    destFileEntityAndFile.getLeft().getFileId()
+            );
         }
     }
 
     private void onFileDelete(DownStreamEvent downStreamEvent) throws SyncDuoException {
-
+        // 上游删除的文件, 下游标记为 desynced
+        FileEntity fileEntity = downStreamEvent.getFileEntity();
+        this.fileSyncMappingService.desyncBySourceFileId(fileEntity.getFileId());
     }
 
-    private String getDestFilePathOnFileChange(
+    private Pair<FileEntity, Path> getDestFileOnFileChange(
             FileEntity sourceFileEntity,
             FolderEntity destFolderEntity,
             Path file,
             SyncFlowEntity syncFlowEntity
     ) throws SyncDuoException {
+        // 找不到 fileSyncMappingEntity, 则不需要更新
         FileSyncMappingEntity fileSyncMappingEntity = this.fileSyncMappingService.getBySyncFlowIdAndFileId(
                 syncFlowEntity.getSyncFlowId(),
                 sourceFileEntity.getFileId());
         if (ObjectUtils.isEmpty(fileSyncMappingEntity)) {
-            return "";
+            return null;
         }
+        // 已经 desync, 则不需要更新
         if (FileDesyncEnum.FILE_DESYNC.getCode() == fileSyncMappingEntity.getFileDesync()) {
-            return "";
+            return null;
         }
         Long syncFlowId = syncFlowEntity.getSyncFlowId();
         if (this.syncSettingService.isFilter(syncFlowId, file)) {
             // 根据最新的 filter criteria 已经 filter 了, 则需要删除 fileSyncMapping
-
-            return "";
+            this.fileSyncMappingService.deleteRecord(fileSyncMappingEntity);
+            return null;
         }
+        // 获取 destFileEntity, 为空则表示已删除
         FileEntity destFileEntity = this.fileService.getById(fileSyncMappingEntity.getDestFileId());
-        return destFolderEntity.getFolderFullPath()
-                + destFileEntity.getRelativePath()
-                + destFileEntity.getFileName()
-                + "."
-                + destFileEntity.getFileExtension();
+        if (ObjectUtils.isEmpty(destFileEntity)) {
+            return null;
+        }
+        // 根据 destFileEntity, 获取 file
+        Path destFile = this.fileService.getFileFromFileEntity(destFolderEntity.getFolderFullPath(), destFileEntity);
+        return new ImmutablePair<>(destFileEntity, destFile);
     }
 
     private String getDestFilePathOnFileCreate(

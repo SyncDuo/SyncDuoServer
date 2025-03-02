@@ -17,6 +17,7 @@ public class FileEntity extends BaseEntity {
     private String fileName;
 
     // extension without dot(.)
+    // or "" represent no extension
     private String fileExtension;
 
     private String fileMd5Checksum;

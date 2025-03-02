@@ -23,7 +23,6 @@ public abstract class BaseEntity {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Timestamp lastUpdatedTime;
 
-    // todo: base entity 增加 recordDeleted, 需要修改全部 entity 和 db
     @TableField(fill = FieldFill.INSERT)
     private Integer recordDeleted;
 }

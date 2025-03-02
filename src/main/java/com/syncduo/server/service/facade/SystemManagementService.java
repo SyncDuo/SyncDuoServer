@@ -14,6 +14,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -41,7 +42,8 @@ public class SystemManagementService {
         this.systemBus = systemBus;
     }
 
-
+    // initial delay 5 minutes, fixDelay 30 minutes. unit is millisecond
+    @Scheduled(initialDelay = 1000 * 60 * 5, fixedDelayString = "${syncduo.server.check.folder.insync.interval:1800000}")
     public void periodicalScan() throws SyncDuoException {
         List<FolderEntity> allFolder = this.folderService.getAllFolder();
         for (FolderEntity folderEntity : allFolder) {
