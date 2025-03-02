@@ -16,6 +16,7 @@ public class FileEntity extends BaseEntity {
 
     private String fileName;
 
+    // extension without dot(.)
     private String fileExtension;
 
     private String fileMd5Checksum;
@@ -24,21 +25,15 @@ public class FileEntity extends BaseEntity {
 
     private Timestamp fileLastModifiedTime;
 
-    private String fileUuid4;
+    // hash from <folderId><fileName><fileExtension>
+    private String fileUniqueHash;
 
-    private Long rootFolderId;
+    private Long folderId;
 
 
     // always starts with "/"
     // if no sub folder, then only contains "/"
-    // eg: <parent folder>/
     // else ends with "folder name"
     // eg: <parent folder><relativePath> which <relativePath> contains prefix "/"
     private String relativePath;
-
-    @TableField(fill = FieldFill.INSERT)
-    private Integer fileDeleted;
-
-    @TableField(fill = FieldFill.INSERT)
-    private Integer fileDesync; // 表示这个 file 和上游同步了一次,但是后续不需要再同步. 仅用在 content folder file
 }

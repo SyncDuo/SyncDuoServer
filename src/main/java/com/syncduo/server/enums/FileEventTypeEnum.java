@@ -7,6 +7,4 @@ public enum FileEventTypeEnum {
     FILE_CHANGED,
 
     FILE_DELETED,
-
-    FILE_DESYNCED,
 }

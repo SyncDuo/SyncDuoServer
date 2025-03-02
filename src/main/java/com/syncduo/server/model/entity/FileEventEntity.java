@@ -16,7 +16,7 @@ public class FileEventEntity extends BaseEntity {
 
     private String fileEventType;
 
-    private Long rootFolderId;
+    private Long folderId;
 
     private Long fileId;
 }

@@ -14,17 +14,14 @@ import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 @Component
-public class FileOperationUtils {
+public class FilesystemUtil {
 
     private static final ConcurrentHashMap<Path, ReentrantReadWriteLock> fileLockMap =
             new ConcurrentHashMap<>(10000);
@@ -37,7 +34,36 @@ public class FileOperationUtils {
 
     private static final Random RANDOM = new Random();
 
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
     private static final FileSystem FILE_SYSTEM = FileSystems.getDefault();
+
+    public static List<Path> getAllFileInFolder(String folderPath) throws SyncDuoException {
+        List<Path> fileList = new ArrayList<>();
+        Path startPath = isFolderPathValid(folderPath);
+
+        // Walk the file tree and collect files
+        try {
+            Files.walkFileTree(startPath, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    fileList.add(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                    // Handle the case where a file or directory could not be accessed
+                    log.error("Error accessing file: {}", file);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new SyncDuoException("listFilesInFolder failed. folderPath is %s".formatted(folderPath), e);
+        }
+
+        return fileList;
+    }
 
 
     public static boolean endsWithSeparator(String path) throws SyncDuoException {
@@ -58,14 +84,6 @@ public class FileOperationUtils {
             return contentFolder;
         }
         return createFolder(contentFolder);
-    }
-
-    public static String getInternalFolderFullPath(String sourceFolderFullPath) throws SyncDuoException {
-        Path sourceFolder = isFolderPathValid(sourceFolderFullPath);
-        Path sourceFolderParent = sourceFolder.getParent();
-        String internalFolderName = "." + sourceFolder.getFileName();
-
-        return sourceFolderParent.resolve(internalFolderName).toAbsolutePath().toString();
     }
 
     public static Path createFolder(String folderFullPath) throws SyncDuoException {
@@ -134,34 +152,30 @@ public class FileOperationUtils {
         return FILE_SYSTEM.getSeparator();
     }
 
-    // 拼接字符串 <rootFolderId><relativePath><fileFullName>
-    // 生成 UUID4
-    public static String getUUID4(Long rootFolderId, String rootFolderFullPath, Path file)
+    // 拼接字符串 <folderId><relativePath><fileFullName>
+    // 生成 sha256 hash
+    public static String getUniqueHash(Long folderId, String folderFullPath, Path file)
             throws SyncDuoException {
-        if (ObjectUtils.anyNull(rootFolderId, file)) {
-            throw new SyncDuoException("getUUID4 failed, rootFolderId or file 为空");
+        if (ObjectUtils.anyNull(folderId, file)) {
+            throw new SyncDuoException("getUniqueHash failed, folderId or file 为空");
         }
-        Path rootFolder = isFolderPathValid(rootFolderFullPath);
+        Path rootFolder = isFolderPathValid(folderFullPath);
         if (!file.startsWith(rootFolder)) {
-            throw new SyncDuoException("getUUID4 failed. file's path doesn't contain rootFolderFullPath." +
-                    "rootFolderFullPath is %s, file is %s".formatted(rootFolderFullPath, file));
+            throw new SyncDuoException("getUniqueHash failed. file's path doesn't contain folderFullPath." +
+                    "folderFullPath is %s, file is %s".formatted(folderFullPath, file));
         }
-        String relativizePath = getRelativePath(rootFolderFullPath, file);
-        byte[] hash = DigestUtils.sha256(rootFolderId + relativizePath + file.getFileName());
-        return UUID.nameUUIDFromBytes(hash).toString();
+        String relativizePath = getRelativePath(folderFullPath, file);
+        byte[] hash = DigestUtils.sha256(folderId + relativizePath + file.getFileName());
+        return hashBytesToString(hash);
     }
 
-    public static String getUUID4(Long rootFolderId, String fileRelativePath, String fileFullName)
-            throws SyncDuoException {
-        if (ObjectUtils.anyNull(rootFolderId)) {
-            throw new SyncDuoException("getUUID4 failed, rootFolderId is null");
+    private static String hashBytesToString (byte[] hashBytes) {
+        // Convert the byte array to a hexadecimal string and return it
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hashBytes) {
+            hexString.append(String.format("%02x", b)); // Format as two-digit hex
         }
-        if (StringUtils.isAnyBlank(fileRelativePath, fileFullName)) {
-            throw new SyncDuoException("getUUID4 failed, fileRelativePath or fileFullName is null." +
-                    "fileRelativePath is %s, fileFullName is %s".formatted(fileRelativePath, fileFullName));
-        }
-        byte[] hash = DigestUtils.sha256(rootFolderId + fileRelativePath + fileFullName);
-        return UUID.nameUUIDFromBytes(hash).toString();
+        return hexString.toString();
     }
 
     public static Pair<Timestamp, Timestamp> getFileCrTimeAndMTime(Path file) throws SyncDuoException {
@@ -198,8 +212,8 @@ public class FileOperationUtils {
         }
         Path relativizePath = rootFolder.relativize(file.getParent());
         return StringUtils.isEmpty(relativizePath.toString()) ?
-                FileOperationUtils.getPathSeparator() :
-                FileOperationUtils.getPathSeparator() + relativizePath;
+                FilesystemUtil.getPathSeparator() :
+                FilesystemUtil.getPathSeparator() + relativizePath;
     }
 
     public static Pair<String, String> getFileNameAndExtension(Path file) throws SyncDuoException {
@@ -468,5 +482,30 @@ public class FileOperationUtils {
                     "tryLockWithRetries failed. lockType is %s, file is %s".formatted(lockType, file), e);
         }
         throw new SyncDuoException("tryLockWithRetries failed. acquire lock timeout");
+    }
+
+    //  返回一个 string, 格式为 randomFileName.fileExtension, 其文件名称为随机的8位长字符串, 且保证在目录下唯一
+    public static String getNewFileName(String fileFullPath) throws SyncDuoException {
+        Path filePath = Paths.get(fileFullPath);
+        Path parentDir = filePath.getParent();
+        Pair<String, String> fileNameAndExtension = FilesystemUtil.getFileNameAndExtension(filePath);
+        String extension = fileNameAndExtension.getRight();
+
+        Path newFilePath;
+        do {
+            String newFileName = FilesystemUtil.getRandomName() + extension;
+            newFilePath = parentDir.resolve(newFileName);
+        } while (Files.exists(newFilePath)); // Keep trying until no duplicate
+
+        return newFilePath.getFileName().toString();
+    }
+
+    private static String getRandomName() {
+        StringBuilder randomName = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            int index = RANDOM.nextInt(CHARACTERS.length());
+            randomName.append(CHARACTERS.charAt(index));
+        }
+        return randomName.toString();
     }
 }

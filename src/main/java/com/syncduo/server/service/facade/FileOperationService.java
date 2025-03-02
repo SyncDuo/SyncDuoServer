@@ -1,17 +1,21 @@
-package com.syncduo.server.service.impl;
+package com.syncduo.server.service.facade;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.syncduo.server.enums.*;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.event.FileEventDto;
 import com.syncduo.server.model.entity.FileEntity;
-import com.syncduo.server.model.entity.RootFolderEntity;
+import com.syncduo.server.model.entity.FolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SyncSettingEntity;
-import com.syncduo.server.mq.FileAccessValidator;
-import com.syncduo.server.mq.SystemQueue;
-import com.syncduo.server.mq.producer.RootFolderEventProducer;
-import com.syncduo.server.util.FileOperationUtils;
+import com.syncduo.server.bus.FileAccessValidator;
+import com.syncduo.server.bus.SystemBus;
+import com.syncduo.server.bus.FolderWatcher;
+import com.syncduo.server.service.bussiness.impl.FileService;
+import com.syncduo.server.service.bussiness.impl.FolderService;
+import com.syncduo.server.service.bussiness.impl.SyncFlowService;
+import com.syncduo.server.service.bussiness.impl.SyncSettingService;
+import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -33,36 +37,36 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @Slf4j
-public class AdvancedFileOpService {
+public class FileOperationService {
     private final FileService fileService;
 
-    private final SystemQueue systemQueue;
+    private final SystemBus systemBus;
 
-    private final RootFolderService rootFolderService;
+    private final FolderService rootFolderService;
 
     private final SyncFlowService syncFlowService;
 
     private final SyncSettingService syncSettingService;
 
-    private final RootFolderEventProducer rootFolderEventProducer;
+    private final FolderWatcher folderWatcher;
 
     private final FileAccessValidator fileAccessValidator;
 
     @Autowired
-    public AdvancedFileOpService(
+    public FileOperationService(
             FileService fileService,
-            SystemQueue systemQueue,
-            RootFolderService rootFolderService,
+            SystemBus systemBus,
+            FolderService rootFolderService,
             SyncFlowService syncFlowService,
             SyncSettingService syncSettingService,
-            RootFolderEventProducer rootFolderEventProducer,
+            FolderWatcher folderWatcher,
             FileAccessValidator fileAccessValidator) {
         this.fileService = fileService;
-        this.systemQueue = systemQueue;
+        this.systemBus = systemBus;
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.syncSettingService = syncSettingService;
-        this.rootFolderEventProducer = rootFolderEventProducer;
+        this.folderWatcher = folderWatcher;
         this.fileAccessValidator = fileAccessValidator;
     }
 
@@ -113,29 +117,29 @@ public class AdvancedFileOpService {
                 default -> throw new SyncDuoException("不支持的 sync-flow type. " + syncFlowType);
             }
             // 添加 watcher
-            RootFolderEntity rootFolderEntity = this.rootFolderService.getByFolderId(folderIdToAddWatcher);
-            rootFolderEventProducer.addMonitor(rootFolderEntity);
+            FolderEntity folderEntity = this.rootFolderService.getByFolderId(folderIdToAddWatcher);
+            folderWatcher.addWatcher(folderEntity);
             // 初始化 sync-flow map
             this.syncFlowService.initialEventCountMap(folderIdToAddWatcher);
             // 添加 FileAccessValidator 白名单
-            this.fileAccessValidator.addWhitelist(rootFolderEntity);
+            this.fileAccessValidator.addWhitelist(folderEntity);
             log.info("sync-flow {} sync status: {}", syncFlowEntity, isSynced);
         }
     }
 
-    public void initialScan(RootFolderEntity rootFolder) throws SyncDuoException {
+    public void initialScan(FolderEntity rootFolder) throws SyncDuoException {
         // 检查参数
         RootFolderTypeEnum rootFolderType = RootFolderTypeEnum.valueOf(rootFolder.getRootFolderType());
         if (ObjectUtils.isEmpty(rootFolderType) || rootFolderType.equals(RootFolderTypeEnum.INTERNAL_FOLDER)) {
             throw new SyncDuoException("rootFolderType %s 不支持".formatted(rootFolderType));
         }
-        FileOperationUtils.walkFilesTree(rootFolder.getRootFolderFullPath(), new SimpleFileVisitor<>() {
+        FilesystemUtil.walkFilesTree(rootFolder.getFolderFullPath(), new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 try {
-                    systemQueue.sendFileEvent(FileEventDto.builder()
+                    systemBus.sendFileEvent(FileEventDto.builder()
                             .file(file)
-                            .rootFolderId(rootFolder.getRootFolderId())
+                            .rootFolderId(rootFolder.getFolderId())
                             .fileEventTypeEnum(FileEventTypeEnum.FILE_CREATED)
                             .rootFolderTypeEnum(rootFolderType)
                             .destFolderTypeEnum(rootFolderType)
@@ -155,9 +159,9 @@ public class AdvancedFileOpService {
             throw new SyncDuoException("SyncFlowType is empty");
         }
         // 获取 source 和 dest 的 rootFolderEntity
-        RootFolderEntity sourceFolderEntity =
+        FolderEntity sourceFolderEntity =
                 this.rootFolderService.getByFolderId(syncFlowEntity.getSourceFolderId());
-        RootFolderEntity destFolderEntity =
+        FolderEntity destFolderEntity =
                 this.rootFolderService.getByFolderId(syncFlowEntity.getDestFolderId());
         // 执行 full scan
         boolean isSourceFolderSync = this.fullScan(sourceFolderEntity);
@@ -187,10 +191,10 @@ public class AdvancedFileOpService {
         return isSynced;
     }
 
-    public boolean fullScan(RootFolderEntity rootFolder) throws SyncDuoException {
+    public boolean fullScan(FolderEntity rootFolder) throws SyncDuoException {
         AtomicBoolean isSync = new AtomicBoolean(true);
         // 检查参数
-        Long rootFolderId = rootFolder.getRootFolderId();
+        Long rootFolderId = rootFolder.getFolderId();
         RootFolderTypeEnum rootFolderType = RootFolderTypeEnum.valueOf(rootFolder.getRootFolderType());
         if (ObjectUtils.isEmpty(rootFolderType)) {
             throw new SyncDuoException("无法进行 full scan, rootFolderType 为空");
@@ -209,10 +213,10 @@ public class AdvancedFileOpService {
         this.pageHelper(
                 ((startPage, pageSize) ->
                         this.fileService.getByRootFolderIdPaged(rootFolderId, startPage, pageSize)),
-                (fileEntity) -> uuid4FileEntityMap.put(fileEntity.getFileUuid4(), fileEntity)
+                (fileEntity) -> uuid4FileEntityMap.put(fileEntity.getFileUniqueHash(), fileEntity)
         );
         // 遍历文件夹, 根据 set 判断文件新增或修改
-        FileOperationUtils.walkFilesTree(rootFolder.getRootFolderFullPath(), new SimpleFileVisitor<>() {
+        FilesystemUtil.walkFilesTree(rootFolder.getFolderFullPath(), new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (ObjectUtils.isEmpty(attrs)) {
@@ -220,12 +224,12 @@ public class AdvancedFileOpService {
                 }
                 try {
                     // 从文件系统计算 UUID4
-                    String uuid4 = FileOperationUtils.getUUID4(rootFolderId, rootFolder.getRootFolderFullPath(), file);
+                    String uuid4 = FilesystemUtil.getUniqueHash(rootFolderId, rootFolder.getFolderFullPath(), file);
                     // uuid4 命中, 则判断文件是否有修改
                     if (uuid4FileEntityMap.containsKey(uuid4)) {
                         if (isFileChange(file, uuid4FileEntityMap.get(uuid4))) {
                             // 发送 file changed event
-                            systemQueue.sendFileEvent(FileEventDto.builder()
+                            systemBus.sendFileEvent(FileEventDto.builder()
                                     .file(file)
                                     .rootFolderId(rootFolderId)
                                     .fileEventTypeEnum(FileEventTypeEnum.FILE_CHANGED)
@@ -239,7 +243,7 @@ public class AdvancedFileOpService {
                     } else {
                         // uuid4 不存在数据库中, 说明是新增文件
                         // 发送 file created event
-                        systemQueue.sendFileEvent(FileEventDto.builder()
+                        systemBus.sendFileEvent(FileEventDto.builder()
                                 .file(file)
                                 .rootFolderId(rootFolderId)
                                 .fileEventTypeEnum(FileEventTypeEnum.FILE_CREATED)
@@ -273,7 +277,7 @@ public class AdvancedFileOpService {
         }
         // 根据 syncFlow 获得 source folder entity
         Long sourceFolderId = syncFlow.getSourceFolderId();
-        RootFolderEntity sourceFolderEntity = this.rootFolderService.getByFolderId(sourceFolderId);
+        FolderEntity sourceFolderEntity = this.rootFolderService.getByFolderId(sourceFolderId);
         // 根据 syncFlow 获得 internalFolderId
         Long internalFolderId = syncFlow.getDestFolderId();
         // page helper 查询 folder 下所有的 file, 并执行 compare 操作
@@ -283,7 +287,7 @@ public class AdvancedFileOpService {
                 (sourceFileEntity) -> {
                     // 获取 source file
                     Path sourceFile = this.fileService.getFileFromFileEntity(
-                            sourceFolderEntity.getRootFolderFullPath(),
+                            sourceFolderEntity.getFolderFullPath(),
                             sourceFileEntity
                     );
                     // 找到右集
@@ -293,7 +297,7 @@ public class AdvancedFileOpService {
                     );
                     if (ObjectUtils.isEmpty(internalFileEntity)) {
                         // 遍历左集,找不到对应的右集, 则新增;
-                        this.systemQueue.sendFileEvent(
+                        this.systemBus.sendFileEvent(
                                 FileEventDto.builder()
                                         .file(sourceFile)
                                         .rootFolderId(sourceFolderId)
@@ -305,7 +309,7 @@ public class AdvancedFileOpService {
                         isSync.set(false);
                     } else if (isFileEntityChange(sourceFileEntity, internalFileEntity)) {
                         // md5checksum 或 lastModifiedTime 不一致,则更新
-                        this.systemQueue.sendFileEvent(
+                        this.systemBus.sendFileEvent(
                                 FileEventDto.builder()
                                         .file(sourceFile)
                                         .rootFolderId(sourceFolderId)
@@ -331,7 +335,7 @@ public class AdvancedFileOpService {
         }
         // 根据 syncFlow 获得 internal folder entity
         Long internalFolderId = syncFlow.getSourceFolderId();
-        RootFolderEntity internalFolderEntity = this.rootFolderService.getByFolderId(internalFolderId);
+        FolderEntity internalFolderEntity = this.rootFolderService.getByFolderId(internalFolderId);
         // 根据 syncFlow 获得 content folder id
         Long contentFolderId = syncFlow.getDestFolderId();
         // 根据 syncFlow 获得 sync setting entity
@@ -347,7 +351,7 @@ public class AdvancedFileOpService {
                 (internalFileEntity) -> {
                     // 获取 internal file
                     Path internalFile = this.fileService.getFileFromFileEntity(
-                            internalFolderEntity.getRootFolderFullPath(),
+                            internalFolderEntity.getFolderFullPath(),
                             internalFileEntity
                     );
                     // 查询是否有 desynced 的, 所以 ignored delete
@@ -359,7 +363,7 @@ public class AdvancedFileOpService {
                             );
                     if (ObjectUtils.isEmpty(contentFileEntity)) {
                         // 找不到, 说明确实没有同步, 则发送 file created event
-                        this.systemQueue.sendFileEvent(
+                        this.systemBus.sendFileEvent(
                                 FileEventDto.builder()
                                         .file(internalFile)
                                         .rootFolderId(internalFolderId)
@@ -375,7 +379,7 @@ public class AdvancedFileOpService {
                     // return 0 代表没有改变, 1 代表 changed, 2 代表已经 desynced, 3 代表 content file 需要 desynced
                     switch (code) {
                         case 1 -> {
-                            this.systemQueue.sendFileEvent(
+                            this.systemBus.sendFileEvent(
                                     FileEventDto.builder()
                                             .file(internalFile)
                                             .rootFolderId(internalFolderId)
@@ -385,7 +389,7 @@ public class AdvancedFileOpService {
                                             .build());
                             isSync.set(false);
                         }
-                        case 3 -> this.systemQueue.sendFileEvent(
+                        case 3 -> this.systemBus.sendFileEvent(
                                 FileEventDto.builder()
                                         .file(internalFile)
                                         .rootFolderId(internalFolderId)
@@ -402,7 +406,7 @@ public class AdvancedFileOpService {
 
     private boolean isFileChange(Path file, FileEntity fileEntity) throws SyncDuoException {
         // 比较 modified time 即可知道是否同一个文件在文件系统和在数据库是否一致
-        Pair<Timestamp, Timestamp> fileCrTimeAndMTime = FileOperationUtils.getFileCrTimeAndMTime(file);
+        Pair<Timestamp, Timestamp> fileCrTimeAndMTime = FilesystemUtil.getFileCrTimeAndMTime(file);
         Timestamp fileLastModifiedTime = fileCrTimeAndMTime.getRight();
         Timestamp fileLastModifiedTimeDb = fileEntity.getFileLastModifiedTime();
         // truncate to seconds

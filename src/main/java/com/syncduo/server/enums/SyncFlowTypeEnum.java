@@ -2,9 +2,9 @@ package com.syncduo.server.enums;
 
 public enum SyncFlowTypeEnum {
 
-    SOURCE_TO_INTERNAL,
+    TRANSFORM,
 
-    INTERNAL_TO_CONTENT;
+    SYNC;
 
     public static SyncFlowTypeEnum getByString(String syncFlowTypeString) {
         try {

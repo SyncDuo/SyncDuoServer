@@ -1,4 +1,4 @@
-package com.syncduo.server.service.impl;
+package com.syncduo.server.service.bussiness.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -6,7 +6,7 @@ import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.FileEventMapper;
 import com.syncduo.server.model.entity.FileEventEntity;
-import com.syncduo.server.service.IFileEventService;
+import com.syncduo.server.service.bussiness.IFileEventService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
@@ -19,6 +19,34 @@ import java.util.List;
 public class FileEventService
         extends ServiceImpl<FileEventMapper, FileEventEntity>
         implements IFileEventService {
+
+    public FileEventEntity createFileEvent(
+            String fileEventType,
+            Long folderId,
+            Long fileId
+    ) throws SyncDuoException {
+        FileEventEntity fileEventEntity = new FileEventEntity();
+        fileEventEntity.setFileEventType(fileEventType);
+        fileEventEntity.setFileId(fileId);
+        fileEventEntity.setFolderId(folderId);
+        return this.createFileEvent(fileEventEntity);
+    }
+
+    public FileEventEntity createFileEvent(FileEventEntity fileEventEntity) throws SyncDuoException {
+        if (ObjectUtils.anyNull(
+                fileEventEntity.getFileEventType(),
+                fileEventEntity.getFolderId(),
+                fileEventEntity.getFileId()
+        )) {
+            throw new SyncDuoException("createFileEvent failed." +
+                    "fileEventType, folderId or fileId is null");
+        }
+        boolean save = this.save(fileEventEntity);
+        if (!save) {
+            throw new SyncDuoException("createFileEvent failed. can't save to database");
+        }
+        return fileEventEntity;
+    }
 
     public List<FileEventEntity> getByFileEventTypeAndFileId(
             FileEventTypeEnum fileEventType,
@@ -47,7 +75,7 @@ public class FileEventService
         }
         LambdaQueryWrapper<FileEventEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(FileEventEntity::getFileEventType, fileEventType.toString());
-        queryWrapper.eq(FileEventEntity::getRootFolderId, rootFolderId);
+        queryWrapper.eq(FileEventEntity::getFolderId, rootFolderId);
         List<FileEventEntity> dbResult = this.list(queryWrapper);
         if (CollectionUtils.isEmpty(dbResult)) {
             return Collections.emptyList();

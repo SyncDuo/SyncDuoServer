@@ -17,5 +17,5 @@ public class SyncSettingEntity extends BaseEntity {
     private String filterCriteria;
 
     @TableField(updateStrategy = FieldStrategy.NEVER)
-    private Integer flattenFolder;
+    private Integer syncMode;
 }

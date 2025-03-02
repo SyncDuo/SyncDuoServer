@@ -3,7 +3,7 @@ package com.syncduo.server.controller;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.http.filesystem.FileSystemResponse;
 import com.syncduo.server.model.dto.http.filesystem.Folder;
-import com.syncduo.server.util.FileOperationUtils;
+import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -28,7 +27,7 @@ public class FileSystemAccessController {
             return FileSystemResponse.onError("path is null");
         }
         try {
-            List<Path> subfolders = FileOperationUtils.getSubFolders(path);
+            List<Path> subfolders = FilesystemUtil.getSubFolders(path);
             if (CollectionUtils.isEmpty(subfolders)) {
                 return FileSystemResponse.onSuccess("no subfolders");
             }

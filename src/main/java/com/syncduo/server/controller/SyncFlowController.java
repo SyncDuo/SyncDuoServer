@@ -9,16 +9,16 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.dto.http.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.dto.http.syncflow.DeleteSyncFlowRequest;
 import com.syncduo.server.model.dto.http.syncflow.SyncFlowResponse;
-import com.syncduo.server.model.entity.RootFolderEntity;
+import com.syncduo.server.model.entity.FolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SyncSettingEntity;
-import com.syncduo.server.mq.FileAccessValidator;
-import com.syncduo.server.mq.producer.RootFolderEventProducer;
-import com.syncduo.server.service.impl.AdvancedFileOpService;
-import com.syncduo.server.service.impl.RootFolderService;
-import com.syncduo.server.service.impl.SyncFlowService;
-import com.syncduo.server.service.impl.SyncSettingService;
-import com.syncduo.server.util.FileOperationUtils;
+import com.syncduo.server.bus.FileAccessValidator;
+import com.syncduo.server.bus.FolderWatcher;
+import com.syncduo.server.service.facade.FileOperationService;
+import com.syncduo.server.service.bussiness.impl.FolderService;
+import com.syncduo.server.service.bussiness.impl.SyncFlowService;
+import com.syncduo.server.service.bussiness.impl.SyncSettingService;
+import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -37,15 +37,15 @@ import java.util.List;
 @RequestMapping("/sync-flow")
 @Slf4j
 public class SyncFlowController {
-    private final RootFolderService rootFolderService;
+    private final FolderService rootFolderService;
 
     private final SyncFlowService syncFlowService;
 
-    private final AdvancedFileOpService fileOpService;
+    private final FileOperationService fileOpService;
 
     private final SyncSettingService syncSettingService;
 
-    private final RootFolderEventProducer rootFolderEventProducer;
+    private final FolderWatcher folderWatcher;
 
     private final FileAccessValidator fileAccessValidator;
 
@@ -55,17 +55,17 @@ public class SyncFlowController {
 
     @Autowired
     public SyncFlowController(
-            RootFolderService rootFolderService,
+            FolderService rootFolderService,
             SyncFlowService syncFlowService,
-            AdvancedFileOpService fileOpService,
+            FileOperationService fileOpService,
             SyncSettingService syncSettingService,
-            RootFolderEventProducer rootFolderEventProducer,
+            FolderWatcher folderWatcher,
             FileAccessValidator fileAccessValidator) {
         this.rootFolderService = rootFolderService;
         this.syncFlowService = syncFlowService;
         this.fileOpService = fileOpService;
         this.syncSettingService = syncSettingService;
-        this.rootFolderEventProducer = rootFolderEventProducer;
+        this.folderWatcher = folderWatcher;
         this.fileAccessValidator = fileAccessValidator;
     }
 
@@ -179,9 +179,9 @@ public class SyncFlowController {
         this.syncFlowService.deleteSyncFlow(syncFlowEntity);
         // 根据 sync-flow, 停止 watcher
         if (syncFlowType.equals(SyncFlowTypeEnum.SOURCE_TO_INTERNAL)) {
-            this.rootFolderEventProducer.stopMonitor(syncFlowEntity.getSourceFolderId());
+            this.folderWatcher.stopMonitor(syncFlowEntity.getSourceFolderId());
         } else if (syncFlowType.equals(SyncFlowTypeEnum.INTERNAL_TO_CONTENT)) {
-            this.rootFolderEventProducer.stopMonitor(syncFlowEntity.getDestFolderId());
+            this.folderWatcher.stopMonitor(syncFlowEntity.getDestFolderId());
         } else {
             throw new SyncDuoException("deleteSyncFlow failed. wrong syncFlowTypeEnum %s".formatted(syncFlowEntity));
         }
@@ -191,24 +191,24 @@ public class SyncFlowController {
             throws SyncDuoException {
         String sourceFolderFullPath = createSyncFlowRequest.getSourceFolderFullPath();
         // 创建 source folder 和 internal folder
-        Pair<RootFolderEntity, RootFolderEntity> sourceAndInternalFolderEntity =
+        Pair<FolderEntity, FolderEntity> sourceAndInternalFolderEntity =
                 this.rootFolderService.createSourceFolder(sourceFolderFullPath);
-        RootFolderEntity sourceFolderEntity = sourceAndInternalFolderEntity.getLeft();
-        RootFolderEntity internalFolderEntity = sourceAndInternalFolderEntity.getRight();
+        FolderEntity sourceFolderEntity = sourceAndInternalFolderEntity.getLeft();
+        FolderEntity internalFolderEntity = sourceAndInternalFolderEntity.getRight();
         // 创建 content folder
-        RootFolderEntity contentFolderEntity =
+        FolderEntity contentFolderEntity =
                 this.rootFolderService.createContentFolder(
                         sourceFolderFullPath,
                         createSyncFlowRequest.getDestFolderFullPath());
         // 创建 source to internal sync flow
         SyncFlowEntity source2InternalSyncFlow = this.syncFlowService.createSyncFlow(
-                sourceFolderEntity.getRootFolderId(),
-                internalFolderEntity.getRootFolderId(),
+                sourceFolderEntity.getFolderId(),
+                internalFolderEntity.getFolderId(),
                 SyncFlowTypeEnum.SOURCE_TO_INTERNAL);
         // 创建 internal to content sync flow
         SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.createSyncFlow(
-                internalFolderEntity.getRootFolderId(),
-                contentFolderEntity.getRootFolderId(),
+                internalFolderEntity.getFolderId(),
+                contentFolderEntity.getFolderId(),
                 SyncFlowTypeEnum.INTERNAL_TO_CONTENT
         );
         // 添加 FileAccessValidator 白名单
@@ -222,8 +222,8 @@ public class SyncFlowController {
         // 执行 init scan 任务
         this.fileOpService.initialScan(sourceFolderEntity);
         // 执行 addWatcher
-        this.rootFolderEventProducer.addMonitor(sourceFolderEntity);
-        this.rootFolderEventProducer.addMonitor(contentFolderEntity);
+        this.folderWatcher.addWatcher(sourceFolderEntity);
+        this.folderWatcher.addWatcher(contentFolderEntity);
         // 返回 source2InternalSyncFlowId, internal2ContentSyncFlowId
         return List.of(
                 source2InternalSyncFlow.getSyncFlowId(),
@@ -233,20 +233,20 @@ public class SyncFlowController {
     private List<Long> createContentSyncFlow(CreateSyncFlowRequest createSyncFlowRequest, List<String> filters)
             throws SyncDuoException {
         // 获取 source 和 internal folder entity
-        Pair<RootFolderEntity, RootFolderEntity> sourceInternalFolderPair =
+        Pair<FolderEntity, FolderEntity> sourceInternalFolderPair =
                 this.rootFolderService.getFolderPairByPath(createSyncFlowRequest.getSourceFolderFullPath());
         // 获取 source2Internal sync-flow
         SyncFlowEntity source2InternalSyncFlow = this.syncFlowService.getSourceSyncFlowByFolderId(
-                sourceInternalFolderPair.getLeft().getRootFolderId());
+                sourceInternalFolderPair.getLeft().getFolderId());
         // 创建 content folder
-        RootFolderEntity contentFolderEntity = this.rootFolderService.createContentFolder(
+        FolderEntity contentFolderEntity = this.rootFolderService.createContentFolder(
                 createSyncFlowRequest.getSourceFolderFullPath(),
                 createSyncFlowRequest.getDestFolderFullPath()
         );
         // 创建 sync-flow
         SyncFlowEntity internal2ContentSyncFlow = this.syncFlowService.createSyncFlow(
-                sourceInternalFolderPair.getRight().getRootFolderId(),
-                contentFolderEntity.getRootFolderId(),
+                sourceInternalFolderPair.getRight().getFolderId(),
+                contentFolderEntity.getFolderId(),
                 SyncFlowTypeEnum.INTERNAL_TO_CONTENT
         );
         // 添加 FileAccessValidator 白名单
@@ -260,7 +260,7 @@ public class SyncFlowController {
         // 执行 init scan 任务
         this.fileOpService.initialScan(contentFolderEntity);
         // 执行 addWatcher
-        this.rootFolderEventProducer.addMonitor(contentFolderEntity);
+        this.folderWatcher.addWatcher(contentFolderEntity);
         // 返回 source2InternalSyncFlowId, internal2ContentSyncFlowId
         return List.of(
                 source2InternalSyncFlow.getSyncFlowId(),
@@ -276,9 +276,9 @@ public class SyncFlowController {
         String sourceFolderFullPath = createSyncFlowRequest.getSourceFolderFullPath();
         String destFolderFullPath = createSyncFlowRequest.getDestFolderFullPath();
         // 检查 source folder, internal folder, dest folder 是否已存在
-        Pair<RootFolderEntity, RootFolderEntity> sourceInternalFolderEntityPair =
+        Pair<FolderEntity, FolderEntity> sourceInternalFolderEntityPair =
                 this.rootFolderService.getFolderPairByPath(sourceFolderFullPath);
-        RootFolderEntity destFolderEntity = this.rootFolderService.getByFolderFullPath(destFolderFullPath);
+        FolderEntity destFolderEntity = this.rootFolderService.getByFolderFullPath(destFolderFullPath);
         if (ObjectUtils.isEmpty(sourceInternalFolderEntityPair)) {
             if (ObjectUtils.isEmpty(destFolderEntity)) {
                 return 0;
@@ -292,11 +292,11 @@ public class SyncFlowController {
             return 1;
         }
         // 判断对应的 sync flow 是否已存在
-        RootFolderEntity internalFolderEntity = sourceInternalFolderEntityPair.getRight();
+        FolderEntity internalFolderEntity = sourceInternalFolderEntityPair.getRight();
         List<SyncFlowEntity> internalSyncFlowList =
-                this.syncFlowService.getInternalSyncFlowByFolderId(internalFolderEntity.getRootFolderId());
+                this.syncFlowService.getInternalSyncFlowByFolderId(internalFolderEntity.getFolderId());
         for (SyncFlowEntity internalSyncFlowEntity : internalSyncFlowList) {
-            if (internalSyncFlowEntity.getDestFolderId().equals(destFolderEntity.getRootFolderId())) {
+            if (internalSyncFlowEntity.getDestFolderId().equals(destFolderEntity.getFolderId())) {
                 return 2;
             }
         }
@@ -323,16 +323,16 @@ public class SyncFlowController {
                     "sourceFolderFullPath or destParentFolderFullPath is null");
         }
         // 检查 sourceFolderPath 路径是否正确
-        Path sourceFolder = FileOperationUtils.isFolderPathValid(sourceFolderFullPath);
+        Path sourceFolder = FilesystemUtil.isFolderPathValid(sourceFolderFullPath);
         // 检查 destParentFolderFullPath 路径是否正确
-        FileOperationUtils.isFolderPathValid(destParentFolderFullPath);
+        FilesystemUtil.isFolderPathValid(destParentFolderFullPath);
         // 按要求拼接 destFolderFullPath
         String destFolderName = createSyncFlowRequest.getDestFolderName();
         if (StringUtils.isBlank(destFolderName)) {
             destFolderName = sourceFolder.getFileName().toString();
         }
-        String destFolderFullPath = destParentFolderFullPath + FileOperationUtils.getPathSeparator() + destFolderName;
-        if (FileOperationUtils.isFolderPathExist(destFolderFullPath)) {
+        String destFolderFullPath = destParentFolderFullPath + FilesystemUtil.getPathSeparator() + destFolderName;
+        if (FilesystemUtil.isFolderPathExist(destFolderFullPath)) {
             throw new SyncDuoException("isCreateSyncFlowRequestValid failed. destFolderFullPath already exist");
         }
         createSyncFlowRequest.setDestFolderFullPath(destFolderFullPath);

@@ -6,21 +6,16 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@TableName("root_folder")
-public class RootFolderEntity extends BaseEntity {
+@TableName("folder")
+public class FolderEntity extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
-    private Long rootFolderId;
+    private Long folderId;
 
-    private String rootFolderName;
+    private String folderName;
 
     // always starts with "/"
     // always ends with "folder name"
     // eg: /root/folder1
-    private String rootFolderFullPath;
-
-    private String rootFolderType;
-
-    @TableField(fill = FieldFill.INSERT)
-    private int folderDeleted;
+    private String folderFullPath;
 }

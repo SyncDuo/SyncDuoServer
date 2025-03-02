@@ -22,23 +22,7 @@ public class CustomMetaObjectHandler implements MetaObjectHandler {
         this.strictInsertFill(metaObject, "createdTime", Timestamp.class, this.getUTCTimestamp());
         this.strictInsertFill(metaObject, "lastUpdatedUser", String.class, "System");
         this.strictInsertFill(metaObject, "lastUpdatedTime", Timestamp.class, this.getUTCTimestamp());
-
-        // folder entity autofill
-        this.strictInsertFill(
-                metaObject, "folderDeleted", Integer.class, DeletedEnum.NOT_DELETED.getCode());
-
-        // file entity autofill
-        this.strictInsertFill(
-                metaObject, "fileDeleted", Integer.class, DeletedEnum.NOT_DELETED.getCode());
-        this.strictInsertFill(metaObject, "fileDesync", Integer.class, FileDesyncEnum.FILE_SYNC.getCode());
-
-        // file operation entity autofill
-        this.strictInsertFill(metaObject, "executeCount", Integer.class, 0);
-
-        // sync flow entity autofill
-        this.strictInsertFill(metaObject, "syncStatus", String.class, SyncFlowStatusEnum.NOT_SYNC.name());
-        this.strictInsertFill(
-                metaObject, "syncFlowDeleted", Integer.class, DeletedEnum.NOT_DELETED.getCode());
+        this.strictInsertFill(metaObject, "recordDeleted", Integer.class, DeletedEnum.NOT_DELETED.getCode());
     }
 
     @Override

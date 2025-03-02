@@ -20,11 +20,9 @@ public class SyncFlowEntity extends BaseEntity {
 
     private String syncFlowType;
 
-    @TableField(fill = FieldFill.INSERT)
+    private String syncFlowName;
+
     private String syncStatus;
 
     private Timestamp lastSyncTime;
-
-    @TableField(fill = FieldFill.INSERT)
-    private Integer syncFlowDeleted;
 }
