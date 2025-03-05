@@ -25,6 +25,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -67,7 +68,7 @@ public class SyncFlowService
         List<SyncFlowStatus> syncFlowStatusList = cacheMap.get(folderId);
         if (CollectionUtils.isEmpty(syncFlowStatusList)) {
             for (SyncFlowEntity syncFlowEntity : dbResult) {
-                syncFlowStatusList.add(new SyncFlowStatus(syncFlowEntity, 0));
+                syncFlowStatusList.add(new SyncFlowStatus(syncFlowEntity));
             }
         } else {
             // 计算 join
@@ -79,7 +80,7 @@ public class SyncFlowService
             );
             // 左外集则需要添加 cache map
             for (SyncFlowEntity syncFlowEntity : joinResult.getLeftOuterResult()) {
-                syncFlowStatusList.add(new SyncFlowStatus(syncFlowEntity, 0));
+                syncFlowStatusList.add(new SyncFlowStatus(syncFlowEntity));
             }
             // 右外集则需要删除 cache map
             syncFlowStatusList.removeAll(joinResult.getRightOuterResult());
@@ -87,6 +88,7 @@ public class SyncFlowService
         cacheMap.put(folderId, syncFlowStatusList);
     }
 
+    // sourceFolderId 对应的全部 sync flow 都增加 pending event count
     public void addPendingEventCount(Long folderId) throws SyncDuoException {
         // 找到 folder id 为 source id, 对应的 syncFlowId
         List<SyncFlowStatus> syncFlowStatusList = this.doubleQueryCache(folderId);
@@ -101,6 +103,25 @@ public class SyncFlowService
         }
     }
 
+    // 指定 sync flow id 增加 pending event count
+    public void addPendingEventCount(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        // 找到 folder id 为 source id, 对应的 syncFlowId
+        Long folderId = syncFlowEntity.getSourceFolderId();
+        List<SyncFlowStatus> syncFlowStatusList = this.doubleQueryCache(folderId);
+        for (SyncFlowStatus syncFlowStatus : syncFlowStatusList) {
+            if (Objects.equals(syncFlowStatus.getSyncFlowEntity().getSyncFlowId(), syncFlowEntity.getSyncFlowId())) {
+                boolean statusChanged = syncFlowStatus.addPendingEventCount();
+                if (statusChanged) {
+                    this.updateSyncFlowStatus(
+                            syncFlowStatus.getSyncFlowEntity(),
+                            SyncFlowStatusEnum.NOT_SYNC
+                    );
+                }
+            }
+        }
+    }
+
+    // sourceFolderId 对应的全部 sync flow 都减少 pending event count
     public void decrPendingEventCount(Long folderId) throws SyncDuoException {
         // 找到 folder id 为 source id, 对应的 syncFlowId
         List<SyncFlowStatus> syncFlowStatusList = this.cacheMap.get(folderId);
@@ -114,6 +135,27 @@ public class SyncFlowService
                         syncFlowStatus.getSyncFlowEntity(),
                         SyncFlowStatusEnum.SYNC
                 );
+            }
+        }
+    }
+
+    // 指定 sync flow id 减少 pending event count
+    public void decrPendingEventCount(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        // 找到 folder id 为 source id, 对应的 syncFlowId
+        Long folderId = syncFlowEntity.getSourceFolderId();
+        List<SyncFlowStatus> syncFlowStatusList = this.cacheMap.get(folderId);
+        if (CollectionUtils.isEmpty(syncFlowStatusList)) {
+            return;
+        }
+        for (SyncFlowStatus syncFlowStatus : syncFlowStatusList) {
+            if (Objects.equals(syncFlowStatus.getSyncFlowEntity().getSyncFlowId(), syncFlowEntity.getSyncFlowId())) {
+                boolean statusChanged = syncFlowStatus.decrPendingEventCount();
+                if (statusChanged) {
+                    this.updateSyncFlowStatus(
+                            syncFlowStatus.getSyncFlowEntity(),
+                            SyncFlowStatusEnum.SYNC
+                    );
+                }
             }
         }
     }
@@ -138,7 +180,7 @@ public class SyncFlowService
         }
         // sync-flow 添加到 map
         List<SyncFlowStatus> syncFlowStatusList = cacheMap.getOrDefault(sourceFolderId, new ArrayList<>(1));
-        syncFlowStatusList.add(new SyncFlowStatus(dbResult, 0));
+        syncFlowStatusList.add(new SyncFlowStatus(dbResult));
         cacheMap.put(sourceFolderId, syncFlowStatusList);
         // 返回
         return dbResult;
@@ -241,24 +283,28 @@ public class SyncFlowService
                         .equals(syncFlowEntity.getSyncFlowId()));
     }
 
-    @AllArgsConstructor
     @Data
     static class SyncFlowStatus {
 
         private SyncFlowEntity syncFlowEntity;
 
-        private Integer pendingEventCount;
+        private AtomicInteger pendingEventCount;
+
+        public SyncFlowStatus(SyncFlowEntity syncFlowEntity) {
+            this.syncFlowEntity = syncFlowEntity;
+            pendingEventCount = new AtomicInteger(0);
+        }
 
         // 如果 pending event count 从 0->1 跳变, 则返回 true, 否则返回 false
         public boolean addPendingEventCount() {
-            this.pendingEventCount++;
-            return pendingEventCount == 1;
+            this.pendingEventCount.addAndGet(1);
+            return pendingEventCount.get() == 1;
         }
 
         // 如果 pending event count 从 1->0 跳变, 则返回 true, 否则返回 false
         public boolean decrPendingEventCount() {
-            this.pendingEventCount--;
-            return pendingEventCount == 0;
+            this.pendingEventCount.decrementAndGet();
+            return pendingEventCount.get() == 0;
         }
     }
 }

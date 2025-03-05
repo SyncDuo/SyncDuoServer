@@ -7,4 +7,8 @@ public enum FileEventTypeEnum {
     FILE_CHANGED,
 
     FILE_DELETED,
+
+    FILE_REFILTER_CREATED,
+
+    FILE_REFILTER_DELETED,
 }

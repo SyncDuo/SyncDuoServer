@@ -3,7 +3,7 @@ package com.syncduo.server.bus;
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.FolderEntity;
-import com.syncduo.server.model.internal.FileEvent;
+import com.syncduo.server.model.internal.FileSystemEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
@@ -108,7 +108,7 @@ public class FolderWatcher implements DisposableBean {
             @Override
             public void onFileCreate(File file) {
                 try {
-                    systemBus.sendFileEvent(new FileEvent(
+                    systemBus.sendFileEvent(new FileSystemEvent(
                         folderId, file.toPath(), FileEventTypeEnum.FILE_CREATED
                     ));
                 } catch (SyncDuoException e) {
@@ -119,7 +119,7 @@ public class FolderWatcher implements DisposableBean {
             @Override
             public void onFileDelete(File file) {
                 try {
-                    systemBus.sendFileEvent(new FileEvent(
+                    systemBus.sendFileEvent(new FileSystemEvent(
                             folderId, file.toPath(), FileEventTypeEnum.FILE_DELETED
                     ));
                 } catch (SyncDuoException e) {
@@ -130,7 +130,7 @@ public class FolderWatcher implements DisposableBean {
             @Override
             public void onFileChange(File file) {
                 try {
-                    systemBus.sendFileEvent(new FileEvent(
+                    systemBus.sendFileEvent(new FileSystemEvent(
                             folderId, file.toPath(), FileEventTypeEnum.FILE_CHANGED
                     ));
                 } catch (SyncDuoException e) {

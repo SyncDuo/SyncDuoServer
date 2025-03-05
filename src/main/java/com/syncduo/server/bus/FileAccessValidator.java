@@ -23,7 +23,7 @@ public class FileAccessValidator {
             String sourceFileFullPath,
             Long destFolderId,
             String destFileFullPath) throws SyncDuoException {
-        // 检验 sourceFolder 和 internalFolder
+        // 检验 sourceFolder 和 destFolder
         if (this.isFileAccessValid(sourceFolderId, sourceFileFullPath) &&
                 this.isFileAccessValid(destFolderId, destFileFullPath)) {
             return FilesystemUtil.hardlinkFile(sourceFileFullPath, destFileFullPath);
@@ -33,12 +33,23 @@ public class FileAccessValidator {
                 "destFolderId is %s, destFolderId is %s".formatted(destFolderId, destFileFullPath));
     }
 
+    public void deleteFile(
+            Long folderId,
+            Path file) throws SyncDuoException {
+        // 检验 folder path
+        if (this.isFileAccessValid(folderId, file.toAbsolutePath().toString())) {
+            FilesystemUtil.deleteFile(file);
+        }
+        throw new SyncDuoException("copyFile failed. file operation illegal. " +
+                "folderId is %s, file is %s; ".formatted(folderId, file));
+    }
+
     public Path copyFile(
             Long sourceFolderId,
             String sourceFileFullPath,
             Long destFolderId,
             String destFileFullPath) throws SyncDuoException {
-        // 检验 sourceFolder 和 internalFolder
+        // 检验 sourceFolder 和 destFolder
         if (this.isFileAccessValid(sourceFolderId, sourceFileFullPath) &&
                 this.isFileAccessValid(destFolderId, destFileFullPath)) {
             return FilesystemUtil.copyFile(sourceFileFullPath, destFileFullPath);
@@ -53,7 +64,7 @@ public class FileAccessValidator {
             Path sourceFile,
             Long destFolderId,
             Path destFile) throws SyncDuoException {
-        // 检验 sourceFolder 和 internalFolder
+        // 检验 sourceFolder 和 destFolder
         if (this.isFileAccessValid(sourceFolderId, sourceFile.toAbsolutePath().toString()) &&
                 this.isFileAccessValid(destFolderId, destFile.toAbsolutePath().toString())) {
             return FilesystemUtil.updateFileByCopy(sourceFile, destFile);

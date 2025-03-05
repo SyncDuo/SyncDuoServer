@@ -4,25 +4,24 @@ import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.model.entity.FolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-import java.nio.file.Path;
-
+import java.util.List;
 
 @Builder
 @Data
-public class DownStreamEvent {
+public class RefilterEvent {
 
-    FolderEntity folderEntity;
-
-    FileEntity fileEntity;
-
-    Path file;
-
-    // refilter event, 会带上 syncFlowEntity
     SyncFlowEntity syncFlowEntity;
+
+    FolderEntity sourceFolderEntity;
+
+    FileEntity sourceFileEntity;
+
+    FolderEntity destFolderEntity;
+
+    FileEntity destFileEntity;
 
     FileEventTypeEnum fileEventTypeEnum;
 }

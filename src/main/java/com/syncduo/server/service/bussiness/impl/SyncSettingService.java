@@ -15,6 +15,7 @@ import com.syncduo.server.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -84,5 +85,23 @@ public class SyncSettingService
             }
         }
         return false;
+    }
+
+    public boolean isFilter(SyncSettingEntity syncSettingEntity, String fileExtension) throws SyncDuoException {
+        if (StringUtils.isBlank(fileExtension)) {
+            return false;
+        }
+        String filterCriteria = syncSettingEntity.getFilterCriteria();
+        List<String> filters = JsonUtil.deserializeStringToList(filterCriteria);
+        for (String filter : filters) {
+            if (fileExtension.contains(filter)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<String> getFilterCriteria(SyncSettingEntity syncSettingEntity) throws SyncDuoException {
+        return JsonUtil.deserializeStringToList(syncSettingEntity.getFilterCriteria());
     }
 }

@@ -11,9 +11,11 @@ import com.syncduo.server.mapper.FileSyncMappingMapper;
 import com.syncduo.server.model.entity.FileSyncMappingEntity;
 import com.syncduo.server.service.bussiness.IFileSyncMappingService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -21,6 +23,17 @@ import java.util.List;
 public class FileSyncMappingService
         extends ServiceImpl<FileSyncMappingMapper, FileSyncMappingEntity>
         implements IFileSyncMappingService {
+
+    public List<FileSyncMappingEntity> getBySyncFlowId(Long syncFlowId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(syncFlowId)) {
+            throw new SyncDuoException("getBySyncFlowId failed. syncFlowId is null");
+        }
+        LambdaQueryWrapper<FileSyncMappingEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FileSyncMappingEntity::getSyncFlowId, syncFlowId);
+        queryWrapper.eq(FileSyncMappingEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
+        List<FileSyncMappingEntity> dbResult = this.list(queryWrapper);
+        return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
+    }
 
     public void desyncBySourceFileId(Long fileId) throws SyncDuoException {
         if (ObjectUtils.isEmpty(fileId)) {
@@ -54,7 +67,7 @@ public class FileSyncMappingService
             Long destFileId
     ) throws SyncDuoException {
         // 幂等
-        FileSyncMappingEntity dbResult = this.getBySyncFlowIdAndFileId(syncFlowId, sourceFileId);
+        FileSyncMappingEntity dbResult = this.getBySyncFlowIdAndSourceFileId(syncFlowId, sourceFileId);
         if (ObjectUtils.isEmpty(dbResult)) {
             FileSyncMappingEntity fileSyncMappingEntity = new FileSyncMappingEntity();
             fileSyncMappingEntity.setSyncFlowId(syncFlowId);
@@ -84,7 +97,10 @@ public class FileSyncMappingService
         }
     }
 
-    public FileSyncMappingEntity getBySyncFlowIdAndFileId(Long syncFlowId, Long fileId) throws SyncDuoException {
+    public FileSyncMappingEntity getBySyncFlowIdAndSourceFileId(
+            Long syncFlowId,
+            Long fileId
+    ) throws SyncDuoException {
         if (ObjectUtils.anyNull(syncFlowId, fileId)) {
             throw new SyncDuoException("isFileIdExist failed. syncFlowId or fileId is null");
         }

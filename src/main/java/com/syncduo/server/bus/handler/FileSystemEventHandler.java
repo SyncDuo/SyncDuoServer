@@ -1,10 +1,12 @@
-package com.syncduo.server.bus;
+package com.syncduo.server.bus.handler;
 
+import com.syncduo.server.bus.FileAccessValidator;
+import com.syncduo.server.bus.SystemBus;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.model.entity.FolderEntity;
 import com.syncduo.server.model.internal.DownStreamEvent;
-import com.syncduo.server.model.internal.FileEvent;
+import com.syncduo.server.model.internal.FileSystemEvent;
 import com.syncduo.server.service.bussiness.impl.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -18,7 +20,7 @@ import java.util.Collections;
 
 @Service
 @Slf4j
-public class FileEventHandler implements DisposableBean {
+public class FileSystemEventHandler implements DisposableBean {
 
     private final SystemBus systemBus;
 
@@ -39,14 +41,14 @@ public class FileEventHandler implements DisposableBean {
     private volatile boolean RUNNING = true;  // Flag to control the event loop
 
     @Autowired
-    public FileEventHandler(SystemBus systemBus,
-                            FileService fileService,
-                            FolderService folderService,
-                            FileEventService fileEventService,
-                            FileSyncMappingService fileSyncMappingService,
-                            SyncFlowService syncFlowService,
-                            ThreadPoolTaskExecutor threadPoolTaskExecutor,
-                            FileAccessValidator fileAccessValidator) {
+    public FileSystemEventHandler(SystemBus systemBus,
+                                  FileService fileService,
+                                  FolderService folderService,
+                                  FileEventService fileEventService,
+                                  FileSyncMappingService fileSyncMappingService,
+                                  SyncFlowService syncFlowService,
+                                  ThreadPoolTaskExecutor threadPoolTaskExecutor,
+                                  FileAccessValidator fileAccessValidator) {
         this.systemBus = systemBus;
         this.fileService = fileService;
         this.folderService = folderService;
@@ -60,113 +62,108 @@ public class FileEventHandler implements DisposableBean {
     @Async("threadPoolTaskExecutor")
     public void startHandle() {
         while (RUNNING) {
-            FileEvent fileEvent = systemBus.getFileEvent();
-            if (ObjectUtils.isEmpty(fileEvent) ||
-                    fileAccessValidator.isFileEventInValid(fileEvent.getFolderId())) {
+            FileSystemEvent fileSystemEvent = systemBus.getFileEvent();
+            if (ObjectUtils.isEmpty(fileSystemEvent) ||
+                    fileAccessValidator.isFileEventInValid(fileSystemEvent.getFolderId())) {
                 continue;
             }
             this.threadPoolTaskExecutor.submit(() -> {
                 try {
-                    switch (fileEvent.getFileEventTypeEnum()) {
-                        case FILE_CREATED -> this.onFileCreate(fileEvent);
-                        case FILE_CHANGED -> this.onFileChange(fileEvent);
-                        case FILE_DELETED -> this.onFileDelete(fileEvent);
-                        default -> throw new SyncDuoException("文件夹的文件事件:%s 不识别".formatted(fileEvent));
+                    switch (fileSystemEvent.getFileEventTypeEnum()) {
+                        case FILE_CREATED -> this.onFileCreate(fileSystemEvent);
+                        case FILE_CHANGED -> this.onFileChange(fileSystemEvent);
+                        case FILE_DELETED -> this.onFileDelete(fileSystemEvent);
+                        default -> throw new SyncDuoException("文件夹的文件事件:%s 不识别".formatted(fileSystemEvent));
                     }
                 } catch (SyncDuoException e) {
-                    log.error("startHandle failed. fileEvent:{} failed!", fileEvent, e);
-                    try {
-                        this.syncFlowService.decrPendingEventCount(fileEvent.getFolderId());
-                    } catch (SyncDuoException ex) {
-                        log.error("startHandle failed. pending event count can't decrease", e);
-                    }
+                    log.error("startHandle failed. fileEvent:{} failed!", fileSystemEvent, e);
                 }
             });
         }
     }
 
-    private void onFileCreate(FileEvent fileEvent) throws SyncDuoException {
+    private void onFileCreate(FileSystemEvent fileSystemEvent) throws SyncDuoException {
         // 幂等
-        FolderEntity folderEntity = this.folderService.getById(fileEvent.getFolderId());
+        FolderEntity folderEntity = this.folderService.getById(fileSystemEvent.getFolderId());
         FileEntity fileEntity = this.fileService.getFileEntityFromFile(
                 folderEntity.getFolderId(),
                 folderEntity.getFolderFullPath(),
-                fileEvent.getFile()
+                fileSystemEvent.getFile()
         );
         if (ObjectUtils.isNotEmpty(fileEntity)) {
             throw new SyncDuoException("onFileCreate failed. fileEntity already exist!." +
-                    "fileEvent is %s".formatted(fileEvent));
+                    "fileEvent is %s".formatted(fileSystemEvent));
         }
         // 创建文件记录
         fileEntity = this.fileService.createFileRecord(
                 folderEntity.getFolderId(),
                 folderEntity.getFolderFullPath(),
-                fileEvent.getFile()
+                fileSystemEvent.getFile()
         );
-        durationAndDownStream(fileEvent, folderEntity, fileEntity);
+        durationAndDownStream(fileSystemEvent, folderEntity, fileEntity);
     }
 
-    private void onFileChange(FileEvent fileEvent) throws SyncDuoException {
+    private void onFileChange(FileSystemEvent fileSystemEvent) throws SyncDuoException {
         // 幂等
-        FolderEntity folderEntity = this.folderService.getById(fileEvent.getFolderId());
+        FolderEntity folderEntity = this.folderService.getById(fileSystemEvent.getFolderId());
         FileEntity fileEntity = this.fileService.getFileEntityFromFile(
                 folderEntity.getFolderId(),
                 folderEntity.getFolderFullPath(),
-                fileEvent.getFile()
+                fileSystemEvent.getFile()
         );
         if (ObjectUtils.isEmpty(fileEntity)) {
             throw new SyncDuoException("onFileChange failed. fileEntity is not exist." +
-                    "fileEvent is %s".formatted(fileEvent));
+                    "fileEvent is %s".formatted(fileSystemEvent));
         }
         // 更新 file entity
         this.fileService.updateFileEntityByFile(
                 fileEntity,
-                fileEvent.getFile()
+                fileSystemEvent.getFile()
         );
-        durationAndDownStream(fileEvent, folderEntity, fileEntity);
+        durationAndDownStream(fileSystemEvent, folderEntity, fileEntity);
     }
 
-    private void onFileDelete(FileEvent fileEvent) throws SyncDuoException {
+    private void onFileDelete(FileSystemEvent fileSystemEvent) throws SyncDuoException {
         // 幂等
-        FolderEntity folderEntity = this.folderService.getById(fileEvent.getFolderId());
+        FolderEntity folderEntity = this.folderService.getById(fileSystemEvent.getFolderId());
         FileEntity fileEntity;
-        if (ObjectUtils.isEmpty(fileEvent.getFile())) {
-            fileEntity = fileEvent.getFileEntityNotInFilesystem();
+        if (ObjectUtils.isEmpty(fileSystemEvent.getFile())) {
+            fileEntity = fileSystemEvent.getFileEntityNotInFilesystem();
         } else {
             fileEntity = this.fileService.getFileEntityFromFile(
                     folderEntity.getFolderId(),
                     folderEntity.getFolderFullPath(),
-                    fileEvent.getFile()
+                    fileSystemEvent.getFile()
             );
             if (ObjectUtils.isEmpty(fileEntity)) {
                 throw new SyncDuoException("onFileDelete failed. can't find fileEntity." +
-                        "fileEvent is %s".formatted(fileEvent));
+                        "fileEvent is %s".formatted(fileSystemEvent));
             }
         }
         // 删除 file entity
         this.fileService.deleteBatchByFileEntity(Collections.singletonList(fileEntity));
         // 判断是否 desynced, 如果删除的文件在 file_sync_mapping 中, 则标记为 desynced
         this.fileSyncMappingService.desyncByDestFileId(fileEntity.getFileId());
-        durationAndDownStream(fileEvent, folderEntity, fileEntity);
+        durationAndDownStream(fileSystemEvent, folderEntity, fileEntity);
     }
 
     private void durationAndDownStream(
-            FileEvent fileEvent,
+            FileSystemEvent fileSystemEvent,
             FolderEntity folderEntity,
             FileEntity fileEntity) throws SyncDuoException {
         // 创建 fileEvent
         this.fileEventService.createFileEvent(
-                fileEvent.getFileEventTypeEnum(),
+                fileSystemEvent.getFileEventTypeEnum(),
                 folderEntity.getFolderId(),
                 fileEntity.getFileId()
         );
         // 传递下游事件
-        DownStreamEvent downStreamEvent = new DownStreamEvent(
-                folderEntity,
-                fileEntity,
-                fileEvent.getFile(),
-                fileEvent.getFileEventTypeEnum()
-        );
+        DownStreamEvent downStreamEvent = DownStreamEvent.builder()
+                .folderEntity(folderEntity)
+                .fileEntity(fileEntity)
+                .file(fileSystemEvent.getFile())
+                .fileEventTypeEnum(fileSystemEvent.getFileEventTypeEnum())
+                .build();
         this.systemBus.sendDownStreamEvent(downStreamEvent);
     }
 

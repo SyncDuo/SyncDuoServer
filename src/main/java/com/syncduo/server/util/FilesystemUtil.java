@@ -68,7 +68,7 @@ public class FilesystemUtil {
 
 
     public static List<Long> getFolderInfo(String path) throws SyncDuoException {
-        Path folder = FileOperationUtils.isFolderPathValid(path);
+        Path folder = FilesystemUtil.isFolderPathValid(path);
         // 初始化变量
         AtomicLong fileCount = new AtomicLong(0);
         AtomicLong subFolderCount = new AtomicLong(0);

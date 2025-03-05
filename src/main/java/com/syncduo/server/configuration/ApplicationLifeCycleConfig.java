@@ -1,8 +1,10 @@
 package com.syncduo.server.configuration;
 
 
-import com.syncduo.server.bus.FileEventHandler;
+import com.syncduo.server.bus.handler.DownstreamHandler;
+import com.syncduo.server.bus.handler.FileSystemEventHandler;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.service.facade.SystemManagementService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,16 +18,20 @@ public class ApplicationLifeCycleConfig {
     @Value("${spring.profiles.active:prod}")
     private String activeProfile;
 
-    private final FileOperationService fileOperationService;
+    private final SystemManagementService systemManagementService;
 
-    private final FileEventHandler fileEventHandler;
+    private final FileSystemEventHandler fileSystemEventHandler;
+
+    private final DownstreamHandler downstreamHandler;
 
     @Autowired
     public ApplicationLifeCycleConfig(
-            FileOperationService fileOperationService,
-            FileEventHandler fileEventHandler) {
-        this.fileOperationService = fileOperationService;
-        this.fileEventHandler = fileEventHandler;
+            SystemManagementService systemManagementService,
+            FileSystemEventHandler fileSystemEventHandler,
+            DownstreamHandler downstreamHandler) {
+        this.systemManagementService = systemManagementService;
+        this.fileSystemEventHandler = fileSystemEventHandler;
+        this.downstreamHandler = downstreamHandler;
     }
 
     @PostConstruct
@@ -35,9 +41,10 @@ public class ApplicationLifeCycleConfig {
             // @PostConstruct 在 @BeforeEach 前面, 会导致在 "旧的folder" 上添加 watcher
             // "旧的folder" 在 @BeforeEach 中删除, 后续触发的事件会发生异常
             // 所以需要判断当前 profile 是否为 test, 不为 test 才执行 systemStartUp
-            this.fileOperationService.systemStartUp();
+            this.systemManagementService.systemStartUp();
         }
         // 启动 handler
-        fileEventHandler.startHandle();
+        fileSystemEventHandler.startHandle();
+        downstreamHandler.startHandle();
     }
 }
