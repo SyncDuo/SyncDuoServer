@@ -72,7 +72,7 @@ public class SystemManagementService {
         if (ObjectUtils.isEmpty(allFolder)) {
             return;
         }
-        periodicalScan();
+        this.periodicalScan();
         for (FolderEntity folderEntity : allFolder) {
             this.folderWatcher.addWatcher(folderEntity);
         }
@@ -184,7 +184,11 @@ public class SystemManagementService {
         );
         // left outer 代表记录已不在 filesystem, 需要删除
         for (FileEntity fileEntity : joinResult.getLeftOuterResult()) {
-            FileSystemEvent fileSystemEvent = new FileSystemEvent(fileEntity.getFolderId(), fileEntity, FileEventTypeEnum.FILE_DELETED);
+            FileSystemEvent fileSystemEvent = new FileSystemEvent(
+                    fileEntity.getFolderId(),
+                    fileEntity,
+                    FileEventTypeEnum.FILE_DELETED
+            );
             this.systemBus.sendFileEvent(fileSystemEvent);
         }
         // inner join 则需要进一步比较,判断文件是否修改

@@ -35,34 +35,33 @@ public class FolderService
         this.fileAccessValidator = fileAccessValidator;
     }
 
-    public List<FolderEntity> getAllFolder() throws SyncDuoException {
+    public List<FolderEntity> getAllFolder() {
         LambdaQueryWrapper<FolderEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(FolderEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
         return this.list(queryWrapper);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public FolderEntity createFolder(FolderEntity folderEntity) throws SyncDuoException {
-        if (ObjectUtils.anyNull(
-                folderEntity,
-                folderEntity.getFolderFullPath(),
-                folderEntity.getFolderName()
-        )) {
-            throw new SyncDuoException("folderEntity,folderName or folderFullPath is null. %s".formatted(folderEntity));
+    public FolderEntity createFolderEntity(Path folder) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(folder)) {
+            throw new SyncDuoException("createFolderEntity failed. folder is null");
         }
         // 幂等
-        FolderEntity dbResult = this.getByFolderFullPath(folderEntity.getFolderFullPath());
+        String folderName = folder.getFileName().toString();
+        String folderFullPath = folder.toAbsolutePath().toString();
+        FolderEntity dbResult = this.getByFolderFullPath(folderFullPath);
         if (ObjectUtils.isEmpty(dbResult)) {
-            folderEntity.setFolderId(null);
+            FolderEntity folderEntity = new FolderEntity();
+            folderEntity.setFolderName(folderName);
+            folderEntity.setFolderFullPath(folderFullPath);
             boolean save = this.save(folderEntity);
             if (!save) {
                 throw new SyncDuoException("save folder entity to database failed.");
             }
             fileAccessValidator.addWhitelist(folderEntity);
             return folderEntity;
-        } else {
-            throw new SyncDuoException("folder already exists! folderEntity is %s".formatted(folderEntity));
         }
+        return dbResult;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

@@ -76,22 +76,22 @@ public class FolderWatcher implements DisposableBean {
         monitor.getObservers().forEach(FileAlterationObserver::checkAndNotify);
     }
 
-    public void stopMonitor(Long folderId) throws SyncDuoException {
+    public void stopMonitor(Long folderId) {
         if (ObjectUtils.isEmpty(folderId)) {
-            throw new SyncDuoException("stopWatcher failed. folderId is null");
+            return;
+        }
+        if (!this.map.containsKey(folderId)) {
+            log.warn("stopWatcher failed. can't find monitor with folderId {}", folderId);
+            return;
         }
         FileAlterationMonitor fileAlterationMonitor = this.map.get(folderId);
-        if (ObjectUtils.isNotEmpty(fileAlterationMonitor)) {
-            try {
-                fileAlterationMonitor.stop();
-            } catch (Exception e) {
-                log.warn("stopWatcher failed. monitor is {}, folderId is {}",
-                        fileAlterationMonitor,
-                        folderId,
-                        e);
-            }
-        } else {
-            log.warn("stopWatcher failed. can't find monitor with folderId {}", folderId);
+        try {
+            fileAlterationMonitor.stop();
+        } catch (Exception e) {
+            log.warn("stopWatcher failed. monitor is {}, folderId is {}",
+                    fileAlterationMonitor,
+                    folderId,
+                    e);
         }
     }
 

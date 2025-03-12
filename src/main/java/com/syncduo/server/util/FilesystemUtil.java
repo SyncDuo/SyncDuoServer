@@ -103,34 +103,19 @@ public class FilesystemUtil {
         return path.endsWith(getPathSeparator());
     }
 
-    public static Path createContentFolder(
-            String sourceFolderFullPath,
-            String contentFolderFullPath) throws SyncDuoException {
-        isFolderPathValid(sourceFolderFullPath);
-        isParentFolderPathValid(contentFolderFullPath);
-        Path contentFolder = Path.of(contentFolderFullPath);
-        if (Files.exists(contentFolder)) {
-            log.warn("the content folder already exist");
-            return contentFolder;
-        }
-        return createFolder(contentFolder);
+    public static Path getFolder(String folderFullPath) throws SyncDuoException {
+        return FilesystemUtil.isFolderPathValid(folderFullPath);
     }
 
     public static Path createFolder(String folderFullPath) throws SyncDuoException {
-        Path folder = Paths.get(folderFullPath);
+        if (FilesystemUtil.isFolderPathExist(folderFullPath)) {
+            return FilesystemUtil.getFolder(folderFullPath);
+        }
+        Path folder = Path.of(folderFullPath);
         try {
             Files.createDirectories(folder);
         } catch (IOException e) {
             throw new SyncDuoException("createFolder failed. folderFullPath is %s".formatted(folderFullPath), e);
-        }
-        return folder;
-    }
-
-    public static Path createFolder(Path folder) throws SyncDuoException {
-        try {
-            Files.createDirectories(folder);
-        } catch (IOException e) {
-            throw new SyncDuoException("createFolder failed. folder is %s".formatted(folder), e);
         }
         return folder;
     }
@@ -164,17 +149,6 @@ public class FilesystemUtil {
             Files.deleteIfExists(file);
         } catch (IOException e) {
             throw new SyncDuoException("deleteFile failed. file is %s.".formatted(file), e);
-        }
-    }
-
-    public static void walkFilesTree(
-            String folderFullPath,
-            SimpleFileVisitor<Path> simpleFileVisitor) throws SyncDuoException {
-        Path folder = isFolderPathValid(folderFullPath);
-        try {
-            Files.walkFileTree(folder, simpleFileVisitor);
-        } catch (IOException e) {
-            throw new SyncDuoException("walkFilesTree failed. folderFullPath is %s".formatted(folderFullPath), e);
         }
     }
 
@@ -438,17 +412,28 @@ public class FilesystemUtil {
 
     public static boolean isFolderPathExist(String path) throws SyncDuoException {
         if (ObjectUtils.isEmpty(path)) {
-            throw new SyncDuoException("isFolderPathValid failed. folderPath is null");
+            throw new SyncDuoException("isFolderPathValid failed. path is null");
         }
-        Path folderPath = Paths.get(path);
+        Path folderPath;
+        try {
+            folderPath = Paths.get(path);
+        } catch (Exception e) {
+            throw new SyncDuoException("isFolderPathExist failed. path is not even valid", e);
+        }
         if (Files.exists(folderPath)) {
-            try(DirectoryStream<Path> dirStream = Files.newDirectoryStream(folderPath)) {
-                return !dirStream.iterator().hasNext();
-            } catch (IOException e) {
-                throw new SyncDuoException("isFolderPathExist failed. path is %s".formatted(path), e);
+            // 路径存在的时候, 判断是否为文件夹路径
+            if (Files.isDirectory(folderPath)) {
+                return true;
+            } else {
+                throw new SyncDuoException("isFolderPathExist failed. path is not a folder.");
             }
         } else {
-            return false;
+            // 路径不存在的时候, 判断是否为文件夹路径
+            if (folderPath.getFileName().toString().lastIndexOf('.') > 0) {
+                throw new SyncDuoException("isFolderPathExist failed. path is not a folder.");
+            } else {
+                return false;
+            }
         }
     }
 
@@ -529,6 +514,18 @@ public class FilesystemUtil {
         } while (Files.exists(newFilePath)); // Keep trying until no duplicate
 
         return newFilePath.getFileName().toString();
+    }
+
+    public static String getNewFolderName(String parentFolderPath) throws SyncDuoException {
+        Path parentFolder = isFolderPathValid(parentFolderPath);
+
+        Path newFolder;
+        do {
+            String randomName = FilesystemUtil.getRandomName();
+            newFolder = parentFolder.resolve(randomName);
+        } while (Files.exists(newFolder));
+
+        return newFolder.getFileName().toString();
     }
 
     private static String getRandomName() {

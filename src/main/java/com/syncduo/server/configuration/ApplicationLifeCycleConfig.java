@@ -4,6 +4,7 @@ package com.syncduo.server.configuration;
 import com.syncduo.server.bus.handler.DownstreamHandler;
 import com.syncduo.server.bus.handler.FileSystemEventHandler;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.service.bussiness.impl.SystemConfigService;
 import com.syncduo.server.service.facade.SystemManagementService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -24,18 +25,25 @@ public class ApplicationLifeCycleConfig {
 
     private final DownstreamHandler downstreamHandler;
 
+    private final SystemConfigService systemConfigService;
+
     @Autowired
     public ApplicationLifeCycleConfig(
             SystemManagementService systemManagementService,
             FileSystemEventHandler fileSystemEventHandler,
-            DownstreamHandler downstreamHandler) {
+            DownstreamHandler downstreamHandler,
+            SystemConfigService systemConfigService) {
         this.systemManagementService = systemManagementService;
         this.fileSystemEventHandler = fileSystemEventHandler;
         this.downstreamHandler = downstreamHandler;
+        this.systemConfigService = systemConfigService;
     }
 
     @PostConstruct
     public void startUp() throws SyncDuoException {
+        // 获取系统设置
+        this.systemConfigService.getSystemConfig();
+        // 系统启动扫描
         if ("prod".equals(activeProfile)) {
             // 检查全部 sync-flow 是否同步
             // @PostConstruct 在 @BeforeEach 前面, 会导致在 "旧的folder" 上添加 watcher

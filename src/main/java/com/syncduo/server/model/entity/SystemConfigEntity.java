@@ -12,7 +12,5 @@ public class SystemConfigEntity extends BaseEntity {
     @TableId(type = IdType.AUTO)
     private Long systemConfigId;
 
-    private String systemConfigKey;
-
-    private String systemConfigValue;
+    private String syncStoragePath;
 }

@@ -97,6 +97,20 @@ public class FileSyncMappingService
         }
     }
 
+    public void deleteRecordBySyncFlowId(Long syncFlowId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(syncFlowId)) {
+            return;
+        }
+        LambdaUpdateWrapper<FileSyncMappingEntity> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(FileSyncMappingEntity::getSyncFlowId, syncFlowId);
+        updateWrapper.set(FileSyncMappingEntity::getRecordDeleted, DeletedEnum.DELETED.getCode());
+        boolean update = this.update(updateWrapper);
+        if (!update) {
+            throw new SyncDuoException("deleteRecordSyncFlowId failed. " +
+                    "can't write to database.");
+        }
+    }
+
     public FileSyncMappingEntity getBySyncFlowIdAndSourceFileId(
             Long syncFlowId,
             Long fileId

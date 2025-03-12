@@ -263,13 +263,14 @@ public class SyncFlowService
     public void deleteSyncFlow(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
         // 检查参数
         if (ObjectUtils.isEmpty(syncFlowEntity)) {
-            throw new SyncDuoException("syncFlowEntity is null");
+            return;
         }
         // 删除 sync-flow
         syncFlowEntity.setRecordDeleted(DeletedEnum.DELETED.getCode());
         boolean isDeleted = this.updateById(syncFlowEntity);
         if (!isDeleted) {
-            throw new SyncDuoException("删除 sync-flow 失败");
+            throw new SyncDuoException("deleteSyncFlow failed." +
+                    "can't write to database");
         }
         // 从 map 中删除
         List<SyncFlowStatus> syncFlowStatusList = cacheMap.get(syncFlowEntity.getSyncFlowId());

@@ -104,4 +104,20 @@ public class SyncSettingService
     public List<String> getFilterCriteria(SyncSettingEntity syncSettingEntity) throws SyncDuoException {
         return JsonUtil.deserializeStringToList(syncSettingEntity.getFilterCriteria());
     }
+
+    public void deleteSyncSetting(Long syncFLowId) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(syncFLowId)) {
+            return;
+        }
+        SyncSettingEntity syncSettingEntity = this.getBySyncFlowId(syncFLowId);
+        if (ObjectUtils.isEmpty(syncSettingEntity)) {
+            return;
+        }
+        syncSettingEntity.setRecordDeleted(DeletedEnum.DELETED.getCode());
+        boolean update = this.updateById(syncSettingEntity);
+        if (!update) {
+            throw new SyncDuoException("deleteSyncSetting failed. " +
+                    "can't write to database.");
+        }
+    }
 }
