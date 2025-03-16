@@ -15,6 +15,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -37,6 +38,42 @@ public class SystemConfigService
                 return null;
             }
             this.systemConfigEntity = dbResult.get(0);
+            return this.systemConfigEntity;
+        }
+
+        public SystemConfigEntity updateConfigEntity(SystemConfigEntity systemConfigEntity) throws SyncDuoException {
+            if (ObjectUtils.isEmpty(systemConfigEntity)) {
+                throw new SyncDuoException("updateConfigEntity failed. systemConfigEntity is null.");
+            }
+            if (ObjectUtils.isEmpty(this.systemConfigEntity)) {
+                boolean saved = this.save(systemConfigEntity);
+                if (!saved) {
+                    throw new SyncDuoException("updateConfigEntity failed. " +
+                            "can't write to database.");
+                }
+                this.systemConfigEntity = systemConfigEntity;
+                return this.systemConfigEntity;
+            }
+            Long systemConfigId = systemConfigEntity.getSystemConfigId();
+            Class<? extends SystemConfigEntity> clazz = systemConfigEntity.getClass();
+            for (Field declaredField : clazz.getDeclaredFields()) {
+                declaredField.setAccessible(true);
+                try {
+                    Object sourceValue = declaredField.get(systemConfigEntity);
+                    if (ObjectUtils.isNotEmpty(sourceValue)) {
+                        declaredField.set(this.systemConfigEntity, sourceValue);
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new SyncDuoException("updateConfigEntity failed. " +
+                            "field %s not accessible.".formatted(declaredField));
+                }
+            }
+            this.systemConfigEntity.setSystemConfigId(systemConfigId);
+            boolean update = this.updateById(this.systemConfigEntity);
+            if (!update) {
+                throw new SyncDuoException("updateConfigEntity failed. " +
+                        "can't write to database.");
+            }
             return this.systemConfigEntity;
         }
 }

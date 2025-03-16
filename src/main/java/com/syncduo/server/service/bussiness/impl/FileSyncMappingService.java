@@ -101,6 +101,10 @@ public class FileSyncMappingService
         if (ObjectUtils.isEmpty(syncFlowId)) {
             return;
         }
+        List<FileSyncMappingEntity> dbResult = this.getBySyncFlowId(syncFlowId);
+        if (CollectionUtils.isEmpty(dbResult)) {
+            return;
+        }
         LambdaUpdateWrapper<FileSyncMappingEntity> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(FileSyncMappingEntity::getSyncFlowId, syncFlowId);
         updateWrapper.set(FileSyncMappingEntity::getRecordDeleted, DeletedEnum.DELETED.getCode());

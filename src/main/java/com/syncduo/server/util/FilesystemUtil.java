@@ -250,7 +250,7 @@ public class FilesystemUtil {
                 return DigestUtils.md5Hex(is);
             }
         } catch (SyncDuoException | IOException e) {
-            throw new SyncDuoException("getMD5Checksum failed. file is %s".formatted(file));
+            throw new SyncDuoException("getMD5Checksum failed. file is %s".formatted(file), e);
         } finally {
             if (ObjectUtils.isNotEmpty(lock)) {
                 lock.readLock().unlock();
@@ -258,11 +258,11 @@ public class FilesystemUtil {
         }
     }
 
-    public static Path copyFile(String sourcePath, String destPath) throws SyncDuoException {
-        log.debug("copying file. source file is {}, dest file is {}", sourcePath, destPath);
+    public static Path copyFile(Path sourceFile, String destPath) throws SyncDuoException {
+        log.debug("copying file. source file is {}, dest file is {}", sourceFile, destPath);
 
         // 检查源文件是否存在
-        Path sourceFile = isFilePathValid(sourcePath);
+        isFileValid(sourceFile);
         // 获取 destFile 的 Path 对象, 注意此时 destFile 不一定存在于文件系统上
         Path destFile = Path.of(destPath);
         if (!Files.exists(destFile)) {
@@ -271,7 +271,7 @@ public class FilesystemUtil {
                 Files.createDirectories(destFile.getParent());
             } catch (IOException e) {
                 throw new SyncDuoException("createDirectories failed. source file is %s, dest file is %s".
-                        formatted(sourcePath, destPath), e);
+                        formatted(sourceFile, destPath), e);
             }
             // 创建一个空的文件, 用于获取 write lock
             try {
@@ -503,6 +503,9 @@ public class FilesystemUtil {
     //  返回一个 string, 格式为 randomFileName.fileExtension, 其文件名称为随机的8位长字符串, 且保证在目录下唯一
     public static String getNewFileName(String fileFullPath) throws SyncDuoException {
         Path filePath = Paths.get(fileFullPath);
+        if (!Files.exists(filePath)) {
+            return fileFullPath;
+        }
         Path parentDir = filePath.getParent();
         Pair<String, String> fileNameAndExtension = FilesystemUtil.getFileNameAndExtension(filePath);
         String extension = fileNameAndExtension.getRight();

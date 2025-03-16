@@ -106,7 +106,8 @@ public class SyncFlowController {
             syncFlowEntity = this.syncFlowService.createSyncFlow(
                     sourceFolderEntity.getFolderId(),
                     destFolderEntity.getFolderId(),
-                    createSyncFlowRequest.getSyncFlowTypeEnum()
+                    createSyncFlowRequest.getSyncFlowTypeEnum(),
+                    createSyncFlowRequest.getSyncFlowName()
             );
         } catch (SyncDuoException e) {
             String errorMessage = "addSyncFlow failed. can't create syncFlowEntity." +
@@ -177,7 +178,11 @@ public class SyncFlowController {
         // 获取 sync flow
         SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(syncFlowId);
         if (ObjectUtils.isEmpty(syncFlowEntity)) {
-            return SyncFlowResponse.onSuccess("删除 syncflow 成功");
+            SyncFlowInfo syncFlowInfo = SyncFlowInfo.builder()
+                    .syncFlowId(syncFlowEntity.getSyncFlowId().toString())
+                    .syncFlowName(syncFlowEntity.getSyncFlowName())
+                    .build();
+            return SyncFlowResponse.onSuccess("删除 syncflow 成功", Collections.singletonList(syncFlowInfo));
         }
         // 停止 watcher
         this.folderWatcher.stopMonitor(syncFlowEntity.getSourceFolderId());
@@ -206,13 +211,22 @@ public class SyncFlowController {
                     "deleteSyncFlowRequest is %s".formatted(deleteSyncFlowRequest);
             return this.generateSyncFlowErrorResponse(e, errorMessage);
         }
-        return SyncFlowResponse.onSuccess("删除 syncFlow 成功");
+        SyncFlowInfo syncFlowInfo = SyncFlowInfo.builder()
+                .syncFlowId(syncFlowEntity.getSyncFlowId().toString())
+                .syncFlowName(syncFlowEntity.getSyncFlowName())
+                .build();
+        return SyncFlowResponse.onSuccess("删除 syncFlow 成功", Collections.singletonList(syncFlowInfo));
     }
 
     private void checkAndCreateDestFolder(CreateSyncFlowRequest createSyncFlowRequest) throws SyncDuoException {
         if (ObjectUtils.isEmpty(createSyncFlowRequest)) {
             throw new SyncDuoException("isCreateSyncFlowRequestValid failed. " +
                     "createSyncFlowRequest is null");
+        }
+        // 检查 syncflow name
+        if (StringUtils.isBlank(createSyncFlowRequest.getSyncFlowName())) {
+            throw new SyncDuoException("isCreateSyncFlowRequestValid failed. " +
+                    "syncFlowName is null");
         }
         // 检查 sync setting
         if (StringUtils.isBlank(createSyncFlowRequest.getSyncSetting())) {

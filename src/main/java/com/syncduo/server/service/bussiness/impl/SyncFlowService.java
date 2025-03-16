@@ -18,6 +18,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -161,9 +162,15 @@ public class SyncFlowService
     }
 
     public SyncFlowEntity createSyncFlow(
-            Long sourceFolderId, Long destFolderId, SyncFlowTypeEnum syncFlowType) throws SyncDuoException {
+            Long sourceFolderId,
+            Long destFolderId,
+            SyncFlowTypeEnum syncFlowType,
+            String syncFlowName) throws SyncDuoException {
         if (ObjectUtils.anyNull(sourceFolderId, destFolderId, syncFlowType)) {
-            throw new SyncDuoException("创建 Sync Flow 失败, sourceFolderId, destFolderId 或 syncFlowType 为空. %s");
+            throw new SyncDuoException("createSyncFlow failed, sourceFolderId, destFolderId or syncFlowType is null.");
+        }
+        if (StringUtils.isBlank(syncFlowName)) {
+            throw new SyncDuoException("createSyncFlow failed, syncFlowName is null");
         }
         SyncFlowEntity dbResult = this.getBySourceFolderIdAndDest(sourceFolderId, destFolderId);
         if (ObjectUtils.isEmpty(dbResult)) {
@@ -172,6 +179,7 @@ public class SyncFlowService
             dbResult.setSourceFolderId(sourceFolderId);
             dbResult.setDestFolderId(destFolderId);
             dbResult.setSyncFlowType(syncFlowType.name());
+            dbResult.setSyncFlowName(syncFlowName);
             dbResult.setSyncStatus(SyncFlowStatusEnum.NOT_SYNC.name());
             boolean saved = this.save(dbResult);
             if (!saved) {

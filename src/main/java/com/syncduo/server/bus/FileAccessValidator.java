@@ -46,16 +46,16 @@ public class FileAccessValidator {
 
     public Path copyFile(
             Long sourceFolderId,
-            String sourceFileFullPath,
+            Path sourceFile,
             Long destFolderId,
             String destFileFullPath) throws SyncDuoException {
         // 检验 sourceFolder 和 destFolder
-        if (this.isFileAccessValid(sourceFolderId, sourceFileFullPath) &&
+        if (this.isFileAccessValid(sourceFolderId, sourceFile.toAbsolutePath().toString()) &&
                 this.isFileAccessValid(destFolderId, destFileFullPath)) {
-            return FilesystemUtil.copyFile(sourceFileFullPath, destFileFullPath);
+            return FilesystemUtil.copyFile(sourceFile, destFileFullPath);
         }
         throw new SyncDuoException("copyFile failed. file operation illegal. " +
-                "sourceFolderId is %s, sourceFileFullPath is %s; ".formatted(sourceFolderId, sourceFileFullPath) +
+                "sourceFolderId is %s, sourceFileFullPath is %s; ".formatted(sourceFolderId, sourceFile) +
                 "destFolderId is %s, destFolderId is %s".formatted(destFolderId, destFileFullPath));
     }
 

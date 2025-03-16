@@ -41,10 +41,10 @@ public class ApplicationLifeCycleConfig {
 
     @PostConstruct
     public void startUp() throws SyncDuoException {
-        // 获取系统设置
-        this.systemConfigService.getSystemConfig();
         // 系统启动扫描
         if ("prod".equals(activeProfile)) {
+            // 获取系统设置
+            this.systemConfigService.getSystemConfig();
             // 检查全部 sync-flow 是否同步
             // @PostConstruct 在 @BeforeEach 前面, 会导致在 "旧的folder" 上添加 watcher
             // "旧的folder" 在 @BeforeEach 中删除, 后续触发的事件会发生异常

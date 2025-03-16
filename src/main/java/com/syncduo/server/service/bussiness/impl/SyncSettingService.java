@@ -35,6 +35,7 @@ public class SyncSettingService
         }
         SyncSettingEntity syncSettingEntity = new SyncSettingEntity();
         syncSettingEntity.setSyncFlowId(syncFlowId);
+        syncSettingEntity.setSyncMode(syncSettingEnum.getCode());
         if (CollectionUtils.isEmpty(filters)) {
             filters = new ArrayList<>();
         }

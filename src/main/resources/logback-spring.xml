@@ -2,7 +2,7 @@
 <configuration>
 
     <!-- Define logging level -->
-    <property name="LOG_LEVEL" value="INFO"/>
+    <property name="LOG_LEVEL" value="DEBUG"/>
 
     <!-- Define log directory -->
     <property name="logDir" value="logs"/>

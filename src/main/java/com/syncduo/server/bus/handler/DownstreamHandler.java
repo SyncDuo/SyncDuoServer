@@ -252,7 +252,7 @@ public class DownstreamHandler implements DisposableBean {
         }
         Path destFile = this.fileAccessValidator.copyFile(
                 folderEntity.getFolderId(),
-                folderEntity.getFolderFullPath(),
+                file,
                 destFolderEntity.getFolderId(),
                 destFilePath
         );
@@ -321,6 +321,7 @@ public class DownstreamHandler implements DisposableBean {
         // 使用 mirror 模式, destFileFullPath = destFolderFullPath + fileEntity.relativePath + fileName.fileExtension
         String  destFileFullPath = destFolderEntity.getFolderFullPath() +
                 sourceFileEntity.getRelativePath() +
+                FilesystemUtil.getPathSeparator() +
                 file.getFileName();
         // 使用 flatten 模式, destFileFullPath = destFolderFullPath + / + fileNewName.fileExtension
         if (!this.syncSettingService.isMirrored(syncFlowId)) {
