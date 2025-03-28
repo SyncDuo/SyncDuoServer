@@ -78,7 +78,7 @@ public class FileOperationTestUtil {
             int currentDepth,
             int folderNumber) throws IOException {
         // Create .txt file with the naming convention
-        Path txtFile = folderPath.resolve("TestFolder" + currentDepth + "_" + folderNumber + ".txt");
+        Path txtFile = folderPath.resolve("TestFile" + currentDepth + "_" + folderNumber + ".txt");
         if (!Files.exists(txtFile)) {
             Files.createFile(txtFile);
         }
@@ -87,7 +87,7 @@ public class FileOperationTestUtil {
         Files.write(txtFile, generateNumbers(), StandardOpenOption.WRITE);
 
         // Create .bin file with the naming convention
-        Path binFile = folderPath.resolve("TestFolder" + currentDepth + "_" + folderNumber + ".bin");
+        Path binFile = folderPath.resolve("TestFile" + currentDepth + "_" + folderNumber + ".bin");
         if (!Files.exists(binFile)) {
             Files.createFile(binFile);
         }

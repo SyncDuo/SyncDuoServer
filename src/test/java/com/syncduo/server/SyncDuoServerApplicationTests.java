@@ -52,7 +52,7 @@ class SyncDuoServerApplicationTests {
 
     private SyncFlowResponse syncFlowResponse;
 
-    private static final String testParentPath = "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/resources";
+    private static final String testParentPath = "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources";
 
     private static final String sourceFolderName = "sourceFolder";
 
@@ -87,10 +87,13 @@ class SyncDuoServerApplicationTests {
     @Test
     void ShouldReturnTrueWhenCreateSyncFlowFlatten() {
         createSyncFlowFlatten();
-        waitAllFileHandle();
+        for (int i = 0; i < 13; i++) {
+            waitAllFileHandle();
+        }
 
         SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(
-                Long.valueOf(this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId()));
+                Long.valueOf(this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
+        );
         assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
     }
 
@@ -100,7 +103,9 @@ class SyncDuoServerApplicationTests {
         waitAllFileHandle();
 
         SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(
-                Long.valueOf(this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId()));
+                Long.valueOf(
+                        this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
+        );
         assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
     }
 
@@ -109,7 +114,11 @@ class SyncDuoServerApplicationTests {
         createSyncFlowMirror();
 
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
-        deleteSyncFlowRequest.setSyncFlowId(Long.valueOf(this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId()));
+        deleteSyncFlowRequest.setSyncFlowId(
+                Long.valueOf(
+                        this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId()
+                )
+        );
         SyncFlowResponse syncFlowResponse1 = this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
         assert syncFlowResponse1.getCode() == 200;
     }

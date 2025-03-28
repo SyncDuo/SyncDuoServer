@@ -501,28 +501,30 @@ public class FilesystemUtil {
     }
 
     //  返回一个 string, 格式为 randomFileName.fileExtension, 其文件名称为随机的8位长字符串, 且保证在目录下唯一
-    public static String getNewFileName(String fileFullPath) throws SyncDuoException {
-        Path filePath = Paths.get(fileFullPath);
-        if (!Files.exists(filePath)) {
-            return fileFullPath;
-        }
-        Path parentDir = filePath.getParent();
-        Pair<String, String> fileNameAndExtension = FilesystemUtil.getFileNameAndExtension(filePath);
+    public static String getNewFileName(String sourceFilePath, String destParentFolderPath) throws SyncDuoException {
+        Path sourceFile = isFilePathValid(sourceFilePath);
+        Path destFolder = isFolderPathValid(destParentFolderPath);
+
+        Pair<String, String> fileNameAndExtension = FilesystemUtil.getFileNameAndExtension(sourceFile);
         String extension = fileNameAndExtension.getRight();
 
         Path newFilePath;
         do {
-            String newFileName = FilesystemUtil.getRandomName() + extension;
-            newFilePath = parentDir.resolve(newFileName);
+            String newFileName = FilesystemUtil.getRandomName() + "." + extension;
+            newFilePath = destFolder.resolve(newFileName);
         } while (Files.exists(newFilePath)); // Keep trying until no duplicate
 
         return newFilePath.getFileName().toString();
     }
 
-    public static String getNewFolderName(String parentFolderPath) throws SyncDuoException {
+    public static String getNewFolderName(String sourceFolderPath, String parentFolderPath) throws SyncDuoException {
+        Path sourceFolder = isFolderPathValid(sourceFolderPath);
         Path parentFolder = isFolderPathValid(parentFolderPath);
 
-        Path newFolder;
+        Path newFolder = parentFolder.resolve(sourceFolder.getFileName().toString());
+        if (!Files.exists(newFolder)) {
+            return newFolder.getFileName().toString();
+        }
         do {
             String randomName = FilesystemUtil.getRandomName();
             newFolder = parentFolder.resolve(randomName);

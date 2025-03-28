@@ -325,9 +325,12 @@ public class DownstreamHandler implements DisposableBean {
                 file.getFileName();
         // 使用 flatten 模式, destFileFullPath = destFolderFullPath + / + fileNewName.fileExtension
         if (!this.syncSettingService.isMirrored(syncFlowId)) {
+            String newFileName = FilesystemUtil.getNewFileName(
+                    file.toAbsolutePath().toString(), destFolderEntity.getFolderFullPath()
+            );
             destFileFullPath = destFolderEntity.getFolderFullPath() +
                     FilesystemUtil.getPathSeparator() +
-                    FilesystemUtil.getNewFileName(destFileFullPath);
+                    newFileName;
         }
         return destFileFullPath;
     }

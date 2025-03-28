@@ -275,9 +275,13 @@ public class SyncFlowController {
                         "system config SyncStoragePath is null. " +
                         "system config is :%s".formatted(systemConfig));
             }
+            String newFolderName = FilesystemUtil.getNewFolderName(
+                    createSyncFlowRequest.getSourceFolderFullPath(),
+                    systemConfig.getSyncStoragePath()
+            );
             String destFolderPath = systemConfig.getSyncStoragePath() +
                     FilesystemUtil.getPathSeparator() +
-                    FilesystemUtil.getNewFolderName(createSyncFlowRequest.getSourceFolderFullPath());
+                    newFolderName;
             createSyncFlowRequest.setDestFolderFullPath(destFolderPath);
         }
         // 检查 sourceFolder 和 destFolder
