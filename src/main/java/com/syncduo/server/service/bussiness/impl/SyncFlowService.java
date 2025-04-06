@@ -36,7 +36,32 @@ public class SyncFlowService
         implements ISyncFlowService {
 
     // <folderId, syncFlowStatus>
+    // 其中 syncFlowStatus 的 source folder id = map 的 key(folderId)
     private final Map<Long, List<SyncFlowStatus>> cacheMap = new ConcurrentHashMap<>();
+
+    public SyncFlowEntity getBySyncFlowIdFromCache(Long syncFlowId) throws SyncDuoException {
+        // 遍历 map, 查看是否有
+        Set<Map.Entry<Long, List<SyncFlowStatus>>> entries = this.cacheMap.entrySet();
+        for (Map.Entry<Long, List<SyncFlowStatus>> entry : entries) {
+            for (SyncFlowStatus syncFlowStatus : entry.getValue()) {
+                if (syncFlowStatus.getSyncFlowEntity().getSyncFlowId().equals(syncFlowId)) {
+                    return syncFlowStatus.getSyncFlowEntity();
+                }
+            }
+        }
+        // 没有则直接查询数据库
+        SyncFlowEntity syncFlowEntity = this.getById(syncFlowId);
+        if (ObjectUtils.isEmpty(syncFlowEntity)) {
+            return syncFlowEntity;
+        }
+        // 并更新到 cacheMap 中
+        for (Map.Entry<Long, List<SyncFlowStatus>> entry : entries) {
+            if (entry.getKey().equals(syncFlowEntity.getSourceFolderId())) {
+                entry.getValue().add(new SyncFlowStatus(syncFlowEntity));
+            }
+        }
+        return syncFlowEntity;
+    }
 
     public List<SyncFlowEntity> getBySourceIdFromCache(Long folderId) throws SyncDuoException {
         List<SyncFlowStatus> syncFlowStatusList = this.doubleQueryCache(folderId);

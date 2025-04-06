@@ -32,8 +32,6 @@ public class FileSystemEventHandler implements DisposableBean {
 
     private final FileSyncMappingService fileSyncMappingService;
 
-    private final SyncFlowService syncFlowService;
-
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     private final FileAccessValidator fileAccessValidator;
@@ -46,7 +44,6 @@ public class FileSystemEventHandler implements DisposableBean {
                                   FolderService folderService,
                                   FileEventService fileEventService,
                                   FileSyncMappingService fileSyncMappingService,
-                                  SyncFlowService syncFlowService,
                                   ThreadPoolTaskExecutor threadPoolTaskExecutor,
                                   FileAccessValidator fileAccessValidator) {
         this.systemBus = systemBus;
@@ -54,7 +51,6 @@ public class FileSystemEventHandler implements DisposableBean {
         this.folderService = folderService;
         this.fileEventService = fileEventService;
         this.fileSyncMappingService = fileSyncMappingService;
-        this.syncFlowService = syncFlowService;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
         this.fileAccessValidator = fileAccessValidator;
     }
@@ -91,8 +87,8 @@ public class FileSystemEventHandler implements DisposableBean {
                 fileSystemEvent.getFile()
         );
         if (ObjectUtils.isNotEmpty(fileEntity)) {
-            throw new SyncDuoException("onFileCreate failed. fileEntity already exist!." +
-                    "fileEvent is %s".formatted(fileSystemEvent));
+            log.error("onFileCreate failed. fileEntity already exist!. fileEvent is {}", fileSystemEvent);
+            return;
         }
         // 创建文件记录
         fileEntity = this.fileService.createFileRecord(
@@ -112,8 +108,8 @@ public class FileSystemEventHandler implements DisposableBean {
                 fileSystemEvent.getFile()
         );
         if (ObjectUtils.isEmpty(fileEntity)) {
-            throw new SyncDuoException("onFileChange failed. fileEntity is not exist." +
-                    "fileEvent is %s".formatted(fileSystemEvent));
+            log.warn("onFileChange failed. fileEntity is not exist. fileEvent is {}", fileSystemEvent);
+            return;
         }
         // 更新 file entity
         this.fileService.updateFileEntityByFile(
@@ -136,8 +132,8 @@ public class FileSystemEventHandler implements DisposableBean {
                     fileSystemEvent.getFile()
             );
             if (ObjectUtils.isEmpty(fileEntity)) {
-                throw new SyncDuoException("onFileDelete failed. can't find fileEntity." +
-                        "fileEvent is %s".formatted(fileSystemEvent));
+                log.warn("onFileDelete failed. fileEntity is not exist. fileEvent is {}", fileSystemEvent);
+                return;
             }
         }
         // 删除 file entity

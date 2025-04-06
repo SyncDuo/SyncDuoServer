@@ -268,6 +268,8 @@ public class SyncFlowController {
                             "syncFlowType is %s".formatted(createSyncFlowRequest.getSyncFlowType()));
         }
         // sync flow type 是 sync, 则从配置信息获取存储位置, destFolderPath = <storage_path>/random_name
+        // 且 sync flow setting 是 MIRROR
+        // 且 filterCriteria 是 []
         if (SyncFlowTypeEnum.SYNC.equals(syncFlowTypeEnum)) {
             SystemConfigEntity systemConfig = this.systemConfigService.getSystemConfig();
             if (ObjectUtils.isEmpty(systemConfig) || StringUtils.isBlank(systemConfig.getSyncStoragePath())) {
@@ -283,6 +285,8 @@ public class SyncFlowController {
                     FilesystemUtil.getPathSeparator() +
                     newFolderName;
             createSyncFlowRequest.setDestFolderFullPath(destFolderPath);
+            createSyncFlowRequest.setSyncSettingEnum(SyncSettingEnum.MIRROR);
+            createSyncFlowRequest.setFilters(Collections.emptyList());
         }
         // 检查 sourceFolder 和 destFolder
         String sourceFolderFullPath = createSyncFlowRequest.getSourceFolderFullPath();

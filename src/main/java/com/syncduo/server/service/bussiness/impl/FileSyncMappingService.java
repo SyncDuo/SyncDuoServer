@@ -13,6 +13,7 @@ import com.syncduo.server.service.bussiness.IFileSyncMappingService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.ibatis.executor.BatchResult;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -39,11 +40,17 @@ public class FileSyncMappingService
         if (ObjectUtils.isEmpty(fileId)) {
             throw new SyncDuoException("desyncByFileId failed. fileId is null");
         }
-        LambdaUpdateWrapper<FileSyncMappingEntity> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(FileSyncMappingEntity::getSourceFileId, fileId);
-        updateWrapper.set(FileSyncMappingEntity::getFileDesync, FileDesyncEnum.FILE_DESYNC.getCode());
-        boolean update = this.update(updateWrapper);
-        if (!update) {
+        LambdaQueryWrapper<FileSyncMappingEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FileSyncMappingEntity::getSourceFileId, fileId);
+        List<FileSyncMappingEntity> dbResult = this.list(queryWrapper);
+        if (CollectionUtils.isEmpty(dbResult)) {
+            return;
+        }
+        for (FileSyncMappingEntity fileSyncMappingEntity : dbResult) {
+            fileSyncMappingEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
+        }
+        List<BatchResult> update = this.baseMapper.updateById(dbResult);
+        if (CollectionUtils.isEmpty(update)) {
             throw new SyncDuoException("desyncByFileId failed. can't not update database");
         }
     }
@@ -52,11 +59,17 @@ public class FileSyncMappingService
         if (ObjectUtils.isEmpty(fileId)) {
             throw new SyncDuoException("desyncByFileId failed. fileId is null");
         }
-        LambdaUpdateWrapper<FileSyncMappingEntity> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(FileSyncMappingEntity::getDestFileId, fileId);
-        updateWrapper.set(FileSyncMappingEntity::getFileDesync, FileDesyncEnum.FILE_DESYNC.getCode());
-        boolean update = this.update(updateWrapper);
-        if (!update) {
+        LambdaQueryWrapper<FileSyncMappingEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FileSyncMappingEntity::getDestFileId, fileId);
+        List<FileSyncMappingEntity> dbResult = this.list(queryWrapper);
+        if (CollectionUtils.isEmpty(dbResult)) {
+            return;
+        }
+        for (FileSyncMappingEntity fileSyncMappingEntity : dbResult) {
+            fileSyncMappingEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
+        }
+        List<BatchResult> update = this.baseMapper.updateById(dbResult);
+        if (CollectionUtils.isEmpty(update)) {
             throw new SyncDuoException("desyncByFileId failed. can't not update database");
         }
     }

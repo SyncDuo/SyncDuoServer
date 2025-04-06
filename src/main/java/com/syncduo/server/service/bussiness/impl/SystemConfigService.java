@@ -27,6 +27,10 @@ public class SystemConfigService
 
         public SystemConfigEntity systemConfigEntity;
 
+        public void clearCache() {
+            this.systemConfigEntity = null;
+        }
+
         public SystemConfigEntity getSystemConfig() {
             if (ObjectUtils.isNotEmpty(systemConfigEntity)) {
                 return this.systemConfigEntity;
@@ -41,39 +45,24 @@ public class SystemConfigService
             return this.systemConfigEntity;
         }
 
-        public SystemConfigEntity updateConfigEntity(SystemConfigEntity systemConfigEntity) throws SyncDuoException {
-            if (ObjectUtils.isEmpty(systemConfigEntity)) {
-                throw new SyncDuoException("updateConfigEntity failed. systemConfigEntity is null.");
-            }
-            if (ObjectUtils.isEmpty(this.systemConfigEntity)) {
-                boolean saved = this.save(systemConfigEntity);
-                if (!saved) {
-                    throw new SyncDuoException("updateConfigEntity failed. " +
-                            "can't write to database.");
+        public SystemConfigEntity updateSystemConfig(SystemConfigEntity systemConfigEntity) throws SyncDuoException {
+            if (ObjectUtils.isEmpty(systemConfigEntity.getSystemConfigId())) {
+                if (ObjectUtils.isNotEmpty(this.systemConfigEntity)) {
+                    // 没有主键 ID, 但是有缓存, 说明使用错误
+                    throw new SyncDuoException("updateSystemConfig failed. systemConfigId is null");
                 }
-                this.systemConfigEntity = systemConfigEntity;
-                return this.systemConfigEntity;
-            }
-            Long systemConfigId = systemConfigEntity.getSystemConfigId();
-            Class<? extends SystemConfigEntity> clazz = systemConfigEntity.getClass();
-            for (Field declaredField : clazz.getDeclaredFields()) {
-                declaredField.setAccessible(true);
-                try {
-                    Object sourceValue = declaredField.get(systemConfigEntity);
-                    if (ObjectUtils.isNotEmpty(sourceValue)) {
-                        declaredField.set(this.systemConfigEntity, sourceValue);
-                    }
-                } catch (IllegalAccessException e) {
-                    throw new SyncDuoException("updateConfigEntity failed. " +
-                            "field %s not accessible.".formatted(declaredField));
+                // 如果没有主键 ID 且目前没有缓存, 则新建
+                boolean save = this.save(systemConfigEntity);
+                if (!save) {
+                    throw new SyncDuoException("updateSystemConfig failed. can't write to database.");
                 }
             }
-            this.systemConfigEntity.setSystemConfigId(systemConfigId);
-            boolean update = this.updateById(this.systemConfigEntity);
-            if (!update) {
-                throw new SyncDuoException("updateConfigEntity failed. " +
-                        "can't write to database.");
+            // 如果有主键 ID, 则覆盖或新增缓存
+            int count = this.baseMapper.updateById(systemConfigEntity);
+            if (count != 1) {
+                throw new SyncDuoException("updateSystemConfig failed. can't write to database.");
             }
+            this.systemConfigEntity = systemConfigEntity;
             return this.systemConfigEntity;
         }
 }

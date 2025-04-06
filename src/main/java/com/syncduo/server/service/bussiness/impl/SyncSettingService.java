@@ -31,7 +31,7 @@ public class SyncSettingService
     public SyncSettingEntity createSyncSetting(Long syncFlowId, List<String> filters, SyncSettingEnum syncSettingEnum)
             throws SyncDuoException {
         if (ObjectUtils.anyNull(syncFlowId, syncSettingEnum)) {
-            throw new SyncDuoException("创建 syncSetting 失败, syncFlowId 或 flattenFolder 为空");
+            throw new SyncDuoException("创建 syncSetting 失败, syncFlowId 或 syncSettingEnum 为空");
         }
         SyncSettingEntity syncSettingEntity = new SyncSettingEntity();
         syncSettingEntity.setSyncFlowId(syncFlowId);

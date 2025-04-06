@@ -1,5 +1,7 @@
 package com.syncduo.server;
 
+import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -7,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
@@ -117,6 +120,44 @@ public class FileOperationTestUtil {
         writeRandomBinaryData(binFile);
 
         return new ImmutablePair<>(txtFile, binFile);
+    }
+
+    public static List<Path> modifyFile(Path folderPath, int number) throws IOException {
+        List<Path> files = new ArrayList<>(number);
+        // 获取所有文件
+        List<Path> allFile = getAllFile(folderPath);
+        // 遍历 number 个文件, 并修改, 且作为结果返回
+        int cur = 0;
+        for (Path file : allFile) {
+            if (cur == number) {
+                break;
+            }
+            if (file.getFileName().toString().contains("txt")) {
+                writeToTextFile(file);
+            } else {
+                writeRandomBinaryData(file);
+            }
+            cur++;
+            files.add(file);
+        }
+        return files;
+    }
+
+    public static List<Path> deleteFile(Path folderPath, int number) throws IOException, SyncDuoException {
+        List<Path> files = new ArrayList<>(number);
+        // 获取所有文件
+        List<Path> allFile = getAllFile(folderPath);
+        // 遍历 number 个文件, 并删除, 且作为结果返回
+        int cur = 0;
+        for (Path file : allFile) {
+            if (cur == number) {
+                break;
+            }
+            FilesystemUtil.deleteFile(file);
+            cur++;
+            files.add(file);
+        }
+        return files;
     }
 
     public static List<Path> getAllFile(Path folder) throws IOException {

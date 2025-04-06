@@ -43,6 +43,7 @@ public class ApplicationLifeCycleConfig {
     public void startUp() throws SyncDuoException {
         // 系统启动扫描
         if ("prod".equals(activeProfile)) {
+            log.info("Starting up production environment");
             // 获取系统设置
             this.systemConfigService.getSystemConfig();
             // 检查全部 sync-flow 是否同步
@@ -50,6 +51,8 @@ public class ApplicationLifeCycleConfig {
             // "旧的folder" 在 @BeforeEach 中删除, 后续触发的事件会发生异常
             // 所以需要判断当前 profile 是否为 test, 不为 test 才执行 systemStartUp
             this.systemManagementService.systemStartUp();
+        } else {
+            log.info("Starting up development environment");
         }
         // 启动 handler
         fileSystemEventHandler.startHandle();
