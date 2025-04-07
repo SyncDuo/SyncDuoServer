@@ -91,7 +91,54 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByDeleteFile() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenTriggerWatcherByDeleteFileTransform() throws IOException, SyncDuoException {
+        // 创建 syncflow
+        createSyncFlowTransform("[\"txt\"]");
+        for (int i = 0; i < 13; i++) {
+            waitAllFileHandle();
+        }
+        // 源文件夹修改文件
+        List<Path> modifiedFile = FileOperationTestUtil.deleteFile(Path.of(sourceFolderPath), 2);
+        // 等待文件处理
+        waitAllFileHandle();
+        // 判断 fileEvent 是否处理正确
+        modifiedFile.removeIf(file -> file.getFileName().toString().contains("txt"));
+        checkIsFileEventHandleCorrectWhenDeleteFile(modifiedFile);
+    }
+
+    @Test
+    void ShouldReturnTrueWhenTriggerWatcherByModifyFileTransform() throws IOException, SyncDuoException {
+        // 创建 syncflow
+        createSyncFlowTransform("[\"txt\"]");
+        for (int i = 0; i < 13; i++) {
+            waitAllFileHandle();
+        }
+        // 源文件夹修改文件
+        List<Path> modifiedFile = FileOperationTestUtil.modifyFile(Path.of(sourceFolderPath), 2);
+        // 等待文件处理
+        waitAllFileHandle();
+        // 判断 fileEvent 是否处理正确
+        modifiedFile.removeIf(file -> file.getFileName().toString().contains("txt"));
+        checkIsFileEventHandleCorrectWhenChangeFile(modifiedFile);
+    }
+
+    @Test
+    void ShouldReturnTrueWhenTriggerWatcherByCreateFileTransform() throws IOException, SyncDuoException {
+        // 创建 syncflow
+        createSyncFlowTransform("[\"txt\"]");
+        for (int i = 0; i < 13; i++) {
+            waitAllFileHandle();
+        }
+        // 源文件夹创建文件
+        Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
+        List<Path> files = new ArrayList<>();
+        files.add(txtAndBinFile.getRight());
+        // 判断 fileEvent 是否处理正确
+        checkIsFileEventHandleCorrectWhenCreateFile(files);
+    }
+
+    @Test
+    void ShouldReturnTrueWhenTriggerWatcherByDeleteFileMirrored() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlowMirror();
         for (int i = 0; i < 13; i++) {
@@ -106,7 +153,7 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByModifyFile() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenTriggerWatcherByModifyFileMirrored() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlowMirror();
         for (int i = 0; i < 13; i++) {
@@ -121,7 +168,7 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByCreateFile() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenTriggerWatcherByCreateFileMirrored() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlowMirror();
         for (int i = 0; i < 13; i++) {
