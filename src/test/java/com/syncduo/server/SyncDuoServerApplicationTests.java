@@ -67,6 +67,9 @@ class SyncDuoServerApplicationTests {
     private static final String contentFolderParentPath = testParentPath + "/contentParentFolder";
 
     private static final String contentFolderPath = contentFolderParentPath + "/" + sourceFolderName;
+    
+    // delay 函数延迟的时间, 单位"秒"
+    private static final int DELAY_UNIT = 6;
 
     @Autowired
     SyncDuoServerApplicationTests(
@@ -91,12 +94,38 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
+    void ShouldReturnTrueWhenDeleteSyncFlow() throws IOException, SyncDuoException {
+        // 创建 syncflow
+        createSyncFlowTransform("[\"txt\"]");
+        waitAllFileHandle();
+        // 删除 syncflow
+        DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
+        deleteSyncFlowRequest.setSyncFlowId(Long.valueOf(
+                this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
+        );
+        this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
+        // 源文件夹创建文件
+        Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
+        // 目的文件夹没有文件增加
+        List<Path> allFileInFolder = FilesystemUtil.getAllFileInFolder(contentFolderPath);
+        boolean sameTextFile = false;
+        boolean sameBinFile = false;
+        for (Path file : allFileInFolder) {
+            if (txtAndBinFile.getLeft().getFileName().equals(file.getFileName())) {
+                sameTextFile = true;
+            } else if (txtAndBinFile.getRight().getFileName().equals(file.getFileName())) {
+                sameBinFile = true;
+            }
+        }
+
+        assert !sameTextFile && !sameBinFile;
+    }
+
+    @Test
     void ShouldReturnTrueWhenTriggerWatcherByDeleteFileTransform() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlowTransform("[\"txt\"]");
-        for (int i = 0; i < 13; i++) {
-            waitAllFileHandle();
-        }
+waitAllFileHandle();
         // 源文件夹修改文件
         List<Path> modifiedFile = FileOperationTestUtil.deleteFile(Path.of(sourceFolderPath), 2);
         // 等待文件处理
@@ -110,9 +139,7 @@ class SyncDuoServerApplicationTests {
     void ShouldReturnTrueWhenTriggerWatcherByModifyFileTransform() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlowTransform("[\"txt\"]");
-        for (int i = 0; i < 13; i++) {
-            waitAllFileHandle();
-        }
+waitAllFileHandle();
         // 源文件夹修改文件
         List<Path> modifiedFile = FileOperationTestUtil.modifyFile(Path.of(sourceFolderPath), 2);
         // 等待文件处理
@@ -126,9 +153,7 @@ class SyncDuoServerApplicationTests {
     void ShouldReturnTrueWhenTriggerWatcherByCreateFileTransform() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlowTransform("[\"txt\"]");
-        for (int i = 0; i < 13; i++) {
-            waitAllFileHandle();
-        }
+waitAllFileHandle();
         // 源文件夹创建文件
         Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
         List<Path> files = new ArrayList<>();
@@ -141,9 +166,7 @@ class SyncDuoServerApplicationTests {
     void ShouldReturnTrueWhenTriggerWatcherByDeleteFileMirrored() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlowMirror();
-        for (int i = 0; i < 13; i++) {
-            waitAllFileHandle();
-        }
+waitAllFileHandle();
         // 源文件夹修改文件
         List<Path> modifiedFile = FileOperationTestUtil.deleteFile(Path.of(sourceFolderPath), 2);
         // 等待文件处理
@@ -156,9 +179,7 @@ class SyncDuoServerApplicationTests {
     void ShouldReturnTrueWhenTriggerWatcherByModifyFileMirrored() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlowMirror();
-        for (int i = 0; i < 13; i++) {
-            waitAllFileHandle();
-        }
+waitAllFileHandle();
         // 源文件夹修改文件
         List<Path> modifiedFile = FileOperationTestUtil.modifyFile(Path.of(sourceFolderPath), 2);
         // 等待文件处理
@@ -171,9 +192,7 @@ class SyncDuoServerApplicationTests {
     void ShouldReturnTrueWhenTriggerWatcherByCreateFileMirrored() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlowMirror();
-        for (int i = 0; i < 13; i++) {
-            waitAllFileHandle();
-        }
+waitAllFileHandle();
         // 源文件夹创建文件
         Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
         List<Path> files = new ArrayList<>();
@@ -268,9 +287,7 @@ class SyncDuoServerApplicationTests {
         // fixme: 处理 fileSystemEvent 的时候会报错 fileEntity 已存在
         String filterCriteria = "[\"bin\"]";
         createSyncFlowTransformFlatten(filterCriteria);
-        for (int i = 0; i < 13; i++) {
-            waitAllFileHandle();
-        }
+waitAllFileHandle();
 
         SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(
                 Long.valueOf(
@@ -284,9 +301,7 @@ class SyncDuoServerApplicationTests {
         // fixme: 处理 fileSystemEvent 的时候会报错 fileEntity 已存在
         String filterCriteria = "[\"bin\"]";
         createSyncFlowTransform(filterCriteria);
-        for (int i = 0; i < 13; i++) {
-            waitAllFileHandle();
-        }
+waitAllFileHandle();
 
         SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(
                 Long.valueOf(
@@ -298,9 +313,7 @@ class SyncDuoServerApplicationTests {
     @Test
     void ShouldReturnTrueWhenCreateSyncFlowSync() {
         createSyncFlowMirror();
-        for (int i = 0; i < 13; i++) {
-            waitAllFileHandle();
-        }
+waitAllFileHandle();
 
         SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(
                 Long.valueOf(
@@ -357,7 +370,7 @@ class SyncDuoServerApplicationTests {
 
     void waitAllFileHandle() {
         try {
-            Thread.sleep(1000 * 6);
+            Thread.sleep(1000 * DELAY_UNIT);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

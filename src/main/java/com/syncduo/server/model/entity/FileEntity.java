@@ -31,7 +31,6 @@ public class FileEntity extends BaseEntity {
 
     private Long folderId;
 
-
     // always starts with "/"
     // if no sub folder, then only contains "/"
     // else ends with "folder name"

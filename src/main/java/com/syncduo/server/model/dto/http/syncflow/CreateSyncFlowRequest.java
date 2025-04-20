@@ -21,7 +21,7 @@ public class CreateSyncFlowRequest {
 
     private String syncFlowName;
 
-    private String syncFlowType;
+    private String syncFlowType; // 当 syncflow type = sync 时, sync setting 和 filterCriteria 失效
 
     @JsonIgnore
     private Path sourceFolder; // 这个变量用于内部业务逻辑使用, 不参与序列化/反序列化
