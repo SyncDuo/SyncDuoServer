@@ -2,10 +2,8 @@ package com.syncduo.server.bus;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.internal.DownStreamEvent;
 import com.syncduo.server.model.internal.FileSystemEvent;
-import com.syncduo.server.model.internal.RefilterEvent;
 import com.syncduo.server.service.bussiness.impl.SyncFlowService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +28,7 @@ public class SystemBus {
 
     public void sendFileEvent(FileSystemEvent fileSystemEvent) throws SyncDuoException {
         log.debug("fileEvent: {}", fileSystemEvent);
-        this.fileSystemEventQueue.add(fileSystemEvent);
+        this.fileSystemEventQueue.offer(fileSystemEvent);
     }
 
     public FileSystemEvent getFileEvent() {

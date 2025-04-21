@@ -63,6 +63,7 @@ public class FileSystemEventHandler implements DisposableBean {
                     fileAccessValidator.isFileEventInValid(fileSystemEvent.getFolderId())) {
                 continue;
             }
+            log.debug("fileSystemEvent is: {}", fileSystemEvent);
             this.threadPoolTaskExecutor.submit(() -> {
                 try {
                     switch (fileSystemEvent.getFileEventTypeEnum()) {
@@ -87,7 +88,10 @@ public class FileSystemEventHandler implements DisposableBean {
                 fileSystemEvent.getFile()
         );
         if (ObjectUtils.isNotEmpty(fileEntity)) {
-            log.error("onFileCreate failed. fileEntity already exist!. fileEvent is {}", fileSystemEvent);
+            // 文件重复不是一个错误, 因为在这个系统设计里面, 有负反馈机制
+            // 1. 文件创建在 folder a, 通过 downStreamHandler, 文件会复制到 folder b 并创建 file entity
+            // 2. 此时就会触发 watcher b, 从而报出 file entity 已存在
+            log.debug("fileEntity already exist!. fileEvent is {}", fileSystemEvent);
             return;
         }
         // 创建文件记录

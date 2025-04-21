@@ -1,4 +1,4 @@
-package com.syncduo.server.model.dto.event;
+package com.syncduo.server.model.internal;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.enums.RootFolderTypeEnum;

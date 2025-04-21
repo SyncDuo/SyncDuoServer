@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// todo
+
 @SpringBootTest
 @ActiveProfiles("test")
 @TestPropertySource(properties = "spring.profiles.active=test")
@@ -126,7 +126,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlowTransform("[\"txt\"]");
         waitAllFileHandle();
-        // 源文件夹修改文件
+        // 源文件夹删除文件
         List<Path> modifiedFile = FileOperationTestUtil.deleteFile(Path.of(sourceFolderPath), 2);
         // 等待文件处理
         waitAllFileHandle();
@@ -284,7 +284,6 @@ class SyncDuoServerApplicationTests {
 
     @Test
     void ShouldReturnTrueWhenCreateSyncFlowTransformFlatten() {
-        // fixme: 处理 fileSystemEvent 的时候会报错 fileEntity 已存在
         String filterCriteria = "[\"bin\"]";
         createSyncFlowTransformFlatten(filterCriteria);
         waitAllFileHandle();
@@ -298,7 +297,6 @@ class SyncDuoServerApplicationTests {
 
     @Test
     void ShouldReturnTrueWhenCreateSyncFlowTransform() {
-        // fixme: 处理 fileSystemEvent 的时候会报错 fileEntity 已存在
         String filterCriteria = "[\"bin\"]";
         createSyncFlowTransform(filterCriteria);
         waitAllFileHandle();
