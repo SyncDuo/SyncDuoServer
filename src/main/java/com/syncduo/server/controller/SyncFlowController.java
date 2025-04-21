@@ -17,15 +17,14 @@ import com.syncduo.server.service.facade.SystemManagementService;
 import com.syncduo.server.util.FilesystemUtil;
 import com.syncduo.server.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,6 +32,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/sync-flow")
 @Slf4j
+@CrossOrigin
 public class SyncFlowController {
     private final FolderService folderService;
 
@@ -216,6 +216,53 @@ public class SyncFlowController {
                 .syncFlowName(syncFlowEntity.getSyncFlowName())
                 .build();
         return SyncFlowResponse.onSuccess("删除 syncFlow 成功", Collections.singletonList(syncFlowInfo));
+    }
+
+    @GetMapping("/get-sync-flow")
+    public SyncFlowResponse getSyncFlow() {
+        // 查询全部 sync-flow
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        if (CollectionUtils.isEmpty(allSyncFlow)) {
+            return SyncFlowResponse.onSuccess("没有正在运行的 sync flow", null);
+        }
+        // 设置返回结果
+        List<SyncFlowInfo> syncFlowInfoList = new ArrayList<>();
+        for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
+            FolderEntity sourceFolderEntity = this.folderService.getById(syncFlowEntity.getSourceFolderId());
+            FolderEntity destFolderEntity = this.folderService.getById(syncFlowEntity.getDestFolderId());
+            // 获取同步设置
+            SyncSettingEntity syncSettingEntity;
+            try {
+                syncSettingEntity = this.syncSettingService.getBySyncFlowId(syncFlowEntity.getSyncFlowId());
+            } catch (SyncDuoException e) {
+                return SyncFlowResponse.onError("获取 sync flow 失败. 异常信息 " + e.getMessage());
+            }
+            SyncSettingEnum syncSettingEnum = SyncSettingEnum.getByCode(syncSettingEntity.getSyncMode());
+            if (ObjectUtils.isEmpty(syncSettingEntity) || syncSettingEnum == null) {
+                return SyncFlowResponse.onError("获取 sync flow 失败. 异常信息 "
+                        + "sync mode " + syncSettingEntity.getSyncMode() + "无法识别");
+            }
+            // 获取文件夹信息
+            List<Long> folderInfo;
+            try {
+                folderInfo = FilesystemUtil.getFolderInfo(destFolderEntity.getFolderFullPath());
+            } catch (SyncDuoException e) {
+                return SyncFlowResponse.onError("获取 sync flow 失败. 异常信息 " + e.getMessage());
+            }
+            SyncFlowInfo syncFlowInfo = SyncFlowInfo.builder()
+                    .syncFlowId(syncFlowEntity.getSyncFlowId().toString())
+                    .syncFlowName(syncFlowEntity.getSyncFlowName())
+                    .sourceFolderPath(sourceFolderEntity.getFolderFullPath())
+                    .destFolderPath(destFolderEntity.getFolderFullPath())
+                    .syncSettings(syncSettingEnum.name())
+                    .ignorePatten(syncSettingEntity.getFilterCriteria())
+                    .syncStatus(syncFlowEntity.getSyncStatus())
+                    .lastSyncTimeStamp(syncFlowEntity.getLastSyncTime().toString())
+                    .build();
+            syncFlowInfo.setFolderStats(folderInfo.get(0), folderInfo.get(1), folderInfo.get(2));
+            syncFlowInfoList.add(syncFlowInfo);
+        }
+        return SyncFlowResponse.onSuccess("创建 syncflow 成功", syncFlowInfoList);
     }
 
     private void checkAndCreateDestFolder(CreateSyncFlowRequest createSyncFlowRequest) throws SyncDuoException {

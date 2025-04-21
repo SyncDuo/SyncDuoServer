@@ -24,8 +24,8 @@ public class SyncFlowInfo {
 
     private String lastSyncTimeStamp;
 
-    public void setFolderStats(String fileCount, String folderCount, String space) {
-        this.destFolderStats = new FolderStats(fileCount, folderCount, space);
+    public void setFolderStats(Long fileCount, Long folderCount, Long space) {
+        this.destFolderStats = new FolderStats(fileCount.toString(), folderCount.toString(), space.toString());
     }
 
     @AllArgsConstructor
