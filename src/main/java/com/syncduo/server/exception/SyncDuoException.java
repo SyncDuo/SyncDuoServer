@@ -6,6 +6,10 @@ public class SyncDuoException extends Exception {
         super(message);
     }
 
+    public SyncDuoException(Exception e) {
+        super(e);
+    }
+
     public SyncDuoException(String message, Throwable cause) {
         super(message, cause);
     }

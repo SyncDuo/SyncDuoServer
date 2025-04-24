@@ -1,7 +1,6 @@
-package com.syncduo.server.model.dto.http.filesystem;
+package com.syncduo.server.model.http.filesystem;
 
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.List;

@@ -39,13 +39,17 @@ public class SystemConfigService
             queryWrapper.eq(SystemConfigEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
             List<SystemConfigEntity> dbResult = this.list(queryWrapper);
             if (CollectionUtils.isEmpty(dbResult)) {
-                return null;
+                this.systemConfigEntity = null;
+            } else {
+                this.systemConfigEntity = dbResult.get(0);
             }
-            this.systemConfigEntity = dbResult.get(0);
             return this.systemConfigEntity;
         }
 
         public SystemConfigEntity updateSystemConfig(SystemConfigEntity systemConfigEntity) throws SyncDuoException {
+            if (ObjectUtils.isEmpty(systemConfigEntity)) {
+                throw new SyncDuoException("updateSystemConfig failed. systemConfigEntity is null");
+            }
             if (ObjectUtils.isEmpty(systemConfigEntity.getSystemConfigId())) {
                 if (ObjectUtils.isNotEmpty(this.systemConfigEntity)) {
                     // 没有主键 ID, 但是有缓存, 说明使用错误

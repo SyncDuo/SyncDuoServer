@@ -1,4 +1,4 @@
-package com.syncduo.server.model.dto.http.syncflow;
+package com.syncduo.server.model.http.syncflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.syncduo.server.enums.SyncFlowTypeEnum;

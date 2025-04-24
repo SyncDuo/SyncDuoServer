@@ -1,8 +1,8 @@
 package com.syncduo.server.controller;
 
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.dto.http.filesystem.FileSystemResponse;
-import com.syncduo.server.model.dto.http.filesystem.Folder;
+import com.syncduo.server.model.http.filesystem.FileSystemResponse;
+import com.syncduo.server.model.http.filesystem.Folder;
 import com.syncduo.server.util.FilesystemUtil;
 import com.syncduo.server.util.SystemInfoUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +43,9 @@ public class FileSystemAccessController {
                 return FileSystemResponse.onSuccess("no subfolders");
             }
             // 最相似的文件夹, 放在最前面
-            subfolders.sort(Comparator.comparingInt(
-                    subfolder -> getSimilarityScore(subfolder.getFileName().toString(), path)));
+            Comparator<Path> similarityComparator = Comparator.comparingInt(
+                    (Path subfolder) -> getSimilarityScore(subfolder.toAbsolutePath().toString(), path)).reversed();
+            subfolders.sort(similarityComparator);
             List<Folder> folderList = subfolders.stream().map(Folder::new).toList();
             return FileSystemResponse.onSuccess("getSubfolders success.", folderList);
         } catch (SyncDuoException e) {
@@ -62,14 +63,14 @@ public class FileSystemAccessController {
      * @return An integer score representing the similarity.
      */
     private static int getSimilarityScore(String subfolder, String inputPath) {
-        // Return the number of matching characters from the start of both paths
-        int score = 0;
-        String subfolderName = Paths.get(subfolder).getFileName().toString();
-        String inputName = Paths.get(inputPath).getFileName().toString();
+        String base = Paths.get(subfolder).normalize().toString().toLowerCase();
+        String input = Paths.get(inputPath).normalize().toString().toLowerCase();
 
-        // Compare both the input path and the subfolder name, character by character
-        for (int i = 0; i < Math.min(subfolderName.length(), inputName.length()); i++) {
-            if (subfolderName.charAt(i) == inputName.charAt(i)) {
+        int score = 0;
+        int minCount = Math.min(base.length(), input.length());
+
+        for (int i = 0; i < minCount; i++) {
+            if (base.charAt(i) == input.charAt(i)) {
                 score++;
             } else {
                 break;

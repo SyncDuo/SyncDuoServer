@@ -1,4 +1,4 @@
-package com.syncduo.server.model.dto.http.filesystem;
+package com.syncduo.server.model.http.filesystem;
 
 import lombok.Data;
 

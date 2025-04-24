@@ -1,7 +1,6 @@
-package com.syncduo.server.model.dto.http.syncflow;
+package com.syncduo.server.model.http.syncflow;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.util.List;

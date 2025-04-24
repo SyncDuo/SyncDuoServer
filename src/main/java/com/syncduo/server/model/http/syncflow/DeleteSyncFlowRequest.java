@@ -1,4 +1,4 @@
-package com.syncduo.server.model.dto.http.syncflow;
+package com.syncduo.server.model.http.syncflow;
 
 import lombok.Data;
 
