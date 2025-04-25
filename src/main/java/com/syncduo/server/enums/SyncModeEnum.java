@@ -3,7 +3,7 @@ package com.syncduo.server.enums;
 import lombok.Getter;
 
 @Getter
-public enum SyncSettingEnum {
+public enum SyncModeEnum {
     FLATTEN_FOLDER(1),
 
     MIRROR(0),
@@ -12,12 +12,12 @@ public enum SyncSettingEnum {
     private final int code;
 
 
-    SyncSettingEnum(int code) {
+    SyncModeEnum(int code) {
         this.code = code;
     }
 
-    public static SyncSettingEnum getByCode(int code) {
-        for (SyncSettingEnum e : SyncSettingEnum.values()) {
+    public static SyncModeEnum getByCode(int code) {
+        for (SyncModeEnum e : SyncModeEnum.values()) {
             if (e.code == code) {
                 return e;
             }

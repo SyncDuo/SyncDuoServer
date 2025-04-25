@@ -2,7 +2,7 @@ package com.syncduo.server.model.http.syncflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.syncduo.server.enums.SyncFlowTypeEnum;
-import com.syncduo.server.enums.SyncSettingEnum;
+import com.syncduo.server.enums.SyncModeEnum;
 import lombok.Data;
 
 import java.nio.file.Path;
@@ -17,7 +17,7 @@ public class CreateSyncFlowRequest {
 
     private String filterCriteria;
 
-    private String syncSetting;
+    private String syncMode;
 
     private String syncFlowName;
 
@@ -33,7 +33,7 @@ public class CreateSyncFlowRequest {
     private SyncFlowTypeEnum syncFlowTypeEnum; // 这个变量用于内部业务逻辑使用, 不参与序列化/反序列化
 
     @JsonIgnore
-    private SyncSettingEnum syncSettingEnum; // 这个变量用于内部业务逻辑使用, 不参与序列化/反序列化
+    private SyncModeEnum syncModeEnum; // 这个变量用于内部业务逻辑使用, 不参与序列化/反序列化
 
     @JsonIgnore
     private List<String> filters; // 这个变量用于内部业务逻辑使用, 不参与序列化/反序列化

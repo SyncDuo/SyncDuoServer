@@ -4,7 +4,7 @@ import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.enums.FileDesyncEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.enums.SyncFlowTypeEnum;
-import com.syncduo.server.enums.SyncSettingEnum;
+import com.syncduo.server.enums.SyncModeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.http.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.http.syncflow.DeleteSyncFlowRequest;
@@ -337,7 +337,7 @@ class SyncDuoServerApplicationTests {
     void createSyncFlowMirror() {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setSyncSetting(SyncSettingEnum.MIRROR.name());
+        createSyncFlowRequest.setSyncMode(SyncModeEnum.MIRROR.name());
         createSyncFlowRequest.setSyncFlowName("test");
         createSyncFlowRequest.setSyncFlowType(SyncFlowTypeEnum.SYNC.name());
         this.syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
@@ -348,7 +348,7 @@ class SyncDuoServerApplicationTests {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
         createSyncFlowRequest.setDestFolderFullPath(contentFolderPath);
-        createSyncFlowRequest.setSyncSetting(SyncSettingEnum.MIRROR.name());
+        createSyncFlowRequest.setSyncMode(SyncModeEnum.MIRROR.name());
         createSyncFlowRequest.setFilterCriteria(filterCriteria);
         createSyncFlowRequest.setSyncFlowName("test");
         createSyncFlowRequest.setSyncFlowType(SyncFlowTypeEnum.TRANSFORM.name());
@@ -359,7 +359,7 @@ class SyncDuoServerApplicationTests {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
         createSyncFlowRequest.setDestFolderFullPath(contentFolderPath);
-        createSyncFlowRequest.setSyncSetting(SyncSettingEnum.FLATTEN_FOLDER.name());
+        createSyncFlowRequest.setSyncMode(SyncModeEnum.FLATTEN_FOLDER.name());
         createSyncFlowRequest.setFilterCriteria(filterCriteria);
         createSyncFlowRequest.setSyncFlowName("test");
         createSyncFlowRequest.setSyncFlowType(SyncFlowTypeEnum.TRANSFORM.name());

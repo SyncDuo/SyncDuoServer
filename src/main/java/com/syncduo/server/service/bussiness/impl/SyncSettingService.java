@@ -2,11 +2,8 @@ package com.syncduo.server.service.bussiness.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.enums.SyncSettingEnum;
+import com.syncduo.server.enums.SyncModeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.SyncSettingMapper;
 import com.syncduo.server.model.entity.SyncSettingEntity;
@@ -28,14 +25,14 @@ public class SyncSettingService
         extends ServiceImpl<SyncSettingMapper, SyncSettingEntity>
         implements ISyncSettingService {
 
-    public SyncSettingEntity createSyncSetting(Long syncFlowId, List<String> filters, SyncSettingEnum syncSettingEnum)
+    public SyncSettingEntity createSyncSetting(Long syncFlowId, List<String> filters, SyncModeEnum syncModeEnum)
             throws SyncDuoException {
-        if (ObjectUtils.anyNull(syncFlowId, syncSettingEnum)) {
+        if (ObjectUtils.anyNull(syncFlowId, syncModeEnum)) {
             throw new SyncDuoException("创建 syncSetting 失败, syncFlowId 或 syncSettingEnum 为空");
         }
         SyncSettingEntity syncSettingEntity = new SyncSettingEntity();
         syncSettingEntity.setSyncFlowId(syncFlowId);
-        syncSettingEntity.setSyncMode(syncSettingEnum.getCode());
+        syncSettingEntity.setSyncMode(syncModeEnum.getCode());
         if (CollectionUtils.isEmpty(filters)) {
             filters = new ArrayList<>();
         }
@@ -64,12 +61,12 @@ public class SyncSettingService
         if (ObjectUtils.isEmpty(syncSettingEntity)) {
             throw new SyncDuoException("没有找到同步设置, syncFlowId %s".formatted(syncFlowId));
         }
-        SyncSettingEnum syncSettingEnum = SyncSettingEnum.getByCode(syncSettingEntity.getSyncMode());
-        if (ObjectUtils.isEmpty(syncSettingEnum)) {
+        SyncModeEnum syncModeEnum = SyncModeEnum.getByCode(syncSettingEntity.getSyncMode());
+        if (ObjectUtils.isEmpty(syncModeEnum)) {
             throw new SyncDuoException("无法读取 flatten folder 设置." +
                     "syncSettingEntity is %s".formatted(syncSettingEntity));
         }
-        return syncSettingEnum.equals(SyncSettingEnum.MIRROR);
+        return syncModeEnum.equals(SyncModeEnum.MIRROR);
     }
 
     public boolean isFilter(Long syncFlowId, Path file) throws SyncDuoException {

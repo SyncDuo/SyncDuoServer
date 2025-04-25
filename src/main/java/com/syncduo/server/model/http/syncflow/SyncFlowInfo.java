@@ -14,9 +14,11 @@ public class SyncFlowInfo {
 
     private String destFolderPath;
 
-    private String syncSettings;
+    private String syncMode;
 
     private String ignorePatten;
+
+    private String syncFlowType;
 
     private FolderStats destFolderStats;
 

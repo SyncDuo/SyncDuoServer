@@ -1,7 +1,7 @@
 package com.syncduo.server.controller;
 
 import com.syncduo.server.enums.SyncFlowTypeEnum;
-import com.syncduo.server.enums.SyncSettingEnum;
+import com.syncduo.server.enums.SyncModeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.http.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.http.syncflow.DeleteSyncFlowRequest;
@@ -121,12 +121,12 @@ public class SyncFlowController {
             syncSetting = this.syncSettingService.createSyncSetting(
                     syncFlowEntity.getSyncFlowId(),
                     createSyncFlowRequest.getFilters(),
-                    createSyncFlowRequest.getSyncSettingEnum()
+                    createSyncFlowRequest.getSyncModeEnum()
             );
         } catch (SyncDuoException e) {
             String errorMessage = "addSyncFlow failed. can't create sync setting." +
                     "filter is : %s.".formatted(createSyncFlowRequest.getFilterCriteria()) +
-                    "sync setting is : %s.".formatted(createSyncFlowRequest.getSyncSetting());
+                    "sync setting is : %s.".formatted(createSyncFlowRequest.getSyncMode());
             return this.generateSyncFlowErrorResponse(e, errorMessage);
         }
         // 创建 watcher
@@ -160,7 +160,7 @@ public class SyncFlowController {
                 .syncFlowName(syncFlowEntity.getSyncFlowName())
                 .sourceFolderPath(sourceFolderEntity.getFolderFullPath())
                 .destFolderPath(destFolderEntity.getFolderFullPath())
-                .syncSettings(createSyncFlowRequest.getSyncSetting())
+                .syncMode(createSyncFlowRequest.getSyncMode())
                 .ignorePatten(createSyncFlowRequest.getFilterCriteria())
                 .syncStatus(syncFlowEntity.getSyncStatus())
                 .build();
@@ -230,6 +230,12 @@ public class SyncFlowController {
         for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
             FolderEntity sourceFolderEntity = this.folderService.getById(syncFlowEntity.getSourceFolderId());
             FolderEntity destFolderEntity = this.folderService.getById(syncFlowEntity.getDestFolderId());
+            // 获取 syncflow type
+            SyncFlowTypeEnum syncFlowTypeEnum = SyncFlowTypeEnum.getByString(syncFlowEntity.getSyncFlowType());
+            if (ObjectUtils.isEmpty(syncFlowTypeEnum)) {
+                return SyncFlowResponse.onError("获取 sync flow 失败. 异常信息 "
+                        + "sync flow type " + syncFlowEntity.getSyncFlowType() + "无法识别");
+            }
             // 获取同步设置
             SyncSettingEntity syncSettingEntity;
             try {
@@ -237,8 +243,8 @@ public class SyncFlowController {
             } catch (SyncDuoException e) {
                 return SyncFlowResponse.onError("获取 sync flow 失败. 异常信息 " + e.getMessage());
             }
-            SyncSettingEnum syncSettingEnum = SyncSettingEnum.getByCode(syncSettingEntity.getSyncMode());
-            if (ObjectUtils.isEmpty(syncSettingEntity) || syncSettingEnum == null) {
+            SyncModeEnum syncModeEnum = SyncModeEnum.getByCode(syncSettingEntity.getSyncMode());
+            if (ObjectUtils.isEmpty(syncSettingEntity) || syncModeEnum == null) {
                 return SyncFlowResponse.onError("获取 sync flow 失败. 异常信息 "
                         + "sync mode " + syncSettingEntity.getSyncMode() + "无法识别");
             }
@@ -249,15 +255,23 @@ public class SyncFlowController {
             } catch (SyncDuoException e) {
                 return SyncFlowResponse.onError("获取 sync flow 失败. 异常信息 " + e.getMessage());
             }
+            // 处理 lastSyncTime 为空的现象
+            String lastSyncTime;
+            if (ObjectUtils.isEmpty(syncFlowEntity.getLastSyncTime())) {
+                lastSyncTime = "";
+            } else {
+                lastSyncTime = syncFlowEntity.getLastSyncTime().toString();
+            }
             SyncFlowInfo syncFlowInfo = SyncFlowInfo.builder()
                     .syncFlowId(syncFlowEntity.getSyncFlowId().toString())
                     .syncFlowName(syncFlowEntity.getSyncFlowName())
                     .sourceFolderPath(sourceFolderEntity.getFolderFullPath())
                     .destFolderPath(destFolderEntity.getFolderFullPath())
-                    .syncSettings(syncSettingEnum.name())
+                    .syncMode(syncModeEnum.name())
                     .ignorePatten(syncSettingEntity.getFilterCriteria())
+                    .syncFlowType(syncFlowTypeEnum.name())
                     .syncStatus(syncFlowEntity.getSyncStatus())
-                    .lastSyncTimeStamp(syncFlowEntity.getLastSyncTime().toString())
+                    .lastSyncTimeStamp(lastSyncTime)
                     .build();
             syncFlowInfo.setFolderStats(folderInfo.get(0), folderInfo.get(1), folderInfo.get(2));
             syncFlowInfoList.add(syncFlowInfo);
@@ -276,16 +290,17 @@ public class SyncFlowController {
                     "syncFlowName is null");
         }
         // 检查 sync setting
-        if (StringUtils.isBlank(createSyncFlowRequest.getSyncSetting())) {
+        if (StringUtils.isBlank(createSyncFlowRequest.getSyncMode())) {
             throw new SyncDuoException("isCreateSyncFlowRequestValid failed. " +
                     "syncSetting is null");
         }
+        // 获取 syncMode
         try {
-            SyncSettingEnum syncSettingEnum = SyncSettingEnum.valueOf(createSyncFlowRequest.getSyncSetting());
-            createSyncFlowRequest.setSyncSettingEnum(syncSettingEnum);
+            SyncModeEnum syncModeEnum = SyncModeEnum.valueOf(createSyncFlowRequest.getSyncMode());
+            createSyncFlowRequest.setSyncModeEnum(syncModeEnum);
         } catch (IllegalArgumentException e) {
             throw new SyncDuoException("isCreateSyncFlowRequestValid failed. " +
-                    "sySetting: %s invalid.".formatted(createSyncFlowRequest.getSyncSetting()), e);
+                    "sySetting: %s invalid.".formatted(createSyncFlowRequest.getSyncMode()), e);
         }
         // 检查过滤条件
         List<String> filters;
@@ -332,7 +347,7 @@ public class SyncFlowController {
                     FilesystemUtil.getPathSeparator() +
                     newFolderName;
             createSyncFlowRequest.setDestFolderFullPath(destFolderPath);
-            createSyncFlowRequest.setSyncSettingEnum(SyncSettingEnum.MIRROR);
+            createSyncFlowRequest.setSyncModeEnum(SyncModeEnum.MIRROR);
             createSyncFlowRequest.setFilters(Collections.emptyList());
         }
         // 检查 sourceFolder 和 destFolder
