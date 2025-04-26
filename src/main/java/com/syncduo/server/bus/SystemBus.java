@@ -47,8 +47,9 @@ public class SystemBus {
 
     public void decrSyncFlowPendingEventCount(DownStreamEvent downStreamEvent) throws SyncDuoException {
         if (FileEventTypeEnum.FILE_REFILTER_CREATED.equals(downStreamEvent.getFileEventTypeEnum()) ||
-                FileEventTypeEnum.FILE_REFILTER_DELETED.equals(downStreamEvent.getFileEventTypeEnum())) {
-            // refilter event, 根据单条 syncflow 增加 pending event count, 因为不是从 watcher 触发的
+            FileEventTypeEnum.FILE_REFILTER_DELETED.equals(downStreamEvent.getFileEventTypeEnum()) ||
+            FileEventTypeEnum.DB_FILE_RETRIEVE.equals(downStreamEvent.getFileEventTypeEnum())) {
+            // 根据单条 syncflow 增加 pending event count, 因为不是从 watcher 触发的
             this.syncFlowService.decrPendingEventCount(downStreamEvent.getSyncFlowEntity());
         } else {
             // 其他 event, 批量增加 pending event count, 因为是从 watcher 触发
@@ -58,8 +59,9 @@ public class SystemBus {
 
     private void incrSyncFlowPendingEventCount(DownStreamEvent downStreamEvent) throws SyncDuoException {
         if (FileEventTypeEnum.FILE_REFILTER_CREATED.equals(downStreamEvent.getFileEventTypeEnum()) ||
-                FileEventTypeEnum.FILE_REFILTER_DELETED.equals(downStreamEvent.getFileEventTypeEnum())) {
-            // refilter event, 根据单条 syncflow 增加 pending event count, 因为不是从 watcher 触发的
+            FileEventTypeEnum.FILE_REFILTER_DELETED.equals(downStreamEvent.getFileEventTypeEnum()) ||
+            FileEventTypeEnum.DB_FILE_RETRIEVE.equals(downStreamEvent.getFileEventTypeEnum())) {
+            // 根据单条 syncflow 增加 pending event count, 因为不是从 watcher 触发的
             this.syncFlowService.addPendingEventCount(downStreamEvent.getSyncFlowEntity());
         } else {
             // 其他 event, 批量增加 pending event count, 因为是从 watcher 触发

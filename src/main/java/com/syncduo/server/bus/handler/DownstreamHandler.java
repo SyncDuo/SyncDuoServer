@@ -21,6 +21,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -79,7 +80,7 @@ public class DownstreamHandler implements DisposableBean {
             this.threadPoolTaskExecutor.submit(() -> {
                 try {
                     switch (downStreamEvent.getFileEventTypeEnum()) {
-                        case FILE_CREATED -> this.onFileCreate(downStreamEvent);
+                        case FILE_CREATED, DB_FILE_RETRIEVE -> this.onFileCreate(downStreamEvent);
                         case FILE_CHANGED -> this.onFileChange(downStreamEvent);
                         case FILE_DELETED -> this.onFileDelete(downStreamEvent);
                         case FILE_REFILTER_CREATED -> this.onRefilterCreated(downStreamEvent);
@@ -97,14 +98,20 @@ public class DownstreamHandler implements DisposableBean {
         FolderEntity folderEntity = downStreamEvent.getFolderEntity();
         FileEntity fileEntity = downStreamEvent.getFileEntity();
         Path file = downStreamEvent.getFile();
-        // 查询 syncflow
-        List<SyncFlowEntity> syncFlowEntityList =
-                this.syncFlowService.getBySourceIdFromCache(folderEntity.getFolderId());
+        // 查询 syncflow, 如果 DownStreamEvent 已经有 syncFlowEntity, 则不需要从 cache 查询
+        List<SyncFlowEntity> syncFlowEntityList = new ArrayList<>();
+        if (ObjectUtils.isEmpty(downStreamEvent.getSyncFlowEntity())) {
+            syncFlowEntityList = this.syncFlowService.getBySourceIdFromCache(folderEntity.getFolderId());
+        } else {
+            syncFlowEntityList.add(downStreamEvent.getSyncFlowEntity());
+        }
+        // 如果查不到 syncFlow, 显然 syncFlow 已被删除, 则减少 count
         if (CollectionUtils.isEmpty(syncFlowEntityList)) {
             // 减少 pending event count
             this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
             return;
         }
+        // 创建文件
         for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
             downStreamFileCreate(downStreamEvent, syncFlowEntity, fileEntity, file, folderEntity);
             // 减少 pending event count
@@ -226,7 +233,6 @@ public class DownstreamHandler implements DisposableBean {
         // 减少 pending event count
         this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
     }
-
 
     private void downStreamFileCreate(
             DownStreamEvent downStreamEvent,

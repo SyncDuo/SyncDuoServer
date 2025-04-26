@@ -82,15 +82,23 @@ public class SyncFlowController {
             return this.generateSyncFlowErrorResponse(e, errorMessage);
         }
         // 创建 folder entity
+        boolean isSourceFolderNew = true;
         FolderEntity sourceFolderEntity;
         FolderEntity destFolderEntity;
+        Path sourceFolder = createSyncFlowRequest.getSourceFolder();
         try {
-            sourceFolderEntity = this.folderService.createFolderEntity(createSyncFlowRequest.getSourceFolder());
+            // 检查 sourceFolderEntity 是否存在, 影响后续初始化动作
+            sourceFolderEntity = this.folderService.getByFolderFullPath(sourceFolder.toAbsolutePath().toString());
+            if (ObjectUtils.isEmpty(sourceFolderEntity)) {
+                sourceFolderEntity = this.folderService.createFolderEntity(sourceFolder);
+            } else {
+                isSourceFolderNew = false;
+            }
             destFolderEntity = this.folderService.createFolderEntity(createSyncFlowRequest.getDestFolder());
         } catch (SyncDuoException e) {
             String errorMessage = "addSyncFlow failed. can't create folder entity." +
                     "sourceFolder is : %s.".formatted(createSyncFlowRequest.getDestFolder()) +
-                    "destFolder is : %s.".formatted(createSyncFlowRequest.getSourceFolder());
+                    "destFolder is : %s.".formatted(sourceFolder);
             return this.generateSyncFlowErrorResponse(e, errorMessage);
         }
         // 创建 syncFlow
@@ -112,7 +120,7 @@ public class SyncFlowController {
         } catch (SyncDuoException e) {
             String errorMessage = "addSyncFlow failed. can't create syncFlowEntity." +
                     "sourceFolder is : %s.".formatted(createSyncFlowRequest.getDestFolder()) +
-                    "destFolder is : %s.".formatted(createSyncFlowRequest.getSourceFolder());
+                    "destFolder is : %s.".formatted(sourceFolder);
             return this.generateSyncFlowErrorResponse(e, errorMessage);
         }
         // 创建 syncSetting
@@ -136,12 +144,16 @@ public class SyncFlowController {
         } catch (SyncDuoException e) {
             String errorMessage = "addSyncFlow failed. can't create watcher." +
                     "sourceFolder is : %s.".formatted(createSyncFlowRequest.getDestFolder()) +
-                    "destFolder is : %s.".formatted(createSyncFlowRequest.getSourceFolder());
+                    "destFolder is : %s.".formatted(sourceFolder);
             return this.generateSyncFlowErrorResponse(e, errorMessage);
         }
         // 扫描 source folder 和 dest folder
         try {
-            this.systemManagementService.updateFolderFromFileSystem(sourceFolderEntity.getFolderId());
+            if (!isSourceFolderNew) {
+                this.systemManagementService.sendDownStreamEventFromSourceFolder(syncFlowEntity);
+            } else {
+                this.systemManagementService.updateFolderFromFileSystem(sourceFolderEntity.getFolderId());
+            }
         } catch (SyncDuoException e) {
             String errorMessage = "addSyncFlow failed. can't scan folder." +
                     "source folder is %s".formatted(sourceFolderEntity);

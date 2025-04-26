@@ -43,6 +43,9 @@ public class FolderWatcher implements DisposableBean {
         if (ObjectUtils.anyNull(folderEntity, folderEntity.getFolderId(), folderEntity.getFolderFullPath())) {
             throw new SyncDuoException("addWatcher failed. folderId or folderFullPath is null");
         }
+        if (map.containsKey(folderEntity.getFolderId())) {
+            return;
+        }
         // 创建 observer
         Long folderId = folderEntity.getFolderId();
         // 监听文件创建/修改/删除

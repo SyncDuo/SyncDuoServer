@@ -78,6 +78,26 @@ public class SystemManagementService {
         }
     }
 
+    // 用于处理 source folder 已存在, dest folder 新建的情况
+    // 1. 扫描 source folder 全部 file, 发送 downStreamEvent
+    public void sendDownStreamEventFromSourceFolder(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        // 获取 sourceFolder
+        FolderEntity sourceFolderEntity = this.folderService.getById(syncFlowEntity.getSourceFolderId());
+        // 从 DB 中获取 source folder 的全部 file
+        List<FileEntity> allFileInSourceFolder =
+                this.fileService.getAllFileByFolderId(sourceFolderEntity.getFolderId());
+        for (FileEntity fileEntity : allFileInSourceFolder) {
+            DownStreamEvent downStreamEvent = DownStreamEvent.builder()
+                    .folderEntity(sourceFolderEntity)
+                    .fileEntity(fileEntity)
+                    .file(this.fileService.getFileFromFileEntity(sourceFolderEntity.getFolderFullPath(), fileEntity))
+                    .fileEventTypeEnum(FileEventTypeEnum.DB_FILE_RETRIEVE)
+                    .syncFlowEntity(syncFlowEntity)
+                    .build();
+            this.systemBus.sendDownStreamEvent(downStreamEvent);
+        }
+    }
+
     // destFolder 中的文件, 因为 filterCriteria 更新, 可能有四种变化
     // 1. 没有增加或减少
     // 2. 增加

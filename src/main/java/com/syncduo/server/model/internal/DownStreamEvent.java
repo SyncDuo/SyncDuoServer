@@ -21,7 +21,7 @@ public class DownStreamEvent {
 
     Path file;
 
-    // refilter event, 会带上 syncFlowEntity
+    // FILE_REFILTER_CREATED, FILE_REFILTER_DELETED, DB_FILE_RETRIEVE, 会带上 syncFlowEntity
     SyncFlowEntity syncFlowEntity;
 
     FileEventTypeEnum fileEventTypeEnum;
