@@ -144,6 +144,10 @@ public class FolderWatcher implements DisposableBean {
         return observer;
     }
 
+    public void pause(FolderEntity folderEntity) {
+
+    }
+
     @Override
     public void destroy() {
         this.map.forEach((k, v) -> {
