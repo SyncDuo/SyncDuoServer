@@ -39,6 +39,14 @@ public class FilesystemUtil {
 
     private static final FileSystem FILE_SYSTEM = FileSystems.getDefault();
 
+    public static long getFileSizeInBytes(Path path) throws SyncDuoException {
+        try {
+            return Files.size(path);
+        } catch (IOException | SecurityException e) {
+            throw new SyncDuoException("getFileSizeInBytes failed!. Path is %s".formatted(path), e);
+        }
+    }
+
     public static List<Path> getAllFileInFolder(String folderPath) throws SyncDuoException {
         List<Path> fileList = new ArrayList<>();
         Path startPath = isFolderPathValid(folderPath);

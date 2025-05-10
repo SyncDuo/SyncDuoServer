@@ -1,6 +1,6 @@
 package com.syncduo.server.bus.handler;
 
-import com.syncduo.server.bus.FileAccessValidator;
+import com.syncduo.server.bus.FileOperationMonitor;
 import com.syncduo.server.bus.SystemBus;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.FileEntity;
@@ -34,7 +34,7 @@ public class FileSystemEventHandler implements DisposableBean {
 
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    private final FileAccessValidator fileAccessValidator;
+    private final FileOperationMonitor fileOperationMonitor;
 
     private volatile boolean RUNNING = true;  // Flag to control the event loop
 
@@ -45,14 +45,14 @@ public class FileSystemEventHandler implements DisposableBean {
                                   FileEventService fileEventService,
                                   FileSyncMappingService fileSyncMappingService,
                                   ThreadPoolTaskExecutor threadPoolTaskExecutor,
-                                  FileAccessValidator fileAccessValidator) {
+                                  FileOperationMonitor fileOperationMonitor) {
         this.systemBus = systemBus;
         this.fileService = fileService;
         this.folderService = folderService;
         this.fileEventService = fileEventService;
         this.fileSyncMappingService = fileSyncMappingService;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
-        this.fileAccessValidator = fileAccessValidator;
+        this.fileOperationMonitor = fileOperationMonitor;
     }
 
     @Async("threadPoolTaskExecutor")
@@ -60,7 +60,7 @@ public class FileSystemEventHandler implements DisposableBean {
         while (RUNNING) {
             FileSystemEvent fileSystemEvent = systemBus.getFileEvent();
             if (ObjectUtils.isEmpty(fileSystemEvent) ||
-                    fileAccessValidator.isFileEventInValid(fileSystemEvent.getFolderId())) {
+                    fileOperationMonitor.isFileEventInValid(fileSystemEvent.getFolderId())) {
                 continue;
             }
             log.debug("fileSystemEvent is: {}", fileSystemEvent);

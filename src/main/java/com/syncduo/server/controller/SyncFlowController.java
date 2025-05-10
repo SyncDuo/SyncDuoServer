@@ -3,6 +3,7 @@ package com.syncduo.server.controller;
 import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.enums.SyncModeEnum;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.http.FolderStats;
 import com.syncduo.server.model.http.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.http.syncflow.DeleteSyncFlowRequest;
 import com.syncduo.server.model.http.syncflow.SyncFlowInfo;
@@ -261,9 +262,10 @@ public class SyncFlowController {
                         + "sync mode " + syncSettingEntity.getSyncMode() + "无法识别");
             }
             // 获取文件夹信息
-            List<Long> folderInfo;
+            FolderStats folderStats;
             try {
-                folderInfo = FilesystemUtil.getFolderInfo(destFolderEntity.getFolderFullPath());
+                List<Long> folderInfo = FilesystemUtil.getFolderInfo(destFolderEntity.getFolderFullPath());
+                folderStats = new FolderStats(folderInfo.get(0), folderInfo.get(1), folderInfo.get(2));
             } catch (SyncDuoException e) {
                 return SyncFlowResponse.onError("获取 sync flow 失败. 异常信息 " + e.getMessage());
             }
@@ -282,10 +284,10 @@ public class SyncFlowController {
                     .syncMode(syncModeEnum.name())
                     .ignorePatten(syncSettingEntity.getFilterCriteria())
                     .syncFlowType(syncFlowTypeEnum.name())
+                    .destFolderStats(folderStats)
                     .syncStatus(syncFlowEntity.getSyncStatus())
                     .lastSyncTimeStamp(lastSyncTime)
                     .build();
-            syncFlowInfo.setFolderStats(folderInfo.get(0), folderInfo.get(1), folderInfo.get(2));
             syncFlowInfoList.add(syncFlowInfo);
         }
         return SyncFlowResponse.onSuccess("创建 syncflow 成功", syncFlowInfoList);

@@ -2,19 +2,15 @@ package com.syncduo.server.service.bussiness.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.syncduo.server.bus.FileAccessValidator;
+import com.syncduo.server.bus.FileOperationMonitor;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.enums.RootFolderTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.FolderMapper;
 import com.syncduo.server.model.entity.FolderEntity;
 import com.syncduo.server.service.bussiness.IFolderService;
-import com.syncduo.server.util.FilesystemUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -28,11 +24,11 @@ public class FolderService
         extends ServiceImpl<FolderMapper, FolderEntity>
         implements IFolderService {
 
-    private final FileAccessValidator fileAccessValidator;
+    private final FileOperationMonitor fileOperationMonitor;
 
     @Autowired
-    public FolderService(FileAccessValidator fileAccessValidator) {
-        this.fileAccessValidator = fileAccessValidator;
+    public FolderService(FileOperationMonitor fileOperationMonitor) {
+        this.fileOperationMonitor = fileOperationMonitor;
     }
 
     public List<FolderEntity> getAllFolder() {
@@ -58,7 +54,7 @@ public class FolderService
             if (!save) {
                 throw new SyncDuoException("save folder entity to database failed.");
             }
-            fileAccessValidator.addWhitelist(folderEntity);
+            fileOperationMonitor.addWhitelist(folderEntity);
             return folderEntity;
         }
         return dbResult;
@@ -75,7 +71,7 @@ public class FolderService
         if (!updated) {
             throw new SyncDuoException("update folder entity to database failed.");
         }
-        fileAccessValidator.removeWhitelist(folderEntity.getFolderId());
+        fileOperationMonitor.removeWhitelist(folderEntity.getFolderId());
     }
 
     public FolderEntity getByFolderFullPath(String folderFullPath) throws SyncDuoException {

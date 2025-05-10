@@ -74,6 +74,9 @@ CREATE TABLE system_config (
                            last_updated_time varchar(255),
                            record_deleted int,
                            sync_storage_path varchar(255),
+                           backup_storage_path varchar(255),
+                           handler_min_threads int,
+                           handler_max_threads int,
 -- select one of the defined columns as the Primary Key
                            CONSTRAINT system_config_pk PRIMARY KEY (system_config_id)
 );

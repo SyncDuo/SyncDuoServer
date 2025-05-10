@@ -1,6 +1,6 @@
 package com.syncduo.server.bus.handler;
 
-import com.syncduo.server.bus.FileAccessValidator;
+import com.syncduo.server.bus.FileOperationMonitor;
 import com.syncduo.server.bus.SystemBus;
 import com.syncduo.server.enums.FileDesyncEnum;
 import com.syncduo.server.exception.SyncDuoException;
@@ -45,7 +45,7 @@ public class DownstreamHandler implements DisposableBean {
 
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    private final FileAccessValidator fileAccessValidator;
+    private final FileOperationMonitor fileOperationMonitor;
 
     private volatile boolean RUNNING = true;  // Flag to control the event loop
 
@@ -58,7 +58,7 @@ public class DownstreamHandler implements DisposableBean {
                              SyncSettingService syncSettingService,
                              SyncFlowService syncFlowService,
                              ThreadPoolTaskExecutor threadPoolTaskExecutor,
-                             FileAccessValidator fileAccessValidator) {
+                             FileOperationMonitor fileOperationMonitor) {
         this.systemBus = systemBus;
         this.fileService = fileService;
         this.folderService = folderService;
@@ -67,7 +67,7 @@ public class DownstreamHandler implements DisposableBean {
         this.syncSettingService = syncSettingService;
         this.syncFlowService = syncFlowService;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
-        this.fileAccessValidator = fileAccessValidator;
+        this.fileOperationMonitor = fileOperationMonitor;
     }
 
     @Async("threadPoolTaskExecutor")
@@ -152,7 +152,7 @@ public class DownstreamHandler implements DisposableBean {
                 continue;
             }
             // 更新文件
-            Path destFile = this.fileAccessValidator.updateFileByCopy(
+            Path destFile = this.fileOperationMonitor.updateFileByCopy(
                     folderEntity.getFolderId(),
                     file,
                     destFolderEntity.getFolderId(),
@@ -222,7 +222,7 @@ public class DownstreamHandler implements DisposableBean {
                 destFolderEntity.getFolderFullPath(),
                 destFileEntity
         );
-        this.fileAccessValidator.deleteFile(
+        this.fileOperationMonitor.deleteFile(
                 destFileEntity.getFolderId(),
                 destFile
         );
@@ -256,7 +256,7 @@ public class DownstreamHandler implements DisposableBean {
         if (StringUtils.isBlank(destFilePath)) {
             return;
         }
-        Path destFile = this.fileAccessValidator.copyFile(
+        Path destFile = this.fileOperationMonitor.copyFile(
                 folderEntity.getFolderId(),
                 file,
                 destFolderEntity.getFolderId(),

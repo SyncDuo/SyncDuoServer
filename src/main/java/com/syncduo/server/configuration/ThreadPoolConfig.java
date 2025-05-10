@@ -36,8 +36,8 @@ public class ThreadPoolConfig implements DisposableBean {
 
     private static ThreadPoolTaskExecutor getThreadPoolTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(50); // Minimum number of threads
-        executor.setMaxPoolSize(100); // Maximum number of threads
+        executor.setCorePoolSize(5); // Minimum number of threads
+        executor.setMaxPoolSize(5); // Maximum number of threads
         executor.setQueueCapacity(50); // Capacity of the queue
         executor.setKeepAliveSeconds(60);
         executor.setWaitForTasksToCompleteOnShutdown(true);
@@ -46,6 +46,11 @@ public class ThreadPoolConfig implements DisposableBean {
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;
+    }
+
+    public void changeMinAndMaxThreadsNum(int handlerMinThreads, int handlerMaxThreads) {
+        threadPoolTaskExecutor.setCorePoolSize(handlerMinThreads);
+        threadPoolTaskExecutor.setMaxPoolSize(handlerMaxThreads);
     }
 
     @Bean(name = "threadPoolTaskExecutor")

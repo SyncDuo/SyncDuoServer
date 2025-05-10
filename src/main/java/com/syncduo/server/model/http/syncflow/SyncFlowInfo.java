@@ -1,5 +1,6 @@
 package com.syncduo.server.model.http.syncflow;
 
+import com.syncduo.server.model.http.FolderStats;
 import lombok.*;
 
 @Data
@@ -25,21 +26,6 @@ public class SyncFlowInfo {
     private String syncStatus;
 
     private String lastSyncTimeStamp;
-
-    public void setFolderStats(Long fileCount, Long folderCount, Long space) {
-        this.destFolderStats = new FolderStats(fileCount.toString(), folderCount.toString(), space.toString());
-    }
-
-    @AllArgsConstructor
-    @ToString
-    @Data
-    static class FolderStats {
-        private String fileCount;
-
-        private String folderCount;
-
-        private String space;
-    }
 }
 
 

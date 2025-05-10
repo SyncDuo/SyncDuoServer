@@ -13,7 +13,7 @@ CREATE TABLE file (
                         file_last_modified_time timestamp,
                         file_unique_hash varchar(255),
                         folder_id long,
-                        relative_path varchar(255),
+                        relative_path varchar(500),
 -- select one of the defined columns as the Primary Key
                         CONSTRAINT file_pk PRIMARY KEY (file_id)
 );
@@ -74,6 +74,9 @@ CREATE TABLE system_config (
                            last_updated_time varchar(255),
                            record_deleted int,
                            sync_storage_path varchar(255),
+                           backup_storage_path varchar(255),
+                           handler_min_threads int,
+                           handler_max_threads int,
 -- select one of the defined columns as the Primary Key
                            CONSTRAINT system_config_pk PRIMARY KEY (system_config_id)
 );

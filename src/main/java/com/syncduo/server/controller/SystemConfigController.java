@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
 import java.util.*;
 
 
@@ -120,6 +121,7 @@ public class SystemConfigController {
         if (type == Short.class) return Short.valueOf(value);
         if (type == Byte.class) return Byte.valueOf(value);
         if (type == Character.class && value.length() == 1) return value.charAt(0);
+        if (type == Timestamp.class) return new Timestamp(Long.parseLong(value));
 
         throw new SyncDuoException("Unsupported type: " + type.getName());
     }

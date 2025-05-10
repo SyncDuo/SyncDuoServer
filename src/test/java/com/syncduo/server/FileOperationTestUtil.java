@@ -185,8 +185,19 @@ public class FileOperationTestUtil {
     }
 
     public static void writeRandomBinaryData(Path binFile) throws IOException {
-        byte[] randomBytes = new byte[1024]; // Generate 1 KB of random data
-        random.nextBytes(randomBytes);
-        Files.write(binFile, randomBytes, StandardOpenOption.WRITE);
+        int chunkSize = 1024 * 1024; // 1 MB
+        int totalChunks = 50; // 50 MB
+
+        byte[] buffer = new byte[chunkSize];
+
+        try (var out = Files.newOutputStream(
+                binFile,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
+            for (int i = 0; i < totalChunks; i++) {
+                random.nextBytes(buffer);
+                out.write(buffer);
+            }
+        }
     }
 }

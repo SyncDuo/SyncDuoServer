@@ -5,6 +5,7 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.FolderEntity;
 import com.syncduo.server.model.internal.FileSystemEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
@@ -29,7 +30,8 @@ public class FolderWatcher implements DisposableBean {
     private final SystemBus systemBus;
 
     // <rootFolderId, monitor>
-    private final ConcurrentHashMap<Long, FileAlterationMonitor> map = new ConcurrentHashMap<>(100);
+    private final ConcurrentHashMap<Long, FileAlterationMonitor> monitorMap =
+            new ConcurrentHashMap<>(100);
 
     @Autowired
     public FolderWatcher(SystemBus systemBus) {
@@ -43,7 +45,7 @@ public class FolderWatcher implements DisposableBean {
         if (ObjectUtils.anyNull(folderEntity, folderEntity.getFolderId(), folderEntity.getFolderFullPath())) {
             throw new SyncDuoException("addWatcher failed. folderId or folderFullPath is null");
         }
-        if (map.containsKey(folderEntity.getFolderId())) {
+        if (monitorMap.containsKey(folderEntity.getFolderId())) {
             return;
         }
         // 创建 observer
@@ -62,7 +64,7 @@ public class FolderWatcher implements DisposableBean {
         FileAlterationMonitor monitor = new FileAlterationMonitor(getRandomInterval(interval), observer);
         try {
             monitor.start();
-            this.map.put(folderId, monitor);
+            this.monitorMap.put(folderId, monitor);
         } catch (Exception e) {
             throw new SyncDuoException("addWatcher failed. folderId is %s".formatted(folderId), e);
         }
@@ -72,7 +74,7 @@ public class FolderWatcher implements DisposableBean {
         if (ObjectUtils.isEmpty(folderId)) {
             throw new SyncDuoException("manualCheckFolder failed. folderId is null");
         }
-        FileAlterationMonitor monitor = this.map.get(folderId);
+        FileAlterationMonitor monitor = this.monitorMap.get(folderId);
         if (ObjectUtils.isEmpty(monitor)) {
             return;
         }
@@ -83,13 +85,14 @@ public class FolderWatcher implements DisposableBean {
         if (ObjectUtils.isEmpty(folderId)) {
             return;
         }
-        if (!this.map.containsKey(folderId)) {
+        if (!this.monitorMap.containsKey(folderId)) {
             log.warn("stopWatcher failed. can't find monitor with folderId {}", folderId);
             return;
         }
-        FileAlterationMonitor fileAlterationMonitor = this.map.get(folderId);
+        FileAlterationMonitor fileAlterationMonitor = this.monitorMap.get(folderId);
         try {
             fileAlterationMonitor.stop();
+            this.monitorMap.remove(folderId);
         } catch (Exception e) {
             log.warn("stopWatcher failed. monitor is {}, folderId is {}",
                     fileAlterationMonitor,
@@ -144,13 +147,16 @@ public class FolderWatcher implements DisposableBean {
         return observer;
     }
 
-    public void pause(FolderEntity folderEntity) {
-
+    public int getWatcherNumber() {
+        if (MapUtils.isEmpty(this.monitorMap)) {
+            return 0;
+        }
+        return this.monitorMap.size();
     }
 
     @Override
     public void destroy() {
-        this.map.forEach((k, v) -> {
+        this.monitorMap.forEach((k, v) -> {
             try {
                 v.stop();
                 log.debug("shutdown monitor. rootFolderId is {}", k);
@@ -158,5 +164,6 @@ public class FolderWatcher implements DisposableBean {
                 log.warn("failed to shutdown monitor. rootFolder is {}", k, e);
             }
         });
+        this.monitorMap.clear();
     }
 }
