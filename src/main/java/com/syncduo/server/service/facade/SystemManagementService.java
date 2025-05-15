@@ -78,6 +78,10 @@ public class SystemManagementService {
         }
     }
 
+    public void pauseAllSyncFlow() throws SyncDuoException {
+
+    }
+
     // 用于处理 source folder 已存在, dest folder 新建的情况
     // 1. 扫描 source folder 全部 file, 发送 downStreamEvent
     public void sendDownStreamEventFromSourceFolder(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
@@ -176,7 +180,8 @@ public class SystemManagementService {
     }
 
     // 需要发送消息, 消息处理的时候做好幂等即可
-    public void updateFolderFromFileSystem(Long folderId) throws SyncDuoException {
+    public boolean updateFolderFromFileSystem(Long folderId) throws SyncDuoException {
+        boolean result = false;
         if (ObjectUtils.isEmpty(folderId)) {
             throw new SyncDuoException("updateFolderFromFileSystem failed. folderId is null");
         }
@@ -210,6 +215,7 @@ public class SystemManagementService {
                     FileEventTypeEnum.FILE_DELETED
             );
             this.systemBus.sendFileEvent(fileSystemEvent);
+            result = true;
         }
         // inner join 则需要进一步比较,判断文件是否修改
         for (ImmutablePair<FileEntity, Path> pair : joinResult.getInnerResult()) {
@@ -230,6 +236,7 @@ public class SystemManagementService {
                         fileInFilesystem,
                         FileEventTypeEnum.FILE_CHANGED
                 );
+                result = true;
                 this.systemBus.sendFileEvent(fileSystemEvent);
             }
         }
@@ -241,6 +248,8 @@ public class SystemManagementService {
                     FileEventTypeEnum.FILE_CREATED
             );
             this.systemBus.sendFileEvent(fileSystemEvent);
+            result = true;
         }
+        return result;
     }
 }

@@ -13,7 +13,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -32,8 +31,6 @@ public class FileSystemEventHandler implements DisposableBean {
 
     private final FileSyncMappingService fileSyncMappingService;
 
-    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
     private final FileOperationMonitor fileOperationMonitor;
 
     private volatile boolean RUNNING = true;  // Flag to control the event loop
@@ -44,18 +41,16 @@ public class FileSystemEventHandler implements DisposableBean {
                                   FolderService folderService,
                                   FileEventService fileEventService,
                                   FileSyncMappingService fileSyncMappingService,
-                                  ThreadPoolTaskExecutor threadPoolTaskExecutor,
                                   FileOperationMonitor fileOperationMonitor) {
         this.systemBus = systemBus;
         this.fileService = fileService;
         this.folderService = folderService;
         this.fileEventService = fileEventService;
         this.fileSyncMappingService = fileSyncMappingService;
-        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
         this.fileOperationMonitor = fileOperationMonitor;
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async("longRunningTaskExecutor")
     public void startHandle() {
         while (RUNNING) {
             FileSystemEvent fileSystemEvent = systemBus.getFileEvent();
@@ -64,18 +59,21 @@ public class FileSystemEventHandler implements DisposableBean {
                 continue;
             }
             log.debug("fileSystemEvent is: {}", fileSystemEvent);
-            this.threadPoolTaskExecutor.submit(() -> {
-                try {
-                    switch (fileSystemEvent.getFileEventTypeEnum()) {
-                        case FILE_CREATED -> this.onFileCreate(fileSystemEvent);
-                        case FILE_CHANGED -> this.onFileChange(fileSystemEvent);
-                        case FILE_DELETED -> this.onFileDelete(fileSystemEvent);
-                        default -> throw new SyncDuoException("文件夹的文件事件:%s 不识别".formatted(fileSystemEvent));
-                    }
-                } catch (SyncDuoException e) {
-                    log.error("startHandle failed. fileEvent:{} failed!", fileSystemEvent, e);
-                }
-            });
+            this.dispatchHandle(fileSystemEvent);
+        }
+    }
+
+    @Async("threadPoolTaskExecutor")
+    protected void dispatchHandle(FileSystemEvent fileSystemEvent) {
+        try {
+            switch (fileSystemEvent.getFileEventTypeEnum()) {
+                case FILE_CREATED -> this.onFileCreate(fileSystemEvent);
+                case FILE_CHANGED -> this.onFileChange(fileSystemEvent);
+                case FILE_DELETED -> this.onFileDelete(fileSystemEvent);
+                default -> throw new SyncDuoException("文件夹的文件事件:%s 不识别".formatted(fileSystemEvent));
+            }
+        } catch (SyncDuoException e) {
+            log.error("startHandle failed. fileEvent:{} failed!", fileSystemEvent, e);
         }
     }
 

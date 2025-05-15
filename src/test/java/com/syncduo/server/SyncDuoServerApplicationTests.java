@@ -69,7 +69,7 @@ class SyncDuoServerApplicationTests {
     private static final String contentFolderPath = contentFolderParentPath + "/" + sourceFolderName;
 
     // delay 函数延迟的时间, 单位"秒"
-    private static final int DELAY_UNIT = 6;
+    private static final int DELAY_UNIT = 10;
 
     @Autowired
     SyncDuoServerApplicationTests(

@@ -3,6 +3,7 @@ package com.syncduo.server.bus.handler;
 import com.syncduo.server.bus.FileOperationMonitor;
 import com.syncduo.server.bus.SystemBus;
 import com.syncduo.server.enums.FileDesyncEnum;
+import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.model.internal.DownStreamEvent;
@@ -17,7 +18,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -43,8 +43,6 @@ public class DownstreamHandler implements DisposableBean {
 
     private final SyncFlowService syncFlowService;
 
-    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
     private final FileOperationMonitor fileOperationMonitor;
 
     private volatile boolean RUNNING = true;  // Flag to control the event loop
@@ -57,7 +55,6 @@ public class DownstreamHandler implements DisposableBean {
                              FileSyncMappingService fileSyncMappingService,
                              SyncSettingService syncSettingService,
                              SyncFlowService syncFlowService,
-                             ThreadPoolTaskExecutor threadPoolTaskExecutor,
                              FileOperationMonitor fileOperationMonitor) {
         this.systemBus = systemBus;
         this.fileService = fileService;
@@ -66,31 +63,34 @@ public class DownstreamHandler implements DisposableBean {
         this.fileSyncMappingService = fileSyncMappingService;
         this.syncSettingService = syncSettingService;
         this.syncFlowService = syncFlowService;
-        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
         this.fileOperationMonitor = fileOperationMonitor;
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async("longRunningTaskExecutor")
     public void startHandle() {
         while (RUNNING) {
             DownStreamEvent downStreamEvent = systemBus.getDownStreamEvent();
             if (ObjectUtils.isEmpty(downStreamEvent)) {
                 continue;
             }
-            this.threadPoolTaskExecutor.submit(() -> {
-                try {
-                    switch (downStreamEvent.getFileEventTypeEnum()) {
-                        case FILE_CREATED, DB_FILE_RETRIEVE -> this.onFileCreate(downStreamEvent);
-                        case FILE_CHANGED -> this.onFileChange(downStreamEvent);
-                        case FILE_DELETED -> this.onFileDelete(downStreamEvent);
-                        case FILE_REFILTER_CREATED -> this.onRefilterCreated(downStreamEvent);
-                        case FILE_REFILTER_DELETED -> this.onRefilterDeleted(downStreamEvent);
-                        default -> throw new SyncDuoException("下游事件:%s 不识别".formatted(downStreamEvent));
-                    }
-                } catch (SyncDuoException e) {
-                    log.error("startHandle failed. downStreamEvent:{} failed!", downStreamEvent, e);
-                }
-            });
+            log.debug("downstream event is {}", downStreamEvent);
+            this.dispatchHandle(downStreamEvent);
+        }
+    }
+
+    @Async("threadPoolTaskExecutor")
+    protected void dispatchHandle(DownStreamEvent downStreamEvent) {
+        try {
+            switch (downStreamEvent.getFileEventTypeEnum()) {
+                case FILE_CREATED, DB_FILE_RETRIEVE -> this.onFileCreate(downStreamEvent);
+                case FILE_CHANGED -> this.onFileChange(downStreamEvent);
+                case FILE_DELETED -> this.onFileDelete(downStreamEvent);
+                case FILE_REFILTER_CREATED -> this.onRefilterCreated(downStreamEvent);
+                case FILE_REFILTER_DELETED -> this.onRefilterDeleted(downStreamEvent);
+                default -> throw new SyncDuoException("下游事件:%s 不识别".formatted(downStreamEvent));
+            }
+        } catch (SyncDuoException e) {
+            log.error("startHandle failed. downStreamEvent:{} failed!", downStreamEvent, e);
         }
     }
 
@@ -113,6 +113,10 @@ public class DownstreamHandler implements DisposableBean {
         }
         // 创建文件
         for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
+            // 如果 syncFlow 停止, 则不处理
+            if (this.isSyncFlowPaused(syncFlowEntity)) {
+                continue;
+            }
             downStreamFileCreate(downStreamEvent, syncFlowEntity, fileEntity, file, folderEntity);
             // 减少 pending event count
             this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
@@ -132,6 +136,10 @@ public class DownstreamHandler implements DisposableBean {
             return;
         }
         for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
+            // 如果 syncFlow 停止, 则不处理
+            if (this.isSyncFlowPaused(syncFlowEntity)) {
+                continue;
+            }
             // 幂等
             FolderEntity destFolderEntity = this.folderService.getById(syncFlowEntity.getDestFolderId());
             if (ObjectUtils.isEmpty(destFolderEntity)) {
@@ -187,6 +195,10 @@ public class DownstreamHandler implements DisposableBean {
         FileEntity fileEntity = downStreamEvent.getFileEntity();
         Path file = downStreamEvent.getFile();
         SyncFlowEntity syncFlowEntity = downStreamEvent.getSyncFlowEntity();
+        // 如果 syncFlow 停止, 则不处理
+        if (this.isSyncFlowPaused(syncFlowEntity)) {
+            return;
+        }
         // 幂等
         FileSyncMappingEntity fileSyncMappingEntity = this.fileSyncMappingService.getBySyncFlowIdAndSourceFileId(
                 syncFlowEntity.getSyncFlowId(),
@@ -207,10 +219,12 @@ public class DownstreamHandler implements DisposableBean {
     }
 
     private void onRefilterDeleted(DownStreamEvent downStreamEvent) throws SyncDuoException {
-        FolderEntity folderEntity = downStreamEvent.getFolderEntity();
         FileEntity fileEntity = downStreamEvent.getFileEntity();
-        Path file = downStreamEvent.getFile();
         SyncFlowEntity syncFlowEntity = downStreamEvent.getSyncFlowEntity();
+        // 如果 syncFlow 停止, 则不处理
+        if (this.isSyncFlowPaused(syncFlowEntity)) {
+            return;
+        }
         // 删除文件
         FileSyncMappingEntity fileSyncMappingEntity = this.fileSyncMappingService.getBySyncFlowIdAndSourceFileId(
                 syncFlowEntity.getSyncFlowId(),
@@ -339,6 +353,10 @@ public class DownstreamHandler implements DisposableBean {
                     newFileName;
         }
         return destFileFullPath;
+    }
+
+    private boolean isSyncFlowPaused(SyncFlowEntity syncFlowEntity) {
+        return SyncFlowStatusEnum.PAUSE.name().equals(syncFlowEntity.getSyncStatus());
     }
 
     @Override

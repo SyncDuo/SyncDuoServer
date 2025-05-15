@@ -37,7 +37,7 @@ public class SystemBus {
 
     public void sendDownStreamEvent(DownStreamEvent downStreamEvent) throws SyncDuoException {
         log.debug("downStreamEvent: {}", downStreamEvent);
-        this.downStreamEventQueue.add(downStreamEvent);
+        this.downStreamEventQueue.offer(downStreamEvent);
         this.incrSyncFlowPendingEventCount(downStreamEvent);
     }
 

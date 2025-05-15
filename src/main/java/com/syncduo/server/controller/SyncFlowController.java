@@ -1,13 +1,11 @@
 package com.syncduo.server.controller;
 
+import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.enums.SyncModeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.http.FolderStats;
-import com.syncduo.server.model.http.syncflow.CreateSyncFlowRequest;
-import com.syncduo.server.model.http.syncflow.DeleteSyncFlowRequest;
-import com.syncduo.server.model.http.syncflow.SyncFlowInfo;
-import com.syncduo.server.model.http.syncflow.SyncFlowResponse;
+import com.syncduo.server.model.http.syncflow.*;
 import com.syncduo.server.model.entity.FolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.bus.FolderWatcher;
@@ -27,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 
@@ -65,6 +64,124 @@ public class SyncFlowController {
         this.fileSyncMappingService = fileSyncMappingService;
         this.systemManagementService = systemManagementService;
         this.systemConfigService = systemConfigService;
+    }
+
+    @PostMapping("/pause-sync-flow")
+    public SyncFlowResponse pauseSyncFlow(@RequestBody PauseSyncFlowRequest pauseSyncFlowRequest) {
+        // 参数检查
+        if (ObjectUtils.isEmpty(pauseSyncFlowRequest)) {
+            return SyncFlowResponse.onError("pause sync flow failed, pause sync flow request is empty");
+        }
+        if (StringUtils.isBlank(pauseSyncFlowRequest.getSyncFlowId())) {
+            return SyncFlowResponse.onError("pause sync flow failed. syncFlowId is blank");
+        }
+        long syncFlowId;
+        try {
+            syncFlowId = Long.parseLong(pauseSyncFlowRequest.getSyncFlowId());
+        } catch (NumberFormatException e) {
+            return SyncFlowResponse.onError("pause sync flow failed. syncFlowId convert to long failed." +
+                    e.getMessage());
+        }
+        SyncFlowEntity syncFlowEntity;
+        try {
+            syncFlowEntity = this.syncFlowService.getBySyncFlowIdFromCache(syncFlowId);
+            if (ObjectUtils.isEmpty(syncFlowEntity)) {
+                return SyncFlowResponse.onSuccess("pause sync flow success.");
+            }
+        } catch (SyncDuoException e) {
+            return SyncFlowResponse.onError("pause sync flow failed. get syncflow failed." +
+                    e.getMessage());
+        }
+        // pause syncflow 操作
+        try {
+            this.syncFlowService.updateSyncFlowStatus(syncFlowId, SyncFlowStatusEnum.PAUSE);
+        } catch (SyncDuoException e) {
+            return SyncFlowResponse.onError("pause sync flow failed." + e.getMessage());
+        }
+        return SyncFlowResponse.onSuccess("pause sync flow success.");
+    }
+
+    @PostMapping("/pause-all-sync-flow")
+    public SyncFlowResponse pauseAllSyncFlow() {
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        if (CollectionUtils.isEmpty(allSyncFlow)) {
+            return SyncFlowResponse.onSuccess("pause all sync flow success.");
+        }
+        for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
+            try {
+                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.PAUSE);
+            } catch (SyncDuoException e) {
+                log.error("pause one sync flow failed", e);
+            }
+        }
+        return SyncFlowResponse.onSuccess("pause all sync flow success.");
+    }
+
+    @PostMapping("/rescan-sync-flow")
+    public SyncFlowResponse rescanSyncFlow(@RequestBody RescanSyncFlowRequest rescanSyncFlowRequest) {
+        // 参数检查
+        if (ObjectUtils.isEmpty(rescanSyncFlowRequest)) {
+            return SyncFlowResponse.onError("rescan sync flow failed, rescan sync flow request is empty");
+        }
+        if (StringUtils.isBlank(rescanSyncFlowRequest.getSyncFlowId())) {
+            return SyncFlowResponse.onError("rescan sync flow failed. syncFlowId is blank");
+        }
+        long syncFlowId;
+        try {
+            syncFlowId = Long.parseLong(rescanSyncFlowRequest.getSyncFlowId());
+        } catch (NumberFormatException e) {
+            return SyncFlowResponse.onError("rescan sync flow failed. syncFlowId convert to long failed." +
+                    e.getMessage());
+        }
+        SyncFlowEntity syncFlowEntity;
+        try {
+            syncFlowEntity = this.syncFlowService.getBySyncFlowIdFromCache(syncFlowId);
+            if (ObjectUtils.isEmpty(syncFlowEntity)) {
+                return SyncFlowResponse.onSuccess("rescan sync flow success.");
+            }
+            if (!syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name())) {
+                return SyncFlowResponse.onSuccess("rescan sync flow success. sync flow status is not SYNC");
+            }
+        } catch (SyncDuoException e) {
+            return SyncFlowResponse.onError("rescan sync flow failed. get syncflow failed." +
+                    e.getMessage());
+        }
+        // rescan syncflow 操作
+        try {
+            boolean sourceFolderUpdated =
+                    this.systemManagementService.updateFolderFromFileSystem(syncFlowEntity.getSourceFolderId());
+            if (sourceFolderUpdated) {
+                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.NOT_SYNC);
+            }
+            this.systemManagementService.updateFolderFromFileSystem(syncFlowEntity.getDestFolderId());
+        } catch (SyncDuoException e) {
+            return SyncFlowResponse.onError("rescan sync flow failed." + e.getMessage());
+        }
+        return SyncFlowResponse.onSuccess("rescan sync flow success.");
+    }
+
+    @PostMapping("/rescan-all-sync-flow")
+    public SyncFlowResponse rescanAllSyncFlow() {
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        if (CollectionUtils.isEmpty(allSyncFlow)) {
+            return SyncFlowResponse.onSuccess("rescan all sync flow success.");
+        }
+        for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
+            if (syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name())) {
+                // rescan syncflow 操作
+                try {
+                    boolean sourceFolderUpdated =
+                            this.systemManagementService.updateFolderFromFileSystem(syncFlowEntity.getSourceFolderId());
+                    if (sourceFolderUpdated) {
+                        this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.NOT_SYNC);
+                    }
+                    this.systemManagementService.updateFolderFromFileSystem(syncFlowEntity.getDestFolderId());
+                } catch (SyncDuoException e) {
+                    log.error("rescan one sync flow failed.", e);
+                }
+            }
+        }
+        return SyncFlowResponse.onSuccess("rescan all sync flow success.");
     }
 
     @PostMapping("/add-sync-flow")
