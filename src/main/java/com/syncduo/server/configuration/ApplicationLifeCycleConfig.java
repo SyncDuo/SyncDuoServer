@@ -6,6 +6,7 @@ import com.syncduo.server.bus.handler.FileSystemEventHandler;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.SystemConfigEntity;
 import com.syncduo.server.service.bussiness.impl.SystemConfigService;
+import com.syncduo.server.service.cache.SyncFlowServiceCache;
 import com.syncduo.server.service.facade.SystemManagementService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,8 @@ public class ApplicationLifeCycleConfig {
     @Value("${spring.profiles.active:prod}")
     private String activeProfile;
 
+    private final SyncFlowServiceCache syncFlowServiceCache;
+
     private final SystemManagementService systemManagementService;
 
     private final FileSystemEventHandler fileSystemEventHandler;
@@ -33,11 +36,13 @@ public class ApplicationLifeCycleConfig {
 
     @Autowired
     public ApplicationLifeCycleConfig(
+            SyncFlowServiceCache syncFlowServiceCache,
             SystemManagementService systemManagementService,
             FileSystemEventHandler fileSystemEventHandler,
             DownstreamHandler downstreamHandler,
             SystemConfigService systemConfigService,
             ThreadPoolConfig threadPoolConfig) {
+        this.syncFlowServiceCache = syncFlowServiceCache;
         this.systemManagementService = systemManagementService;
         this.fileSystemEventHandler = fileSystemEventHandler;
         this.downstreamHandler = downstreamHandler;
@@ -61,6 +66,8 @@ public class ApplicationLifeCycleConfig {
         } else {
             log.info("Starting up development environment");
         }
+        // syncFlow cache 冷启动
+        this.syncFlowServiceCache.preloadCache();
         // 启动 handler
         fileSystemEventHandler.startHandle();
         downstreamHandler.startHandle();

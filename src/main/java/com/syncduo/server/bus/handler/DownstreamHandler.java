@@ -8,6 +8,7 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.model.internal.DownStreamEvent;
 import com.syncduo.server.service.bussiness.impl.*;
+import com.syncduo.server.service.cache.SyncFlowServiceCache;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -41,7 +42,7 @@ public class DownstreamHandler implements DisposableBean {
 
     private final SyncSettingService syncSettingService;
 
-    private final SyncFlowService syncFlowService;
+    private final SyncFlowServiceCache syncFlowServiceCache;
 
     private final FileOperationMonitor fileOperationMonitor;
 
@@ -54,7 +55,7 @@ public class DownstreamHandler implements DisposableBean {
                              FileEventService fileEventService,
                              FileSyncMappingService fileSyncMappingService,
                              SyncSettingService syncSettingService,
-                             SyncFlowService syncFlowService,
+                             SyncFlowServiceCache syncFlowServiceCache,
                              FileOperationMonitor fileOperationMonitor) {
         this.systemBus = systemBus;
         this.fileService = fileService;
@@ -62,7 +63,7 @@ public class DownstreamHandler implements DisposableBean {
         this.fileEventService = fileEventService;
         this.fileSyncMappingService = fileSyncMappingService;
         this.syncSettingService = syncSettingService;
-        this.syncFlowService = syncFlowService;
+        this.syncFlowServiceCache = syncFlowServiceCache;
         this.fileOperationMonitor = fileOperationMonitor;
     }
 
@@ -101,7 +102,7 @@ public class DownstreamHandler implements DisposableBean {
         // 查询 syncflow, 如果 DownStreamEvent 已经有 syncFlowEntity, 则不需要从 cache 查询
         List<SyncFlowEntity> syncFlowEntityList = new ArrayList<>();
         if (ObjectUtils.isEmpty(downStreamEvent.getSyncFlowEntity())) {
-            syncFlowEntityList = this.syncFlowService.getBySourceIdFromCache(folderEntity.getFolderId());
+            syncFlowEntityList = this.syncFlowServiceCache.getBySourceFolderId(folderEntity.getFolderId());
         } else {
             syncFlowEntityList.add(downStreamEvent.getSyncFlowEntity());
         }
@@ -129,7 +130,7 @@ public class DownstreamHandler implements DisposableBean {
         Path file = downStreamEvent.getFile();
         // 查询 syncflow
         List<SyncFlowEntity> syncFlowEntityList =
-                this.syncFlowService.getBySourceIdFromCache(folderEntity.getFolderId());
+                this.syncFlowServiceCache.getBySourceFolderId(folderEntity.getFolderId());
         if (CollectionUtils.isEmpty(syncFlowEntityList)) {
             // 减少 pending event count
             this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);

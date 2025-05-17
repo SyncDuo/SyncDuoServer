@@ -5,25 +5,17 @@ import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.FolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.model.entity.SystemConfigEntity;
 import com.syncduo.server.model.http.FolderStats;
-import com.syncduo.server.model.http.systemconfig.SystemConfigResponse;
-import com.syncduo.server.model.http.systemconfig.UpdateSystemConfigRequest;
 import com.syncduo.server.model.http.systeminfo.SystemInfoResponse;
 import com.syncduo.server.service.bussiness.impl.FolderService;
-import com.syncduo.server.service.bussiness.impl.SyncFlowService;
-import com.syncduo.server.service.bussiness.impl.SystemConfigService;
+import com.syncduo.server.service.cache.SyncFlowServiceCache;
 import com.syncduo.server.util.FilesystemUtil;
 import com.syncduo.server.util.SystemInfoUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 
@@ -33,7 +25,7 @@ import java.util.*;
 @CrossOrigin
 public class SystemInfoController {
 
-    private final SyncFlowService syncFlowService;
+    private final SyncFlowServiceCache syncFlowServiceCache;
 
     private final FolderWatcher folderWatcher;
 
@@ -43,11 +35,11 @@ public class SystemInfoController {
 
     @Autowired
     public SystemInfoController(
-            SyncFlowService syncFlowService,
+            SyncFlowServiceCache syncFlowServiceCache,
             FolderWatcher folderWatcher,
             FolderService folderService,
             FileOperationMonitor fileOperationMonitor) {
-        this.syncFlowService = syncFlowService;
+        this.syncFlowServiceCache = syncFlowServiceCache;
         this.folderWatcher = folderWatcher;
         this.folderService = folderService;
         this.fileOperationMonitor = fileOperationMonitor;
@@ -64,7 +56,7 @@ public class SystemInfoController {
             return systemInfoResponse.onFailed("获取 hostName 失败. 异常是 %s" + e);
         }
         // syncFlowNumber
-        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowServiceCache.getAllSyncFlow();
         if (CollectionUtils.isEmpty(allSyncFlow)) {
             systemInfoResponse.setSyncFlowNumber(0);
         } else {

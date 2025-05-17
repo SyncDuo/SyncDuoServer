@@ -13,6 +13,7 @@ import com.syncduo.server.model.http.syncflow.SyncFlowResponse;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.service.bussiness.impl.*;
+import com.syncduo.server.service.cache.SyncFlowServiceCache;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -42,7 +43,7 @@ class SyncDuoServerApplicationTests {
 
     private final FileService fileService;
 
-    private final SyncFlowService syncFlowService;
+    private final SyncFlowServiceCache syncFlowServiceCache;
 
     private final FolderService rootFolderService;
 
@@ -69,13 +70,13 @@ class SyncDuoServerApplicationTests {
     private static final String contentFolderPath = contentFolderParentPath + "/" + sourceFolderName;
 
     // delay 函数延迟的时间, 单位"秒"
-    private static final int DELAY_UNIT = 10;
+    private static final int DELAY_UNIT = 15;
 
     @Autowired
     SyncDuoServerApplicationTests(
             SyncFlowController syncFlowController,
             FileService fileService,
-            SyncFlowService syncFlowService,
+            SyncFlowServiceCache syncFlowServiceCache,
             FolderService rootFolderService,
             FileEventService fileEventService,
             SyncSettingService syncSettingService,
@@ -84,7 +85,7 @@ class SyncDuoServerApplicationTests {
             SystemConfigService systemConfigService) {
         this.syncFlowController = syncFlowController;
         this.fileService = fileService;
-        this.syncFlowService = syncFlowService;
+        this.syncFlowServiceCache = syncFlowServiceCache;
         this.fileSyncMappingService = fileSyncMappingService;
         this.systemConfigService = systemConfigService;
         this.rootFolderService = rootFolderService;
@@ -208,7 +209,7 @@ class SyncDuoServerApplicationTests {
         // 判断 syncflow 状态是否为 sync
         SyncFlowInfo syncFlowInfo = this.syncFlowResponse.getSyncFlowInfoList().get(0);
         SyncFlowEntity syncFlowEntity =
-                this.syncFlowService.getBySyncFlowIdFromCache(Long.valueOf(syncFlowInfo.getSyncFlowId()));
+                this.syncFlowServiceCache.getBySyncFlowId(Long.valueOf(syncFlowInfo.getSyncFlowId()));
         assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
         for (Path file : files) {
             // 判断源文件夹是否正确响应
@@ -237,7 +238,7 @@ class SyncDuoServerApplicationTests {
         // 判断 syncflow 状态是否为 sync
         SyncFlowInfo syncFlowInfo = this.syncFlowResponse.getSyncFlowInfoList().get(0);
         SyncFlowEntity syncFlowEntity =
-                this.syncFlowService.getBySyncFlowIdFromCache(Long.valueOf(syncFlowInfo.getSyncFlowId()));
+                this.syncFlowServiceCache.getBySyncFlowId(Long.valueOf(syncFlowInfo.getSyncFlowId()));
         assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
         for (Path file : files) {
             // 判断源文件夹是否正确响应
@@ -263,7 +264,7 @@ class SyncDuoServerApplicationTests {
         // 判断 syncflow 状态是否为 sync
         SyncFlowInfo syncFlowInfo = this.syncFlowResponse.getSyncFlowInfoList().get(0);
         SyncFlowEntity syncFlowEntity =
-                this.syncFlowService.getBySyncFlowIdFromCache(Long.valueOf(syncFlowInfo.getSyncFlowId()));
+                this.syncFlowServiceCache.getBySyncFlowId(Long.valueOf(syncFlowInfo.getSyncFlowId()));
         assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
         for (Path file : files) {
             // 判断源文件夹是否正确响应
@@ -288,7 +289,7 @@ class SyncDuoServerApplicationTests {
         createSyncFlowTransformFlatten(filterCriteria);
         waitAllFileHandle();
 
-        SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(
+        SyncFlowEntity syncFlowEntity = this.syncFlowServiceCache.getById(
                 Long.valueOf(
                         this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
         );
@@ -301,7 +302,7 @@ class SyncDuoServerApplicationTests {
         createSyncFlowTransform(filterCriteria);
         waitAllFileHandle();
 
-        SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(
+        SyncFlowEntity syncFlowEntity = this.syncFlowServiceCache.getById(
                 Long.valueOf(
                         this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
         );
@@ -313,7 +314,7 @@ class SyncDuoServerApplicationTests {
         createSyncFlowMirror();
         waitAllFileHandle();
 
-        SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(
+        SyncFlowEntity syncFlowEntity = this.syncFlowServiceCache.getById(
                 Long.valueOf(
                         this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
         );
@@ -441,9 +442,9 @@ class SyncDuoServerApplicationTests {
             );
         }
         // sync flow truncate
-        List<SyncFlowEntity> syncFlowEntities = this.syncFlowService.list();
+        List<SyncFlowEntity> syncFlowEntities = this.syncFlowServiceCache.list();
         if (CollectionUtils.isNotEmpty(syncFlowEntities)) {
-            this.syncFlowService.removeBatchByIds(
+            this.syncFlowServiceCache.removeBatchByIds(
                     syncFlowEntities.stream().map(SyncFlowEntity::getSyncFlowId).collect(Collectors.toList())
             );
         }

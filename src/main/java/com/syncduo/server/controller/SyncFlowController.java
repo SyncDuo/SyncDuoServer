@@ -12,6 +12,7 @@ import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.model.entity.SyncSettingEntity;
 import com.syncduo.server.model.entity.SystemConfigEntity;
 import com.syncduo.server.service.bussiness.impl.*;
+import com.syncduo.server.service.cache.SyncFlowServiceCache;
 import com.syncduo.server.service.facade.SystemManagementService;
 import com.syncduo.server.util.FilesystemUtil;
 import com.syncduo.server.util.JsonUtil;
@@ -25,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 
@@ -36,7 +36,7 @@ import java.util.List;
 public class SyncFlowController {
     private final FolderService folderService;
 
-    private final SyncFlowService syncFlowService;
+    private final SyncFlowServiceCache syncFlowServiceCache;
 
     private final SyncSettingService syncSettingService;
 
@@ -51,14 +51,14 @@ public class SyncFlowController {
     @Autowired
     public SyncFlowController(
             FolderService folderService,
-            SyncFlowService syncFlowService,
+            SyncFlowServiceCache syncFlowServiceCache,
             SyncSettingService syncSettingService,
             FolderWatcher folderWatcher,
             FileSyncMappingService fileSyncMappingService,
             SystemManagementService systemManagementService,
             SystemConfigService systemConfigService) {
         this.folderService = folderService;
-        this.syncFlowService = syncFlowService;
+        this.syncFlowServiceCache = syncFlowServiceCache;
         this.syncSettingService = syncSettingService;
         this.folderWatcher = folderWatcher;
         this.fileSyncMappingService = fileSyncMappingService;
@@ -84,7 +84,7 @@ public class SyncFlowController {
         }
         SyncFlowEntity syncFlowEntity;
         try {
-            syncFlowEntity = this.syncFlowService.getBySyncFlowIdFromCache(syncFlowId);
+            syncFlowEntity = this.syncFlowServiceCache.getBySyncFlowId(syncFlowId);
             if (ObjectUtils.isEmpty(syncFlowEntity)) {
                 return SyncFlowResponse.onSuccess("pause sync flow success.");
             }
@@ -94,7 +94,7 @@ public class SyncFlowController {
         }
         // pause syncflow 操作
         try {
-            this.syncFlowService.updateSyncFlowStatus(syncFlowId, SyncFlowStatusEnum.PAUSE);
+            this.syncFlowServiceCache.updateSyncFlowStatus(syncFlowId, SyncFlowStatusEnum.PAUSE);
         } catch (SyncDuoException e) {
             return SyncFlowResponse.onError("pause sync flow failed." + e.getMessage());
         }
@@ -103,13 +103,13 @@ public class SyncFlowController {
 
     @PostMapping("/pause-all-sync-flow")
     public SyncFlowResponse pauseAllSyncFlow() {
-        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowServiceCache.getAllSyncFlow();
         if (CollectionUtils.isEmpty(allSyncFlow)) {
             return SyncFlowResponse.onSuccess("pause all sync flow success.");
         }
         for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
             try {
-                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.PAUSE);
+                this.syncFlowServiceCache.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.PAUSE);
             } catch (SyncDuoException e) {
                 log.error("pause one sync flow failed", e);
             }
@@ -135,7 +135,7 @@ public class SyncFlowController {
         }
         SyncFlowEntity syncFlowEntity;
         try {
-            syncFlowEntity = this.syncFlowService.getBySyncFlowIdFromCache(syncFlowId);
+            syncFlowEntity = this.syncFlowServiceCache.getBySyncFlowId(syncFlowId);
             if (ObjectUtils.isEmpty(syncFlowEntity)) {
                 return SyncFlowResponse.onSuccess("rescan sync flow success.");
             }
@@ -151,7 +151,7 @@ public class SyncFlowController {
             boolean sourceFolderUpdated =
                     this.systemManagementService.updateFolderFromFileSystem(syncFlowEntity.getSourceFolderId());
             if (sourceFolderUpdated) {
-                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.NOT_SYNC);
+                this.syncFlowServiceCache.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.NOT_SYNC);
             }
             this.systemManagementService.updateFolderFromFileSystem(syncFlowEntity.getDestFolderId());
         } catch (SyncDuoException e) {
@@ -162,7 +162,7 @@ public class SyncFlowController {
 
     @PostMapping("/rescan-all-sync-flow")
     public SyncFlowResponse rescanAllSyncFlow() {
-        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowServiceCache.getAllSyncFlow();
         if (CollectionUtils.isEmpty(allSyncFlow)) {
             return SyncFlowResponse.onSuccess("rescan all sync flow success.");
         }
@@ -173,7 +173,7 @@ public class SyncFlowController {
                     boolean sourceFolderUpdated =
                             this.systemManagementService.updateFolderFromFileSystem(syncFlowEntity.getSourceFolderId());
                     if (sourceFolderUpdated) {
-                        this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.NOT_SYNC);
+                        this.syncFlowServiceCache.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.NOT_SYNC);
                     }
                     this.systemManagementService.updateFolderFromFileSystem(syncFlowEntity.getDestFolderId());
                 } catch (SyncDuoException e) {
@@ -222,14 +222,14 @@ public class SyncFlowController {
         // 创建 syncFlow
         SyncFlowEntity syncFlowEntity;
         try {
-            SyncFlowEntity dbResult = this.syncFlowService.getBySourceFolderIdAndDest(
+            SyncFlowEntity dbResult = this.syncFlowServiceCache.getBySourceFolderIdAndDest(
                     sourceFolderEntity.getFolderId(),
                     destFolderEntity.getFolderId()
             );
             if (ObjectUtils.isNotEmpty(dbResult)) {
                 return SyncFlowResponse.onSuccess("create sync flow success. already exist!");
             }
-            syncFlowEntity = this.syncFlowService.createSyncFlow(
+            syncFlowEntity = this.syncFlowServiceCache.createSyncFlow(
                     sourceFolderEntity.getFolderId(),
                     destFolderEntity.getFolderId(),
                     createSyncFlowRequest.getSyncFlowTypeEnum(),
@@ -306,7 +306,7 @@ public class SyncFlowController {
             return this.generateSyncFlowErrorResponse(null, errorMessage);
         }
         // 获取 sync flow
-        SyncFlowEntity syncFlowEntity = this.syncFlowService.getById(syncFlowId);
+        SyncFlowEntity syncFlowEntity = this.syncFlowServiceCache.getById(syncFlowId);
         if (ObjectUtils.isEmpty(syncFlowEntity)) {
             SyncFlowInfo syncFlowInfo = SyncFlowInfo.builder()
                     .syncFlowId(syncFlowEntity.getSyncFlowId().toString())
@@ -319,7 +319,7 @@ public class SyncFlowController {
         this.folderWatcher.stopMonitor(syncFlowEntity.getDestFolderId());
         // 删除 syncFlow
         try {
-            this.syncFlowService.deleteSyncFlow(syncFlowEntity);
+            this.syncFlowServiceCache.deleteSyncFlow(syncFlowEntity);
         } catch (SyncDuoException e) {
             String errorMessage = "deleteSyncFlow failed. deleteSyncFlow failed. " +
                     "deleteSyncFlowRequest is %s".formatted(deleteSyncFlowRequest);
@@ -351,7 +351,7 @@ public class SyncFlowController {
     @GetMapping("/get-sync-flow")
     public SyncFlowResponse getSyncFlow() {
         // 查询全部 sync-flow
-        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowServiceCache.getAllSyncFlow();
         if (CollectionUtils.isEmpty(allSyncFlow)) {
             return SyncFlowResponse.onSuccess("没有正在运行的 sync flow", null);
         }

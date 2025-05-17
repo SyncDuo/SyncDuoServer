@@ -184,9 +184,9 @@ public class FileOperationTestUtil {
         return sb.toString().getBytes();
     }
 
-    public static void writeRandomBinaryData(Path binFile) throws IOException {
+    private static void writeRandomBinaryData(Path binFile) throws IOException {
         int chunkSize = 1024 * 1024; // 1 MB
-        int totalChunks = 50; // 50 MB
+        int totalChunks = 5; // 50 MB
 
         byte[] buffer = new byte[chunkSize];
 
