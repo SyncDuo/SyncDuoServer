@@ -113,6 +113,13 @@ public class FileSystemEventHandler implements DisposableBean {
             log.warn("onFileChange failed. fileEntity is not exist. fileEvent is {}", fileSystemEvent);
             return;
         }
+        if (!this.fileService.isFileEntityDiffFromFile(fileEntity, fileSystemEvent.getFile())) {
+            // file entity 已经修改不是一个错误, 因为在这个系统设计里面, 有负反馈机制
+            // 1. 文件修改在 folder a, 通过 downStreamHandler, 文件的修改会传导到 folder b 并修改 file 和 file entity
+            // 2. 此时就会触发 watcher b, 从而报出 file entity 已修改
+            log.debug("fileEntity already change!. fileEvent is {}", fileSystemEvent);
+            return;
+        }
         // 更新 file entity
         this.fileService.updateFileEntityByFile(
                 fileEntity,
@@ -126,6 +133,7 @@ public class FileSystemEventHandler implements DisposableBean {
         FolderEntity folderEntity = this.folderService.getById(fileSystemEvent.getFolderId());
         FileEntity fileEntity;
         if (ObjectUtils.isEmpty(fileSystemEvent.getFile())) {
+            // 说明是通过 db 和 filesystem 主动比较出来的, 使用 fileEntityNotInFileSystem
             fileEntity = fileSystemEvent.getFileEntityNotInFilesystem();
         } else {
             fileEntity = this.fileService.getFileEntityFromFile(
@@ -134,13 +142,14 @@ public class FileSystemEventHandler implements DisposableBean {
                     fileSystemEvent.getFile()
             );
             if (ObjectUtils.isEmpty(fileEntity)) {
+                // 文件删除不存在负反馈, 因为文件删除在整个系统中是 ignore delete 的
                 log.warn("onFileDelete failed. fileEntity is not exist. fileEvent is {}", fileSystemEvent);
                 return;
             }
         }
         // 删除 file entity
-        this.fileService.deleteBatchByFileEntity(Collections.singletonList(fileEntity));
-        // 判断是否 desynced, 如果删除的文件在 file_sync_mapping 中, 则标记为 desynced
+        this.fileService.removeById(fileEntity);
+        // 如果删除的文件是"下游", 则在 file_sync_mapping 中标记为 desync, 表示不需要从上游同步
         this.fileSyncMappingService.desyncByDestFileId(fileEntity.getFileId());
         durationAndDownStream(fileSystemEvent, folderEntity, fileEntity);
     }

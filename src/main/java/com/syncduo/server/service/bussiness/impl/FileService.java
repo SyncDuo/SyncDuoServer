@@ -19,8 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,19 +30,34 @@ import java.util.List;
 @Slf4j
 public class FileService extends ServiceImpl<FileMapper, FileEntity> implements IFileService {
 
-    public List<FileEntity> getAllFileByFolderId(Long folderId) throws SyncDuoException {
+    public List<FileEntity> getByFileIds(Collection<? extends Serializable> idList) {
+        if (CollectionUtils.isEmpty(idList)) {
+            return Collections.emptyList();
+        }
         LambdaQueryWrapper<FileEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(FileEntity::getFolderId, folderId);
+        queryWrapper.in(FileEntity::getFileId, idList);
         queryWrapper.eq(FileEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
         return this.list(queryWrapper);
     }
 
-    public List<FileEntity> getByFileIdList(List<Long> fileIdList) throws SyncDuoException {
-        if (CollectionUtils.isEmpty(fileIdList)) {
-            return Collections.emptyList();
+    public boolean isFileEntityDiffFromFile(FileEntity fileEntity, Path file) throws SyncDuoException {
+        Pair<Timestamp, Timestamp> fileCrTimeAndMTime = FilesystemUtil.getFileCrTimeAndMTime(file);
+        String md5Checksum = FilesystemUtil.getMD5Checksum(file);
+        if (!fileEntity.getFileMd5Checksum().equals(md5Checksum)) {
+            return true;
         }
+        return !fileEntity.getFileLastModifiedTime().equals(fileCrTimeAndMTime.getRight());
+    }
+
+    public boolean isSourceFileEntityDiffFromDest(
+            FileEntity sourceFileEntity,
+            FileEntity destFileEntity) {
+        return !sourceFileEntity.getFileMd5Checksum().equals(destFileEntity.getFileMd5Checksum());
+    }
+
+    public List<FileEntity> getAllFileByFolderId(Long folderId) {
         LambdaQueryWrapper<FileEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(FileEntity::getFileId, fileIdList);
+        queryWrapper.eq(FileEntity::getFolderId, folderId);
         queryWrapper.eq(FileEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
         return this.list(queryWrapper);
     }
@@ -66,20 +83,11 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         return fileEntity;
     }
 
-    public void createFileRecord(FileEntity fileEntity) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(fileEntity)) {
-            throw new SyncDuoException("创建文件记录失败, FileEntity 为空");
-        }
-        boolean saved = this.save(fileEntity);
-        if (!saved) {
-            throw new SyncDuoException("创建文件记录失败, 无法写入数据库");
-        }
-    }
-
     public void updateFileEntityByFile(FileEntity fileEntity, Path file) throws SyncDuoException {
         if (ObjectUtils.anyNull(fileEntity, file)) {
             throw new SyncDuoException("获取file失败, fileEntity 或 file 为空");
         }
+
         // 更新  md5 checksum, last_modified_time
         Pair<Timestamp, Timestamp> fileCrTimeAndMTime = FilesystemUtil.getFileCrTimeAndMTime(file);
         fileEntity.setLastUpdatedTime(fileCrTimeAndMTime.getRight());
@@ -147,22 +155,6 @@ public class FileService extends ServiceImpl<FileMapper, FileEntity> implements 
         List<FileEntity> dbResult = this.list(queryWrapper);
 
         return CollectionUtils.isEmpty(dbResult) ? null : dbResult.get(0);
-    }
-
-    public IPage<FileEntity> getByRootFolderIdPaged(Long rootFolderId, Long page, Long pageSize)
-            throws SyncDuoException {
-        if (ObjectUtils.anyNull(rootFolderId, page, pageSize)) {
-            throw new SyncDuoException(
-                    "获取文件记录失败, rootFolderId %s, Long page %s, Long pageSize %s 存在空值"
-                            .formatted(rootFolderId, page, pageSize));
-        }
-        if (page <= 0 || pageSize <= 0 || pageSize >= 1000) {
-            throw new SyncDuoException("page 或 pageSize 小于 0 或者 pageSize 大于 1000");
-        }
-        LambdaQueryWrapper<FileEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(FileEntity::getFolderId, rootFolderId);
-        queryWrapper.eq(FileEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
-        return this.page(new Page<>(page, pageSize), queryWrapper);
     }
 
     public FileEntity fillFileEntityForCreate(

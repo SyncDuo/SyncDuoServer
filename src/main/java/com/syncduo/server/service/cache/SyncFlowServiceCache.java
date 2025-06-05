@@ -1,6 +1,5 @@
 package com.syncduo.server.service.cache;
 
-import com.sun.jna.platform.win32.Winspool;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
@@ -16,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+// todo: 重新设计 cache map, 符合 system bus 的设计
 @Service
 @Slf4j
 public class SyncFlowServiceCache extends SyncFlowService {
@@ -180,106 +180,6 @@ public class SyncFlowServiceCache extends SyncFlowService {
         super.deleteSyncFlowDB(syncFlowEntity);
         // 删除缓存
         this.removeElementInEntry(syncFlowEntity);
-    }
-
-    // sourceFolderId 对应的全部 sync flow 都增加 pending event count
-    public void addPendingEventCount(long sourceFolderId) throws SyncDuoException {
-        List<SyncFlowStatus> cacheResult = this.cacheMap.get(sourceFolderId);
-        if (CollectionUtils.isEmpty(cacheResult)) {
-            // 混合策略更新缓存
-            this.hybridUpdateCache(
-                    sourceFolderId,
-                    () -> super.getBySourceFolderIdDB(sourceFolderId)
-            );
-            // 重复查询, 仍然为空则说明 syncFlow 被删除
-            cacheResult = this.cacheMap.get(sourceFolderId);
-            if (CollectionUtils.isEmpty(cacheResult)) {
-                return;
-            }
-        }
-        for (SyncFlowStatus syncFlowStatus : cacheResult) {
-            boolean statusChanged = syncFlowStatus.addPendingEventCount();
-            if (statusChanged) {
-                this.updateSyncFlowStatus(
-                        syncFlowStatus.getSyncFlowEntity(),
-                        SyncFlowStatusEnum.NOT_SYNC
-                );
-            }
-        }
-    }
-
-    // sourceFolderId 对应的全部 sync flow 都减少 pending event count
-    public void decrPendingEventCount(Long sourceFolderId) throws SyncDuoException {
-        List<SyncFlowStatus> cacheResult = this.cacheMap.get(sourceFolderId);
-        if (CollectionUtils.isEmpty(cacheResult)) {
-            return;
-        }
-        // 找到 folder id 为 source id, 对应的 syncFlowId
-        for (SyncFlowStatus syncFlowStatus : cacheResult) {
-            boolean isStatusChanged = syncFlowStatus.decrPendingEventCount();
-            if (isStatusChanged) {
-                this.updateSyncFlowStatus(
-                        syncFlowStatus.getSyncFlowEntity(),
-                        SyncFlowStatusEnum.SYNC
-                );
-            }
-        }
-    }
-
-    // 指定 sync flow id 增加 pending event count
-    public void addPendingEventCount(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
-        SyncFlowStatus cacheResult = this.getSyncFlowStatusBySyncFlowEntity(syncFlowEntity);
-        if (ObjectUtils.isEmpty(cacheResult)) {
-            // 混合策略更新缓存
-            this.hybridUpdateCache(
-                    syncFlowEntity.getSourceFolderId(),
-                    () -> {
-                        SyncFlowEntity dbResult = super.getBySyncFlowIdDB(syncFlowEntity.getSyncFlowId());
-                        return Collections.singletonList(dbResult);
-                    }
-            );
-            // 重复查询
-            cacheResult = this.getSyncFlowStatusBySyncFlowEntity(syncFlowEntity);
-            // 仍然为空, 则说明 syncFlow 已删除
-            if (ObjectUtils.isEmpty(cacheResult)) {
-                return;
-            }
-        }
-        boolean isStatusChanged = cacheResult.addPendingEventCount();
-        if (isStatusChanged) {
-            this.updateSyncFlowStatus(
-                    cacheResult.getSyncFlowEntity(),
-                    SyncFlowStatusEnum.NOT_SYNC
-            );
-        }
-    }
-
-    // 指定 sync flow id 减少 pending event count
-    public void decrPendingEventCount(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
-        SyncFlowStatus cacheResult = this.getSyncFlowStatusBySyncFlowEntity(syncFlowEntity);
-        // 缓存为空, 说明已删除
-        if (ObjectUtils.isEmpty(cacheResult)) {
-            return;
-        }
-        boolean isStatusChanged = cacheResult.decrPendingEventCount();
-        if (isStatusChanged) {
-            this.updateSyncFlowStatus(cacheResult.getSyncFlowEntity(), SyncFlowStatusEnum.SYNC);
-        }
-    }
-
-    private SyncFlowStatus getSyncFlowStatusBySyncFlowEntity(SyncFlowEntity syncFlowEntity) {
-        Long sourceFolderId = syncFlowEntity.getSourceFolderId();
-        Long syncFlowId = syncFlowEntity.getSyncFlowId();
-        List<SyncFlowStatus> syncFlowStatusList = this.cacheMap.get(sourceFolderId);
-        if (CollectionUtils.isEmpty(syncFlowStatusList)) {
-            return null;
-        }
-        for (SyncFlowStatus syncFlowStatus : syncFlowStatusList) {
-            if (syncFlowStatus.getSyncFlowEntity().getSyncFlowId().equals(syncFlowId)) {
-                return syncFlowStatus;
-            }
-        }
-        return null;
     }
 
     private void hybridUpdateCache(long sourceFolderId, FetchSyncFlow fetchSyncFlow) throws SyncDuoException {

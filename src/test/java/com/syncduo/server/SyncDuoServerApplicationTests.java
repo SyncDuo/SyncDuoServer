@@ -6,10 +6,7 @@ import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.enums.SyncModeEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.http.syncflow.CreateSyncFlowRequest;
-import com.syncduo.server.model.http.syncflow.DeleteSyncFlowRequest;
-import com.syncduo.server.model.http.syncflow.SyncFlowInfo;
-import com.syncduo.server.model.http.syncflow.SyncFlowResponse;
+import com.syncduo.server.model.http.syncflow.*;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.service.bussiness.impl.*;
@@ -92,6 +89,35 @@ class SyncDuoServerApplicationTests {
         this.fileEventService = fileEventService;
         this.syncSettingService = syncSettingService;
         this.folderWatcher = folderWatcher;
+    }
+
+    @Test
+    void ShouldReturnTrueWhenResumeSyncFlow() throws SyncDuoException {
+        // 创建 syncflow
+        createSyncFlowMirror();
+        waitAllFileHandle();
+        SyncFlowInfo syncFlowInfo = this.syncFlowResponse.getSyncFlowInfoList().get(0);
+        assert syncFlowInfo
+                .getSyncStatus()
+                .equals(SyncFlowStatusEnum.SYNC.name());
+        // 停止 syncflow
+        SyncFlowResponse pauseSyncFlowResponse = this.syncFlowController.changeSyncFlowStatus(
+                ChangeSyncFlowStatusRequest.builder()
+                        .syncFlowId(syncFlowInfo.getSyncFlowId())
+                        .syncFlowStatus(SyncFlowStatusEnum.PAUSE.name())
+                        .build()
+        );
+        SyncFlowInfo syncFlowInfo1 = this.syncFlowController.getSyncFlow().getSyncFlowInfoList().get(0);
+        assert syncFlowInfo1.getSyncStatus().equals(SyncFlowStatusEnum.PAUSE.name());
+        // 恢复 syncflow
+        SyncFlowResponse resumeSyncFlowResponse = this.syncFlowController.changeSyncFlowStatus(
+                ChangeSyncFlowStatusRequest.builder()
+                        .syncFlowId(syncFlowInfo.getSyncFlowId())
+                        .syncFlowStatus(SyncFlowStatusEnum.RESUME.name())
+                        .build()
+        );
+        SyncFlowInfo syncFlowInfo2 = this.syncFlowController.getSyncFlow().getSyncFlowInfoList().get(0);
+        assert syncFlowInfo1.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
     }
 
     @Test

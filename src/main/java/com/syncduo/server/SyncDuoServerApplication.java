@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableScheduling
 @EnableAsync
 @EnableTransactionManagement
+// todo: 使用 rclone 替代全部文件操作
 public class SyncDuoServerApplication {
 
     public static void main(String[] args) {

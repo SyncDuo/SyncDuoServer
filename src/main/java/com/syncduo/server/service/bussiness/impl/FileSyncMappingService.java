@@ -36,12 +36,14 @@ public class FileSyncMappingService
         return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
     }
 
-    public void desyncBySourceFileId(Long fileId) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(fileId)) {
-            throw new SyncDuoException("desyncByFileId failed. fileId is null");
+    public void desyncBySyncFlowIdAndFileId(Long syncFlowId, Long fileId) throws SyncDuoException {
+        if (ObjectUtils.anyNull(syncFlowId, fileId)) {
+            throw new SyncDuoException("desyncByFileId failed. syncFlowId or fileId is null");
         }
         LambdaQueryWrapper<FileSyncMappingEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FileSyncMappingEntity::getSyncFlowId, syncFlowId);
         queryWrapper.eq(FileSyncMappingEntity::getSourceFileId, fileId);
+        queryWrapper.eq(FileSyncMappingEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
         List<FileSyncMappingEntity> dbResult = this.list(queryWrapper);
         if (CollectionUtils.isEmpty(dbResult)) {
             return;
@@ -49,8 +51,8 @@ public class FileSyncMappingService
         for (FileSyncMappingEntity fileSyncMappingEntity : dbResult) {
             fileSyncMappingEntity.setFileDesync(FileDesyncEnum.FILE_DESYNC.getCode());
         }
-        List<BatchResult> update = this.baseMapper.updateById(dbResult);
-        if (CollectionUtils.isEmpty(update)) {
+        List<BatchResult> updated = this.baseMapper.updateById(dbResult);
+        if (CollectionUtils.isEmpty(updated)) {
             throw new SyncDuoException("desyncByFileId failed. can't not update database");
         }
     }

@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("file_event")
 public class FileEventEntity extends BaseEntity {
+    // file event 的设计是 append only
 
     @TableId(type = IdType.AUTO)
     private Long fileEventId;

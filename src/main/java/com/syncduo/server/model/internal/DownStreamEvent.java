@@ -4,7 +4,6 @@ import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.model.entity.FileEntity;
 import com.syncduo.server.model.entity.FolderEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -19,10 +18,19 @@ public class DownStreamEvent {
 
     FileEntity fileEntity;
 
+    // 如果事件不是从 watcher 触发, 则没有 file
     Path file;
 
-    // FILE_REFILTER_CREATED, FILE_REFILTER_DELETED, DB_FILE_RETRIEVE, 会带上 syncFlowEntity
+    // 如果该变量为空, 则由 downStreamHandler 填充, 表示处理全部下游
     SyncFlowEntity syncFlowEntity;
 
     FileEventTypeEnum fileEventTypeEnum;
+
+    public DownStreamEvent(DownStreamEvent event) {
+        this.folderEntity = event.getFolderEntity();
+        this.fileEntity = event.getFileEntity();
+        this.file = event.getFile();
+        this.syncFlowEntity = null;
+        this.fileEventTypeEnum = event.getFileEventTypeEnum();
+    }
 }

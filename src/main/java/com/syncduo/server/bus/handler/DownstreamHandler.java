@@ -22,7 +22,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -70,7 +69,13 @@ public class DownstreamHandler implements DisposableBean {
     @Async("longRunningTaskExecutor")
     public void startHandle() {
         while (RUNNING) {
-            DownStreamEvent downStreamEvent = systemBus.getDownStreamEvent();
+            DownStreamEvent downStreamEvent;
+            try {
+                downStreamEvent = systemBus.getDownStreamEvent();
+            } catch (SyncDuoException e) {
+                log.error("downStreamHandler get event failed", e);
+                continue;
+            }
             if (ObjectUtils.isEmpty(downStreamEvent)) {
                 continue;
             }
@@ -82,16 +87,19 @@ public class DownstreamHandler implements DisposableBean {
     @Async("threadPoolTaskExecutor")
     protected void dispatchHandle(DownStreamEvent downStreamEvent) {
         try {
+            // 处理 downStreamEvent
             switch (downStreamEvent.getFileEventTypeEnum()) {
-                case FILE_CREATED, DB_FILE_RETRIEVE -> this.onFileCreate(downStreamEvent);
-                case FILE_CHANGED -> this.onFileChange(downStreamEvent);
-                case FILE_DELETED -> this.onFileDelete(downStreamEvent);
-                case FILE_REFILTER_CREATED -> this.onRefilterCreated(downStreamEvent);
-                case FILE_REFILTER_DELETED -> this.onRefilterDeleted(downStreamEvent);
+                case FILE_CREATED,
+                     DB_FILE_RETRIEVE,
+                     FILE_RESUME_CREATED-> this.onFileCreate(downStreamEvent);
+                case FILE_CHANGED,
+                     FILE_RESUME_CHANGED -> this.onFileChange(downStreamEvent);
+                case FILE_DELETED,
+                     FILE_RESUME_DELETED-> this.onFileDelete(downStreamEvent);
                 default -> throw new SyncDuoException("下游事件:%s 不识别".formatted(downStreamEvent));
             }
         } catch (SyncDuoException e) {
-            log.error("startHandle failed. downStreamEvent:{} failed!", downStreamEvent, e);
+            log.error("dispatchHandle failed. downStreamEvent:{} failed!", downStreamEvent, e);
         }
     }
 
@@ -99,154 +107,69 @@ public class DownstreamHandler implements DisposableBean {
         FolderEntity folderEntity = downStreamEvent.getFolderEntity();
         FileEntity fileEntity = downStreamEvent.getFileEntity();
         Path file = downStreamEvent.getFile();
-        // 查询 syncflow, 如果 DownStreamEvent 已经有 syncFlowEntity, 则不需要从 cache 查询
-        List<SyncFlowEntity> syncFlowEntityList = new ArrayList<>();
-        if (ObjectUtils.isEmpty(downStreamEvent.getSyncFlowEntity())) {
-            syncFlowEntityList = this.syncFlowServiceCache.getBySourceFolderId(folderEntity.getFolderId());
-        } else {
-            syncFlowEntityList.add(downStreamEvent.getSyncFlowEntity());
-        }
-        // 如果查不到 syncFlow, 显然 syncFlow 已被删除, 则减少 count
-        if (CollectionUtils.isEmpty(syncFlowEntityList)) {
-            // 减少 pending event count
-            this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
-            return;
+        SyncFlowEntity syncFlowEntity = downStreamEvent.getSyncFlowEntity();
+        // 幂等
+        FileSyncMappingEntity fileSyncMappingEntity = this.fileSyncMappingService.getBySyncFlowIdAndSourceFileId(
+                syncFlowEntity.getSyncFlowId(),
+                fileEntity.getFileId()
+        );
+        // file sync mapping 已存在, 则删除记录并重新创建
+        if (ObjectUtils.isNotEmpty(fileSyncMappingEntity)) {
+            this.fileSyncMappingService.deleteRecord(fileSyncMappingEntity);
         }
         // 创建文件
-        for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
-            // 如果 syncFlow 停止, 则不处理
-            if (this.isSyncFlowPaused(syncFlowEntity)) {
-                continue;
-            }
-            downStreamFileCreate(downStreamEvent, syncFlowEntity, fileEntity, file, folderEntity);
-            // 减少 pending event count
-            this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
-        }
+        downStreamFileCreate(downStreamEvent, syncFlowEntity, fileEntity, file, folderEntity);
     }
 
     private void onFileChange(DownStreamEvent downStreamEvent) throws SyncDuoException {
         FolderEntity folderEntity = downStreamEvent.getFolderEntity();
         FileEntity fileEntity = downStreamEvent.getFileEntity();
         Path file = downStreamEvent.getFile();
-        // 查询 syncflow
-        List<SyncFlowEntity> syncFlowEntityList =
-                this.syncFlowServiceCache.getBySourceFolderId(folderEntity.getFolderId());
-        if (CollectionUtils.isEmpty(syncFlowEntityList)) {
-            // 减少 pending event count
-            this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
-            return;
-        }
-        for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
-            // 如果 syncFlow 停止, 则不处理
-            if (this.isSyncFlowPaused(syncFlowEntity)) {
-                continue;
-            }
-            // 幂等
-            FolderEntity destFolderEntity = this.folderService.getById(syncFlowEntity.getDestFolderId());
-            if (ObjectUtils.isEmpty(destFolderEntity)) {
-                // 减少 pending event count
-                this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
-                continue;
-            }
-            // 获取 destFile
-            Pair<FileEntity, Path> destFileEntityAndFile = this.getDestFileOnFileChange(
-                    fileEntity,
-                    destFolderEntity,
-                    file,
-                    syncFlowEntity
-            );
-            if (ObjectUtils.isEmpty(destFileEntityAndFile)) {
-                // 减少 pending event count
-                this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
-                continue;
-            }
-            // 更新文件
-            Path destFile = this.fileOperationMonitor.updateFileByCopy(
-                    folderEntity.getFolderId(),
-                    file,
-                    destFolderEntity.getFolderId(),
-                    destFileEntityAndFile.getRight()
-            );
-            // 更新文件记录
-            this.fileService.updateFileEntityByFile(
-                    destFileEntityAndFile.getLeft(),
-                    destFile
-            );
-            // 记录 fileEvent
-            this.fileEventService.createFileEvent(
-                    downStreamEvent.getFileEventTypeEnum(),
-                    destFolderEntity.getFolderId(),
-                    destFileEntityAndFile.getLeft().getFileId()
-            );
-            // 减少 pending event count
-            this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
-        }
-    }
-
-    private void onFileDelete(DownStreamEvent downStreamEvent) throws SyncDuoException {
-        // 上游删除的文件, 下游标记为 desynced
-        FileEntity fileEntity = downStreamEvent.getFileEntity();
-        this.fileSyncMappingService.desyncBySourceFileId(fileEntity.getFileId());
-        // 减少 pending event count
-        this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
-    }
-
-    private void onRefilterCreated(DownStreamEvent downStreamEvent) throws SyncDuoException {
-        FolderEntity folderEntity = downStreamEvent.getFolderEntity();
-        FileEntity fileEntity = downStreamEvent.getFileEntity();
-        Path file = downStreamEvent.getFile();
         SyncFlowEntity syncFlowEntity = downStreamEvent.getSyncFlowEntity();
-        // 如果 syncFlow 停止, 则不处理
-        if (this.isSyncFlowPaused(syncFlowEntity)) {
-            return;
-        }
         // 幂等
-        FileSyncMappingEntity fileSyncMappingEntity = this.fileSyncMappingService.getBySyncFlowIdAndSourceFileId(
-                syncFlowEntity.getSyncFlowId(),
-                fileEntity.getFileId()
-        );
-        if (ObjectUtils.isNotEmpty(fileSyncMappingEntity)) {
-            this.fileSyncMappingService.deleteRecord(fileSyncMappingEntity);
-        }
-        this.downStreamFileCreate(
-                downStreamEvent,
-                syncFlowEntity,
-                fileEntity,
-                file,
-                folderEntity
-        );
-        // 减少 pending event count
-        this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
-    }
-
-    private void onRefilterDeleted(DownStreamEvent downStreamEvent) throws SyncDuoException {
-        FileEntity fileEntity = downStreamEvent.getFileEntity();
-        SyncFlowEntity syncFlowEntity = downStreamEvent.getSyncFlowEntity();
-        // 如果 syncFlow 停止, 则不处理
-        if (this.isSyncFlowPaused(syncFlowEntity)) {
+        FolderEntity destFolderEntity = this.folderService.getById(syncFlowEntity.getDestFolderId());
+        if (ObjectUtils.isEmpty(destFolderEntity)) {
             return;
         }
-        // 删除文件
-        FileSyncMappingEntity fileSyncMappingEntity = this.fileSyncMappingService.getBySyncFlowIdAndSourceFileId(
-                syncFlowEntity.getSyncFlowId(),
-                fileEntity.getFileId()
+        // 获取 destFile
+        Pair<FileEntity, Path> destFileEntityAndFile = this.getDestFileOnFileChange(
+                fileEntity,
+                destFolderEntity,
+                file,
+                syncFlowEntity
         );
-        FileEntity destFileEntity = this.fileService.getById(fileSyncMappingEntity.getDestFileId());
-        FolderEntity destFolderEntity = this.folderService.getById(destFileEntity.getFolderId());
-        Path destFile = this.fileService.getFileFromFileEntity(
-                destFolderEntity.getFolderFullPath(),
-                destFileEntity
+        if (ObjectUtils.isEmpty(destFileEntityAndFile)) {
+            return;
+        }
+        // 更新文件
+        Path destFile = this.fileOperationMonitor.updateFileByCopy(
+                folderEntity.getFolderId(),
+                file,
+                destFolderEntity.getFolderId(),
+                destFileEntityAndFile.getRight()
         );
-        this.fileOperationMonitor.deleteFile(
-                destFileEntity.getFolderId(),
+        // 更新文件记录
+        this.fileService.updateFileEntityByFile(
+                destFileEntityAndFile.getLeft(),
                 destFile
         );
-        // 删除文件记录
-        this.fileService.deleteBatchByFileEntity(Collections.singletonList(destFileEntity));
-        // 删除 fileSyncMappingEntity
-        this.fileSyncMappingService.deleteRecord(fileSyncMappingEntity);
-        // 减少 pending event count
-        this.systemBus.decrSyncFlowPendingEventCount(downStreamEvent);
+        // 记录 fileEvent
+        this.fileEventService.createFileEvent(
+                downStreamEvent.getFileEventTypeEnum(),
+                destFolderEntity.getFolderId(),
+                destFileEntityAndFile.getLeft().getFileId()
+        );
+    }
+
+    private void onFileDelete(
+            DownStreamEvent downStreamEvent) throws SyncDuoException {
+        SyncFlowEntity syncFlowEntity = downStreamEvent.getSyncFlowEntity();
+        // 上游删除的文件, 下游标记为 desynced
+        FileEntity fileEntity = downStreamEvent.getFileEntity();
+        this.fileSyncMappingService.desyncBySyncFlowIdAndFileId(
+                syncFlowEntity.getSyncFlowId(),
+                fileEntity.getFileId()
+        );
     }
 
     private void downStreamFileCreate(
@@ -327,6 +250,9 @@ public class DownstreamHandler implements DisposableBean {
         }
         // 根据 destFileEntity, 获取 file
         Path destFile = this.fileService.getFileFromFileEntity(destFolderEntity.getFolderFullPath(), destFileEntity);
+        if (ObjectUtils.isEmpty(destFile)) {
+            return null;
+        }
         return new ImmutablePair<>(destFileEntity, destFile);
     }
 
@@ -354,10 +280,6 @@ public class DownstreamHandler implements DisposableBean {
                     newFileName;
         }
         return destFileFullPath;
-    }
-
-    private boolean isSyncFlowPaused(SyncFlowEntity syncFlowEntity) {
-        return SyncFlowStatusEnum.PAUSE.name().equals(syncFlowEntity.getSyncStatus());
     }
 
     @Override
