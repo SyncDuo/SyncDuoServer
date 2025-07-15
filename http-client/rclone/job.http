@@ -1,0 +1,8 @@
+POST http://nopepsi:0608@localhost:5572/job/status
+Content-Type: application/json
+
+{
+  "jobid": 104
+}
+
+###

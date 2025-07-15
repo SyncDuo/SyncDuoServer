@@ -1,0 +1,10 @@
+POST http://localhost:10000/sync-flow/add-sync-flow
+Content-Type: application/json
+
+{
+  "sourceFolderFullPath": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/sourceFolder",
+  "destFolderFullPath": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/contentParentFolder/sourceFolder3",
+  "filterCriteria": "[]",
+  "syncFlowName": "test3"
+}
+###

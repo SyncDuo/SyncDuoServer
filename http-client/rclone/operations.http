@@ -1,0 +1,33 @@
+POST http://nopepsi:0608@localhost:5572/operations/stat
+Content-Type: application/json
+
+{
+  "fs": "/",
+  "remote": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/contentParentFolder/",
+  "opt": {
+    "dirsOnly": true
+  }
+}
+
+###
+
+POST http://nopepsi:0608@localhost:5572/operations/copyfile
+Content-Type: application/json
+
+{
+  "srcFs": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/sourceFolder",
+  "srcRemote": "sourceFolder/justBinary.bin",
+  "dstFs": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/contentParentFolder/sourceFolder",
+  "dstRemote": "justBinary.bin"
+}
+
+###
+
+POST http://nopepsi:0608@localhost:5572/operations/check
+Content-Type: application/json
+
+{
+  "srcFs": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/sourceFolder",
+  "dstFs": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/contentParentFolder/sourceFolder",
+  "oneway": true
+}

@@ -1,0 +1,7 @@
+POST http://nopepsi:0608@localhost:5572/options/info
+Accept: application/json
+
+###
+
+POST http://nopepsi:0608@localhost:5572/options/get
+Accept: application/json

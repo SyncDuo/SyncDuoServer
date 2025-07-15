@@ -1,0 +1,15 @@
+POST http://nopepsi:0608@localhost:5572/core/stats
+Content-Type: application/json
+
+{
+  "group": ""
+}
+
+###
+
+POST http://nopepsi:0608@localhost:5572/core/transferred
+Content-Type: application/json
+
+{
+  "group": "job/155"
+}

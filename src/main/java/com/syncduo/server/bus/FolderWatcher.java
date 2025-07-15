@@ -2,14 +2,15 @@ package com.syncduo.server.bus;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.entity.FolderEntity;
-import com.syncduo.server.model.internal.FileSystemEvent;
+import com.syncduo.server.model.internal.FilesystemEvent;
+import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,78 +26,70 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FolderWatcher implements DisposableBean {
 
     @Value("${syncduo.server.event.polling.interval:5000}")
-    private Integer interval;
+    private int interval;
 
-    private final SystemBus systemBus;
+    private final FilesystemEventHandler filesystemEventHandler;
 
-    // <rootFolderId, monitor>
-    private final ConcurrentHashMap<Long, FileAlterationMonitor> monitorMap =
+    // <folderPath, monitor>
+    private final ConcurrentHashMap<String, FileAlterationMonitor> monitorMap =
             new ConcurrentHashMap<>(100);
 
     @Autowired
-    public FolderWatcher(SystemBus systemBus) {
-        this.systemBus = systemBus;
+    public FolderWatcher(FilesystemEventHandler filesystemEventHandler) {
+        this.filesystemEventHandler = filesystemEventHandler;
     }
 
-    public void addWatcher(FolderEntity folderEntity) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(folderEntity.getFolderId())) {
-            throw new SyncDuoException("addWatcher failed. folderId is null");
+    public void addWatcher(String folderPath) throws SyncDuoException {
+        if (StringUtils.isBlank(folderPath)) {
+            throw new SyncDuoException("addWatcher failed. folderPath is empty");
         }
-        if (ObjectUtils.anyNull(folderEntity, folderEntity.getFolderId(), folderEntity.getFolderFullPath())) {
-            throw new SyncDuoException("addWatcher failed. folderId or folderFullPath is null");
-        }
-        if (monitorMap.containsKey(folderEntity.getFolderId())) {
+        Path folderPathValid = FilesystemUtil.isFolderPathValid(folderPath);
+        if (monitorMap.containsKey(folderPath)) {
             return;
         }
-        // 创建 observer
-        Long folderId = folderEntity.getFolderId();
-        // 监听文件创建/修改/删除
-        FileAlterationObserver observer = this.createObserver(
-                folderId,
-                Path.of(folderEntity.getFolderFullPath())
-        );
+        // 创建 observer// 监听文件创建/修改/删除
+        FileAlterationObserver observer = this.createObserver(folderPathValid);
         try {
             observer.initialize();
         } catch (Exception e) {
             throw new SyncDuoException(("addWatcher failed. observer initialize failed. " +
-                    "folderId is %s").formatted(folderId), e);
+                    "folderPath is %s").formatted(folderPath), e);
         }
         FileAlterationMonitor monitor = new FileAlterationMonitor(getRandomInterval(interval), observer);
         try {
             monitor.start();
-            this.monitorMap.put(folderId, monitor);
+            this.monitorMap.put(folderPath, monitor);
         } catch (Exception e) {
-            throw new SyncDuoException("addWatcher failed. folderId is %s".formatted(folderId), e);
+            throw new SyncDuoException("addWatcher failed. folderId is %s".formatted(folderPath), e);
         }
     }
 
-    public void manualCheckFolder(Long folderId) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(folderId)) {
-            throw new SyncDuoException("manualCheckFolder failed. folderId is null");
+    public void manualCheckFolder(String folderPath) {
+        if (StringUtils.isBlank(folderPath)) {
+            return;
         }
-        FileAlterationMonitor monitor = this.monitorMap.get(folderId);
+        FileAlterationMonitor monitor = this.monitorMap.get(folderPath);
         if (ObjectUtils.isEmpty(monitor)) {
             return;
         }
         monitor.getObservers().forEach(FileAlterationObserver::checkAndNotify);
     }
 
-    public void stopMonitor(Long folderId) {
-        if (ObjectUtils.isEmpty(folderId)) {
+    public void stopMonitor(String folderPath) {
+        if (StringUtils.isBlank(folderPath)) {
             return;
         }
-        if (!this.monitorMap.containsKey(folderId)) {
-            log.warn("stopWatcher failed. can't find monitor with folderId {}", folderId);
+        FileAlterationMonitor fileAlterationMonitor = this.monitorMap.get(folderPath);
+        if (ObjectUtils.isEmpty(fileAlterationMonitor)) {
             return;
         }
-        FileAlterationMonitor fileAlterationMonitor = this.monitorMap.get(folderId);
         try {
             fileAlterationMonitor.stop();
-            this.monitorMap.remove(folderId);
+            this.monitorMap.remove(folderPath);
         } catch (Exception e) {
-            log.warn("stopWatcher failed. monitor is {}, folderId is {}",
+            log.warn("stopWatcher failed. monitor is {}, folderPath is {}",
                     fileAlterationMonitor,
-                    folderId,
+                    folderPath,
                     e);
         }
     }
@@ -108,14 +101,14 @@ public class FolderWatcher implements DisposableBean {
         return baseInterval + randomAddition;
     }
 
-    private FileAlterationObserver createObserver(Long folderId, Path folder) {
+    private FileAlterationObserver createObserver(Path folder) {
         FileAlterationObserver observer = new FileAlterationObserver(folder.toFile());
         observer.addListener(new FileAlterationListenerAdaptor() {
             @Override
             public void onFileCreate(File file) {
                 try {
-                    systemBus.sendFileEvent(new FileSystemEvent(
-                        folderId, file.toPath(), FileEventTypeEnum.FILE_CREATED
+                    filesystemEventHandler.sendFileEvent(new FilesystemEvent(
+                        folder, file.toPath(), FileEventTypeEnum.FILE_CREATED
                     ));
                 } catch (SyncDuoException e) {
                     log.error("文件夹发送 file event 失败", e);
@@ -125,8 +118,8 @@ public class FolderWatcher implements DisposableBean {
             @Override
             public void onFileDelete(File file) {
                 try {
-                    systemBus.sendFileEvent(new FileSystemEvent(
-                            folderId, file.toPath(), FileEventTypeEnum.FILE_DELETED
+                    filesystemEventHandler.sendFileEvent(new FilesystemEvent(
+                            folder, file.toPath(), FileEventTypeEnum.FILE_DELETED
                     ));
                 } catch (SyncDuoException e) {
                     log.error("文件夹发送 file event 失败", e);
@@ -136,8 +129,8 @@ public class FolderWatcher implements DisposableBean {
             @Override
             public void onFileChange(File file) {
                 try {
-                    systemBus.sendFileEvent(new FileSystemEvent(
-                            folderId, file.toPath(), FileEventTypeEnum.FILE_CHANGED
+                    filesystemEventHandler.sendFileEvent(new FilesystemEvent(
+                            folder, file.toPath(), FileEventTypeEnum.FILE_MODIFIED
                     ));
                 } catch (SyncDuoException e) {
                     log.error("文件夹发送 file event 失败", e);
@@ -158,10 +151,10 @@ public class FolderWatcher implements DisposableBean {
     public void destroy() {
         this.monitorMap.forEach((k, v) -> {
             try {
-                v.stop();
-                log.debug("shutdown monitor. rootFolderId is {}", k);
+                this.stopMonitor(k);
+                log.debug("shutdown monitor. folderPath is {}", k);
             } catch (Exception e) {
-                log.warn("failed to shutdown monitor. rootFolder is {}", k, e);
+                log.warn("failed to shutdown monitor. folderPath is {}", k, e);
             }
         });
         this.monitorMap.clear();

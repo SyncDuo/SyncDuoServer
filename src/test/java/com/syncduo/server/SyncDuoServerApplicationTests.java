@@ -1,20 +1,19 @@
 package com.syncduo.server;
 
 import com.syncduo.server.controller.SyncFlowController;
-import com.syncduo.server.enums.FileDesyncEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
-import com.syncduo.server.enums.SyncFlowTypeEnum;
-import com.syncduo.server.enums.SyncModeEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.http.syncflow.*;
+import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
-import com.syncduo.server.service.bussiness.impl.*;
-import com.syncduo.server.service.cache.SyncFlowServiceCache;
-import com.syncduo.server.util.FilesystemUtil;
+import com.syncduo.server.model.rclone.operations.check.CheckRequest;
+import com.syncduo.server.model.rclone.sync.copy.SyncCopyRequest;
+import com.syncduo.server.service.db.impl.*;
+import com.syncduo.server.service.rclone.RcloneFacadeService;
+import com.syncduo.server.service.rclone.RcloneService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,23 +37,17 @@ class SyncDuoServerApplicationTests {
 
     private final SyncFlowController syncFlowController;
 
-    private final FileService fileService;
-
-    private final SyncFlowServiceCache syncFlowServiceCache;
-
-    private final FolderService rootFolderService;
-
-    private final FileEventService fileEventService;
+    private final SyncFlowService syncFlowService;
 
     private final SyncSettingService syncSettingService;
 
     private final FolderWatcher folderWatcher;
 
-    private final FileSyncMappingService fileSyncMappingService;
-
     private final SystemConfigService systemConfigService;
 
-    private SyncFlowResponse syncFlowResponse;
+    private final RcloneFacadeService rcloneFacadeService;
+
+    private SyncFlowEntity syncFlowEntity;
 
     private static final String testParentPath = "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources";
 
@@ -67,330 +60,142 @@ class SyncDuoServerApplicationTests {
     private static final String contentFolderPath = contentFolderParentPath + "/" + sourceFolderName;
 
     // delay 函数延迟的时间, 单位"秒"
-    private static final int DELAY_UNIT = 15;
+    private static final int DELAY_UNIT = 18;
 
     @Autowired
     SyncDuoServerApplicationTests(
             SyncFlowController syncFlowController,
-            FileService fileService,
-            SyncFlowServiceCache syncFlowServiceCache,
-            FolderService rootFolderService,
-            FileEventService fileEventService,
+            SyncFlowService syncFlowService,
             SyncSettingService syncSettingService,
             FolderWatcher folderWatcher,
-            FileSyncMappingService fileSyncMappingService,
-            SystemConfigService systemConfigService) {
+            SystemConfigService systemConfigService,
+            RcloneFacadeService rcloneFacadeService) {
         this.syncFlowController = syncFlowController;
-        this.fileService = fileService;
-        this.syncFlowServiceCache = syncFlowServiceCache;
-        this.fileSyncMappingService = fileSyncMappingService;
+        this.syncFlowService = syncFlowService;
         this.systemConfigService = systemConfigService;
-        this.rootFolderService = rootFolderService;
-        this.fileEventService = fileEventService;
         this.syncSettingService = syncSettingService;
         this.folderWatcher = folderWatcher;
+        this.rcloneFacadeService = rcloneFacadeService;
     }
 
     @Test
-    void ShouldReturnTrueWhenResumeSyncFlow() throws SyncDuoException {
+    void ShouldReturnTrueWhenResumeSyncFlow() throws SyncDuoException, IOException {
         // 创建 syncflow
-        createSyncFlowMirror();
-        waitAllFileHandle();
-        SyncFlowInfo syncFlowInfo = this.syncFlowResponse.getSyncFlowInfoList().get(0);
-        assert syncFlowInfo
-                .getSyncStatus()
-                .equals(SyncFlowStatusEnum.SYNC.name());
+        createSyncFlow(null);
         // 停止 syncflow
-        SyncFlowResponse pauseSyncFlowResponse = this.syncFlowController.changeSyncFlowStatus(
+        this.syncFlowController.changeSyncFlowStatus(
                 ChangeSyncFlowStatusRequest.builder()
-                        .syncFlowId(syncFlowInfo.getSyncFlowId())
+                        .syncFlowId(this.syncFlowEntity.getSyncFlowId().toString())
                         .syncFlowStatus(SyncFlowStatusEnum.PAUSE.name())
                         .build()
         );
-        SyncFlowInfo syncFlowInfo1 = this.syncFlowController.getSyncFlow().getSyncFlowInfoList().get(0);
-        assert syncFlowInfo1.getSyncStatus().equals(SyncFlowStatusEnum.PAUSE.name());
+        // 源文件夹创建文件
+        FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
+        // source and dest should be desync
+        assert !this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
         // 恢复 syncflow
-        SyncFlowResponse resumeSyncFlowResponse = this.syncFlowController.changeSyncFlowStatus(
+        this.syncFlowController.changeSyncFlowStatus(
                 ChangeSyncFlowStatusRequest.builder()
-                        .syncFlowId(syncFlowInfo.getSyncFlowId())
+                        .syncFlowId(this.syncFlowEntity.getSyncFlowId().toString())
                         .syncFlowStatus(SyncFlowStatusEnum.RESUME.name())
                         .build()
         );
-        SyncFlowInfo syncFlowInfo2 = this.syncFlowController.getSyncFlow().getSyncFlowInfoList().get(0);
-        assert syncFlowInfo1.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
+        waitAllFileHandle();
+        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
     }
 
     @Test
     void ShouldReturnTrueWhenDeleteSyncFlow() throws IOException, SyncDuoException {
         // 创建 syncflow
-        createSyncFlowTransform("[\"txt\"]");
+        createSyncFlow("[\"txt\"]");
         waitAllFileHandle();
         // 删除 syncflow
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
-        deleteSyncFlowRequest.setSyncFlowId(Long.valueOf(
-                this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
-        );
+        deleteSyncFlowRequest.setSyncFlowId(syncFlowEntity.getSyncFlowId());
         this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
         // 源文件夹创建文件
-        Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
-        // 目的文件夹没有文件增加
-        List<Path> allFileInFolder = FilesystemUtil.getAllFileInFolder(contentFolderPath);
-        boolean sameTextFile = false;
-        boolean sameBinFile = false;
-        for (Path file : allFileInFolder) {
-            if (txtAndBinFile.getLeft().getFileName().equals(file.getFileName())) {
-                sameTextFile = true;
-            } else if (txtAndBinFile.getRight().getFileName().equals(file.getFileName())) {
-                sameBinFile = true;
-            }
-        }
-
-        assert !sameTextFile && !sameBinFile;
+        FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
+        // 等待文件处理
+        waitSingleFileHandle(sourceFolderPath);
+        // source and dest is desync
+        assert !this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByDeleteFileTransform() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenTriggerWatcherByDeleteFile() throws IOException, SyncDuoException {
         // 创建 syncflow
-        createSyncFlowTransform("[\"txt\"]");
+        createSyncFlow(null);
         waitAllFileHandle();
         // 源文件夹删除文件
-        List<Path> modifiedFile = FileOperationTestUtil.deleteFile(Path.of(sourceFolderPath), 2);
+        FileOperationTestUtil.deleteFile(Path.of(sourceFolderPath), 2);
         // 等待文件处理
-        waitAllFileHandle();
+        waitSingleFileHandle(sourceFolderPath);
         // 判断 fileEvent 是否处理正确
-        modifiedFile.removeIf(file -> file.getFileName().toString().contains("txt"));
-        checkIsFileEventHandleCorrectWhenDeleteFile(modifiedFile);
+        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByModifyFileTransform() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenTriggerWatcherByModifyFile() throws IOException, SyncDuoException {
         // 创建 syncflow
-        createSyncFlowTransform("[\"txt\"]");
-        waitAllFileHandle();
+        createSyncFlow(null);
         // 源文件夹修改文件
-        List<Path> modifiedFile = FileOperationTestUtil.modifyFile(Path.of(sourceFolderPath), 2);
+        FileOperationTestUtil.modifyFile(Path.of(sourceFolderPath), 2);
         // 等待文件处理
-        waitAllFileHandle();
+        waitSingleFileHandle(sourceFolderPath);
         // 判断 fileEvent 是否处理正确
-        modifiedFile.removeIf(file -> file.getFileName().toString().contains("txt"));
-        checkIsFileEventHandleCorrectWhenChangeFile(modifiedFile);
+        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByCreateFileTransform() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenTriggerWatcherByCreateFile() throws IOException, SyncDuoException {
         // 创建 syncflow
-        createSyncFlowTransform("[\"txt\"]");
-        waitAllFileHandle();
+        createSyncFlow(null);
         // 源文件夹创建文件
-        Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
-        List<Path> files = new ArrayList<>();
-        files.add(txtAndBinFile.getRight());
+        FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
+        // 等待文件处理
+        waitSingleFileHandle(sourceFolderPath);
         // 判断 fileEvent 是否处理正确
-        checkIsFileEventHandleCorrectWhenCreateFile(files);
+        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByDeleteFileMirrored() throws IOException, SyncDuoException {
-        // 创建 syncflow
-        createSyncFlowMirror();
-        waitAllFileHandle();
-        // 源文件夹修改文件
-        List<Path> modifiedFile = FileOperationTestUtil.deleteFile(Path.of(sourceFolderPath), 2);
-        // 等待文件处理
-        waitAllFileHandle();
-        // 判断 fileEvent 是否处理正确
-        checkIsFileEventHandleCorrectWhenDeleteFile(modifiedFile);
-    }
+    void ShouldReturnTrueWhenCreateSyncFlowWithFilter() throws IOException {
+        String filterCriteria = "[\"*.bin\"]";
+        createSyncFlow(filterCriteria);
 
-    @Test
-    void ShouldReturnTrueWhenTriggerWatcherByModifyFileMirrored() throws IOException, SyncDuoException {
-        // 创建 syncflow
-        createSyncFlowMirror();
-        waitAllFileHandle();
-        // 源文件夹修改文件
-        List<Path> modifiedFile = FileOperationTestUtil.modifyFile(Path.of(sourceFolderPath), 2);
-        // 等待文件处理
-        waitAllFileHandle();
-        // 判断 fileEvent 是否处理正确
-        checkIsFileEventHandleCorrectWhenChangeFile(modifiedFile);
-    }
-
-    @Test
-    void ShouldReturnTrueWhenTriggerWatcherByCreateFileMirrored() throws IOException, SyncDuoException {
-        // 创建 syncflow
-        createSyncFlowMirror();
-        waitAllFileHandle();
-        // 源文件夹创建文件
-        Pair<Path, Path> txtAndBinFile = FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
-        List<Path> files = new ArrayList<>();
-        files.add(txtAndBinFile.getLeft());
-        files.add(txtAndBinFile.getRight());
-        // 判断 fileEvent 是否处理正确
-        checkIsFileEventHandleCorrectWhenCreateFile(files);
-    }
-
-    private void checkIsFileEventHandleCorrectWhenDeleteFile(List<Path> files) throws SyncDuoException {
-        // 等待文件处理
-        waitAllFileHandle();
-        // 判断 syncflow 状态是否为 sync
-        SyncFlowInfo syncFlowInfo = this.syncFlowResponse.getSyncFlowInfoList().get(0);
-        SyncFlowEntity syncFlowEntity =
-                this.syncFlowServiceCache.getBySyncFlowId(Long.valueOf(syncFlowInfo.getSyncFlowId()));
-        assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
-        for (Path file : files) {
-            // 判断源文件夹是否正确响应
-            FileEntity fileEntity = this.fileService.getFileEntityFromFile(
-                    syncFlowEntity.getSourceFolderId(),
-                    sourceFolderPath,
-                    file
-            );
-            assert ObjectUtils.isEmpty(fileEntity);
+        List<Path> allFile = FileOperationTestUtil.getAllFile(Path.of(this.syncFlowEntity.getDestFolderPath()));
+        for (Path path : allFile) {
+            assert !path.getFileName().toString().contains("bin");
         }
-        // 获取 desync 的 fileSyncMapping, 判断与 files 的数量是否一致
-        List<FileSyncMappingEntity> fileSyncMappingEntityList =
-                this.fileSyncMappingService.getBySyncFlowId(syncFlowEntity.getSyncFlowId());
-        int count = 0;
-        for (FileSyncMappingEntity fileSyncMappingEntity : fileSyncMappingEntityList) {
-            if (fileSyncMappingEntity.getFileDesync().equals(FileDesyncEnum.FILE_DESYNC.getCode())) {
-                count++;
-            }
-        }
-        assert count == files.size();
-    }
-
-    private void checkIsFileEventHandleCorrectWhenChangeFile(List<Path> files) throws SyncDuoException {
-        // 等待文件处理
-        waitAllFileHandle();
-        // 判断 syncflow 状态是否为 sync
-        SyncFlowInfo syncFlowInfo = this.syncFlowResponse.getSyncFlowInfoList().get(0);
-        SyncFlowEntity syncFlowEntity =
-                this.syncFlowServiceCache.getBySyncFlowId(Long.valueOf(syncFlowInfo.getSyncFlowId()));
-        assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
-        for (Path file : files) {
-            // 判断源文件夹是否正确响应
-            FileEntity fileEntity = this.fileService.getFileEntityFromFile(
-                    syncFlowEntity.getSourceFolderId(),
-                    sourceFolderPath,
-                    file
-            );
-            assert fileEntity.getFileMd5Checksum().equals(FilesystemUtil.getMD5Checksum(file));
-            // 判断目的文件夹是否正确响应
-            FileSyncMappingEntity fileSyncMapping = this.fileSyncMappingService.getBySyncFlowIdAndSourceFileId(
-                    syncFlowEntity.getSyncFlowId(),
-                    fileEntity.getFileId()
-            );
-            FileEntity destFileEntity = this.fileService.getById(fileSyncMapping.getDestFileId());
-            assert destFileEntity.getFileMd5Checksum().equals(FilesystemUtil.getMD5Checksum(file));
-        }
-    }
-
-    private void checkIsFileEventHandleCorrectWhenCreateFile(List<Path> files) throws SyncDuoException {
-        // 等待文件处理
-        waitAllFileHandle();
-        // 判断 syncflow 状态是否为 sync
-        SyncFlowInfo syncFlowInfo = this.syncFlowResponse.getSyncFlowInfoList().get(0);
-        SyncFlowEntity syncFlowEntity =
-                this.syncFlowServiceCache.getBySyncFlowId(Long.valueOf(syncFlowInfo.getSyncFlowId()));
-        assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
-        for (Path file : files) {
-            // 判断源文件夹是否正确响应
-            FileEntity fileEntity = this.fileService.getFileEntityFromFile(
-                    syncFlowEntity.getSourceFolderId(),
-                    sourceFolderPath,
-                    file
-            );
-            assert ObjectUtils.isNotEmpty(fileEntity);
-            // 判断目的文件夹是否正确响应
-            FileSyncMappingEntity txtFileSyncMapping = this.fileSyncMappingService.getBySyncFlowIdAndSourceFileId(
-                    syncFlowEntity.getSyncFlowId(),
-                    fileEntity.getFileId()
-            );
-            assert ObjectUtils.isNotEmpty(txtFileSyncMapping);
-        }
-    }
-
-    @Test
-    void ShouldReturnTrueWhenCreateSyncFlowTransformFlatten() {
-        String filterCriteria = "[\"bin\"]";
-        createSyncFlowTransformFlatten(filterCriteria);
-        waitAllFileHandle();
-
-        SyncFlowEntity syncFlowEntity = this.syncFlowServiceCache.getById(
-                Long.valueOf(
-                        this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
-        );
-        assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
-    }
-
-    @Test
-    void ShouldReturnTrueWhenCreateSyncFlowTransform() {
-        String filterCriteria = "[\"bin\"]";
-        createSyncFlowTransform(filterCriteria);
-        waitAllFileHandle();
-
-        SyncFlowEntity syncFlowEntity = this.syncFlowServiceCache.getById(
-                Long.valueOf(
-                        this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
-        );
-        assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
-    }
-
-    @Test
-    void ShouldReturnTrueWhenCreateSyncFlowSync() {
-        createSyncFlowMirror();
-        waitAllFileHandle();
-
-        SyncFlowEntity syncFlowEntity = this.syncFlowServiceCache.getById(
-                Long.valueOf(
-                        this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
-        );
-        assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
     }
 
     @Test
     void ShouldReturnTrueWhenCreateAndDeleteSyncFlow() {
-        createSyncFlowMirror();
+        createSyncFlow(null);
 
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
-        deleteSyncFlowRequest.setSyncFlowId(
-                Long.valueOf(
-                        this.syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId()
-                )
-        );
+        deleteSyncFlowRequest.setSyncFlowId(this.syncFlowEntity.getSyncFlowId());
         SyncFlowResponse syncFlowResponse1 = this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
         assert syncFlowResponse1.getCode() == 200;
     }
 
-    void createSyncFlowMirror() {
-        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
-        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setSyncMode(SyncModeEnum.MIRROR.name());
-        createSyncFlowRequest.setSyncFlowName("test");
-        createSyncFlowRequest.setSyncFlowType(SyncFlowTypeEnum.SYNC.name());
-        this.syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
-        assert this.syncFlowResponse.getCode() == 200;
-    }
-
-    void createSyncFlowTransform(String filterCriteria) {
+    void createSyncFlow(String filterCriteria) {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
         createSyncFlowRequest.setDestFolderFullPath(contentFolderPath);
-        createSyncFlowRequest.setSyncMode(SyncModeEnum.MIRROR.name());
-        createSyncFlowRequest.setFilterCriteria(filterCriteria);
         createSyncFlowRequest.setSyncFlowName("test");
-        createSyncFlowRequest.setSyncFlowType(SyncFlowTypeEnum.TRANSFORM.name());
-        this.syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
-    }
+        if (StringUtils.isNotBlank(filterCriteria)) {
+            createSyncFlowRequest.setFilterCriteria(filterCriteria);
+        }
+        SyncFlowResponse syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
+        assert syncFlowResponse.getCode() == 200;
 
-    void createSyncFlowTransformFlatten(String filterCriteria) {
-        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
-        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderPath);
-        createSyncFlowRequest.setSyncMode(SyncModeEnum.FLATTEN_FOLDER.name());
-        createSyncFlowRequest.setFilterCriteria(filterCriteria);
-        createSyncFlowRequest.setSyncFlowName("test");
-        createSyncFlowRequest.setSyncFlowType(SyncFlowTypeEnum.TRANSFORM.name());
-        this.syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
+        waitAllFileHandle();
+        this.syncFlowEntity = this.syncFlowService.getById(
+                Long.valueOf(
+                        syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
+        );
+        assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
     }
 
     void waitAllFileHandle() {
@@ -401,10 +206,10 @@ class SyncDuoServerApplicationTests {
         }
     }
 
-    void waitSingleFileHandle(Long rootFolderId) throws SyncDuoException {
-        this.folderWatcher.manualCheckFolder(rootFolderId);
+    void waitSingleFileHandle(String folderPath) throws SyncDuoException {
+        this.folderWatcher.manualCheckFolder(folderPath);
         try {
-            Thread.sleep(1000 * 2);
+            Thread.sleep(1000 * DELAY_UNIT);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -446,31 +251,10 @@ class SyncDuoServerApplicationTests {
     }
 
     void truncateAllTable() {
-        // root folder truncate
-        List<FolderEntity> dbResult = this.rootFolderService.list();
-        if (CollectionUtils.isNotEmpty(dbResult)) {
-            this.rootFolderService.
-                    removeBatchByIds(
-                            dbResult.stream().map(FolderEntity::getFolderId).collect(Collectors.toList()));
-        }
-        // file entity truncate
-        List<FileEntity> fileEntities = this.fileService.list();
-        if (CollectionUtils.isNotEmpty(fileEntities)) {
-            this.fileService.removeBatchByIds(
-                    fileEntities.stream().map(FileEntity::getFileId).collect(Collectors.toList())
-            );
-        }
-        // file event truncate
-        List<FileEventEntity> fileEventEntities = this.fileEventService.list();
-        if (CollectionUtils.isNotEmpty(fileEventEntities)) {
-            this.fileEventService.removeBatchByIds(
-                    fileEventEntities.stream().map(FileEventEntity::getFileEventId).collect(Collectors.toList())
-            );
-        }
         // sync flow truncate
-        List<SyncFlowEntity> syncFlowEntities = this.syncFlowServiceCache.list();
+        List<SyncFlowEntity> syncFlowEntities = this.syncFlowService.list();
         if (CollectionUtils.isNotEmpty(syncFlowEntities)) {
-            this.syncFlowServiceCache.removeBatchByIds(
+            this.syncFlowService.removeBatchByIds(
                     syncFlowEntities.stream().map(SyncFlowEntity::getSyncFlowId).collect(Collectors.toList())
             );
         }
@@ -479,13 +263,6 @@ class SyncDuoServerApplicationTests {
         if (CollectionUtils.isNotEmpty(syncSettingEntities)) {
             this.syncSettingService.removeBatchByIds(
                     syncSettingEntities.stream().map(SyncSettingEntity::getSyncSettingId).collect(Collectors.toList())
-            );
-        }
-        // file sync mapping truncate
-        List<FileSyncMappingEntity> fileSyncMappingEntities = this.fileSyncMappingService.list();
-        if (CollectionUtils.isNotEmpty(fileSyncMappingEntities)) {
-            this.fileSyncMappingService.removeBatchByIds(
-                    fileSyncMappingEntities.stream().map(FileSyncMappingEntity::getFileSyncMappingId).toList()
             );
         }
         // system config mapping truncate

@@ -11,6 +11,14 @@ public class JsonUtil {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    public static String toJson(Object obj) throws SyncDuoException {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            throw new SyncDuoException("toJson failed. obj is %s".formatted(obj), e);
+        }
+    }
+
     public static List<String> deserializeStringToList(String jsonString) throws SyncDuoException {
         try {
             return objectMapper.readValue(jsonString, new TypeReference<>() {});

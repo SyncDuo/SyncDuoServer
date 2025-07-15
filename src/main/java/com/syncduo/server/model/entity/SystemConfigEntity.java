@@ -15,8 +15,4 @@ public class SystemConfigEntity extends BaseEntity {
     private String syncStoragePath;
 
     private String backupStoragePath;
-
-    private Integer handlerMinThreads;
-
-    private Integer handlerMaxThreads;
 }

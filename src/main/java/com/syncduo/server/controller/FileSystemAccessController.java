@@ -1,8 +1,8 @@
 package com.syncduo.server.controller;
 
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.http.filesystem.FileSystemResponse;
-import com.syncduo.server.model.http.filesystem.Folder;
+import com.syncduo.server.model.api.filesystem.FileSystemResponse;
+import com.syncduo.server.model.api.filesystem.Folder;
 import com.syncduo.server.util.FilesystemUtil;
 import com.syncduo.server.util.SystemInfoUtil;
 import lombok.extern.slf4j.Slf4j;

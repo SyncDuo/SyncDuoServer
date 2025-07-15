@@ -14,11 +14,9 @@ public class SyncFlowEntity extends BaseEntity {
     @TableId(type = IdType.AUTO)
     private Long syncFlowId;
 
-    private Long sourceFolderId;
+    private String sourceFolderPath;
 
-    private Long destFolderId;
-
-    private String syncFlowType;
+    private String destFolderPath;
 
     private String syncFlowName;
 

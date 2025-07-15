@@ -7,11 +7,18 @@ syncthing 加强版. syncthing 是一款开源的多终端文件同步工具,以
 的操作(etc: A 终端空间不足删除了文件, 希望在 B 终端保留该文件), 如果用户需要备份功能, 
 需要再集成单独的备份软件.
 
-为了解决 syncthing 的局限性, SyncDuoServer 出现了. 关键特性是支持 "忽略删除文件" 特性. 用户可以创建 "备份"和"转换"等多种模式,
+为了解决 syncthing 的局限性, SyncDuoServer 出现了. 关键特性是支持 "忽略删除文件" 特性.
 更好地管理多个终端间的数据.
 
 当前 SyncDuoServer 只能管理"本机"的数据,多终端间的同步依赖用户通过 syncthing 手动创建同步流, 后续会集成 syncthing 
 和数据备份软件,在用户体验上做到一致.
+
+## 核心流程
+### NAS的文件夹监控
+watcher -> filesystem event -> copyFile -> copyJob event -> copyJobStatus event -> copyJobStats event
+### 定时器
+syncflow list -> checkAndCopy -> copyJobEvent -> copyJobStatus event -> copyJobStats event
+### 创建流
 
 ## 用户旅程
 1. 创建流: 用户登录 SyncDuoServer 管理界面, 选择"备份"/"转换"等多种同步模式, 选择源文件夹和目的文件夹, 点击确定后即可完成创建.

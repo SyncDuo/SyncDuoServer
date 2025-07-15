@@ -2,8 +2,6 @@ package com.syncduo.server.configuration;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.enums.FileDesyncEnum;
-import com.syncduo.server.enums.SyncFlowStatusEnum;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 

@@ -153,7 +153,7 @@ public class FileOperationTestUtil {
             if (cur == number) {
                 break;
             }
-            FilesystemUtil.deleteFile(file);
+            Files.deleteIfExists(file);
             cur++;
             files.add(file);
         }
@@ -186,7 +186,7 @@ public class FileOperationTestUtil {
 
     private static void writeRandomBinaryData(Path binFile) throws IOException {
         int chunkSize = 1024 * 1024; // 1 MB
-        int totalChunks = 5; // 50 MB
+        int totalChunks = 5; // 5 MB
 
         byte[] buffer = new byte[chunkSize];
 

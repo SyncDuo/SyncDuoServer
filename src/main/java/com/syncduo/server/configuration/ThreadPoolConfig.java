@@ -1,104 +1,98 @@
 package com.syncduo.server.configuration;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
 @Configuration
 @Slf4j
-public class ThreadPoolConfig implements DisposableBean {
+public class ThreadPoolConfig {
 
-    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    private final ThreadPoolTaskScheduler systemManagementTaskScheduler;
 
-    private final ThreadPoolTaskScheduler scheduledTaskExecutor;
+    private final ThreadPoolTaskScheduler generalTaskScheduler;
 
-    private final ThreadPoolTaskExecutor longRunningTaskExecutor;
+    private final ThreadPoolTaskScheduler rcloneTaskScheduler;
+
+    private final ThreadPoolTaskScheduler filesystemEventDebounceScheduler;
 
     public ThreadPoolConfig() {
-        // async thread pool
-        this.threadPoolTaskExecutor = getThreadPoolTaskExecutor();
 
-        // handler thread pool
-        this.longRunningTaskExecutor = getLongRunningTaskExecutor();
+        // filesystem event handler thread pool
+        this.filesystemEventDebounceScheduler = getFilesystemEventDebounceScheduler();
+
+        // generalTaskScheduler
+        this.generalTaskScheduler = getGeneralTaskScheduler();
+
+        // rclone job management schedule thread pool
+        this.rcloneTaskScheduler = getRcloneTaskScheduler();
 
         // scheduler thread pool
-        this.scheduledTaskExecutor = getThreadPoolTaskScheduler();
+        this.systemManagementTaskScheduler = getSystemManagementTaskScheduler();
     }
 
-    private static ThreadPoolTaskScheduler getThreadPoolTaskScheduler() {
+    private static ThreadPoolTaskScheduler getFilesystemEventDebounceScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(1);  // Number of threads for scheduled tasks
-        scheduler.setThreadNamePrefix("Scheduled-Thread-"); // Thread name prefix
+        scheduler.setPoolSize(5);  // Number of threads for scheduled tasks
+        scheduler.setThreadNamePrefix("Filesystem-Event-Debounce-Thread-"); // Thread name prefix
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        scheduler.setAwaitTerminationSeconds(30);
         scheduler.initialize();
         return scheduler;
     }
 
-    private static ThreadPoolTaskExecutor getLongRunningTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2); // Minimum number of threads
-        executor.setMaxPoolSize(2); // Maximum number of threads
-        executor.setQueueCapacity(0); // Capacity of the queue
-        executor.setThreadNamePrefix("Handler-Thread-"); // Thread name prefix
-        executor.initialize();
-        return executor;
+    private static ThreadPoolTaskScheduler getGeneralTaskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(5);  // Number of threads for scheduled tasks
+        scheduler.setThreadNamePrefix("General-Task-Scheduled-Thread-"); // Thread name prefix
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        scheduler.setAwaitTerminationSeconds(30);
+        scheduler.initialize();
+        return scheduler;
     }
 
-    private static ThreadPoolTaskExecutor getThreadPoolTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(5); // Minimum number of threads
-        executor.setMaxPoolSize(10); // Maximum number of threads
-        executor.setQueueCapacity(50); // Capacity of the queue
-        executor.setKeepAliveSeconds(60);
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(120);
-        executor.setThreadNamePrefix("Async-Thread-"); // Thread name prefix
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        executor.initialize();
-        return executor;
+    private static ThreadPoolTaskScheduler getRcloneTaskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(10);  // Number of threads for scheduled tasks
+        scheduler.setThreadNamePrefix("Rclone-Task-Scheduled-Thread-"); // Thread name prefix
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        scheduler.setAwaitTerminationSeconds(30);
+        scheduler.initialize();
+        return scheduler;
     }
 
-    public void changeMinAndMaxThreadsNum(int handlerMinThreads, int handlerMaxThreads) {
-        this.threadPoolTaskExecutor.setCorePoolSize(handlerMinThreads);
-        this.threadPoolTaskExecutor.setMaxPoolSize(handlerMaxThreads);
+    private static ThreadPoolTaskScheduler getSystemManagementTaskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(1);  // Number of threads for scheduled tasks
+        scheduler.setThreadNamePrefix("System-Management-Thread-"); // Thread name prefix
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        scheduler.setAwaitTerminationSeconds(30);
+        scheduler.initialize();
+        return scheduler;
     }
 
-    @Bean(name = "longRunningTaskExecutor")
-    public ThreadPoolTaskExecutor longRunningTaskExecutor() {
-        return this.longRunningTaskExecutor;
+    // Thread pool for filesystem event handler
+    @Bean(name = "filesystemEventDebounceScheduler")
+    public ThreadPoolTaskScheduler filesystemEventDebounceScheduler() {
+        return this.filesystemEventDebounceScheduler;
     }
 
-    @Bean(name = "threadPoolTaskExecutor")
-    public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
-        return this.threadPoolTaskExecutor;
+    @Bean(name = "generalTaskScheduler")
+    public ThreadPoolTaskScheduler generalTaskScheduler() {
+        return this.generalTaskScheduler;
     }
 
     // Thread pool for @Scheduled tasks
-    @Bean(name = "scheduledTaskExecutor")
-    public ThreadPoolTaskScheduler scheduledTaskExecutor() {
-        return this.scheduledTaskExecutor;
+    @Bean(name = "systemManagementTaskScheduler")
+    public ThreadPoolTaskScheduler systemManagementTaskScheduler() {
+        return this.systemManagementTaskScheduler;
     }
 
-    @Override
-    public void destroy() {
-        log.info("shutdown async task thread pool");
-        try {
-            // Gracefully shut down the thread pool
-            threadPoolTaskExecutor.getThreadPoolExecutor().shutdown();
-            // Wait for existing tasks to complete
-            if (!threadPoolTaskExecutor.getThreadPoolExecutor().awaitTermination(60, TimeUnit.SECONDS)) {
-                // If tasks are not completed in the given time, force shutdown
-                threadPoolTaskExecutor.getThreadPoolExecutor().shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            // Handle interruption during shutdown
-            threadPoolTaskExecutor.getThreadPoolExecutor().shutdownNow();
-            Thread.currentThread().interrupt();  // Restore the interrupt status
-        }
+    // Thread pool for rclone job management tasks
+    @Bean(name = "rcloneTaskScheduler")
+    public ThreadPoolTaskScheduler rcloneTaskScheduler() {
+        return this.rcloneTaskScheduler;
     }
 }

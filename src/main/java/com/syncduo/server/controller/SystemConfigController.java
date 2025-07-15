@@ -2,9 +2,9 @@ package com.syncduo.server.controller;
 
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.SystemConfigEntity;
-import com.syncduo.server.model.http.systemconfig.SystemConfigResponse;
-import com.syncduo.server.model.http.systemconfig.UpdateSystemConfigRequest;
-import com.syncduo.server.service.bussiness.impl.*;
+import com.syncduo.server.model.api.systemconfig.SystemConfigResponse;
+import com.syncduo.server.model.api.systemconfig.UpdateSystemConfigRequest;
+import com.syncduo.server.service.db.impl.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
