@@ -17,7 +17,7 @@ import java.util.List;
 public class SystemConfigService
         extends ServiceImpl<SystemConfigMapper, SystemConfigEntity> implements ISystemConfigService {
 
-    public SystemConfigEntity systemConfigEntity;
+    private SystemConfigEntity systemConfigEntity;
 
     public void clearCache() {
             this.systemConfigEntity = null;
@@ -38,24 +38,31 @@ public class SystemConfigService
         return this.systemConfigEntity;
     }
 
+    public void createSystemConfig(SystemConfigEntity systemConfigEntity) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(systemConfigEntity)) {
+            throw new SyncDuoException("createSystemConfig failed. systemConfigEntity is null");
+        }
+        if (ObjectUtils.isNotEmpty(systemConfigEntity.getSystemConfigId())) {
+            throw new SyncDuoException("createSystemConfig failed. Should use update method.");
+        }
+        boolean save = this.save(systemConfigEntity);
+        if (!save) {
+            throw new SyncDuoException("createSystemConfig failed. can't write to database");
+        }
+        this.systemConfigEntity = systemConfigEntity;
+    }
+
+    // 更新要求先获取
     public SystemConfigEntity updateSystemConfig(SystemConfigEntity systemConfigEntity) throws SyncDuoException {
         if (ObjectUtils.isEmpty(systemConfigEntity)) {
             throw new SyncDuoException("updateSystemConfig failed. systemConfigEntity is null");
         }
         if (ObjectUtils.isEmpty(systemConfigEntity.getSystemConfigId())) {
-            if (ObjectUtils.isNotEmpty(this.systemConfigEntity)) {
-                // 没有主键 ID, 但是有缓存, 说明使用错误
-                throw new SyncDuoException("updateSystemConfig failed. systemConfigId is null");
-            }
-            // 如果没有主键 ID 且目前没有缓存, 则新建
-            boolean save = this.save(systemConfigEntity);
-            if (!save) {
-                throw new SyncDuoException("updateSystemConfig failed. can't write to database.");
-            }
+            throw new SyncDuoException("updateSystemConfig failed. systemConfigId is null");
         }
         // 如果有主键 ID, 则覆盖或新增缓存
-        int count = this.baseMapper.updateById(systemConfigEntity);
-        if (count != 1) {
+        boolean updated = this.updateById(systemConfigEntity);
+        if (!updated) {
             throw new SyncDuoException("updateSystemConfig failed. can't write to database.");
         }
         // 更新缓存的 systemConfigEntity

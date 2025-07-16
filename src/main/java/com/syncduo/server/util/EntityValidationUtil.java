@@ -7,6 +7,7 @@ import com.syncduo.server.model.api.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.api.syncflow.DeleteSyncFlowRequest;
 import com.syncduo.server.model.api.syncsettings.UpdateFilterCriteriaRequest;
 import com.syncduo.server.model.entity.SyncFlowEntity;
+import com.syncduo.server.model.entity.SystemConfigEntity;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -143,5 +144,21 @@ public class EntityValidationUtil {
             throw new SyncDuoException("isChangeSyncFlowStatusRequestValid failed. " +
                     "syncFlowStatus %s can't convert.".formatted(changeSyncFlowStatusRequest.getSyncFlowStatus()), e);
         }
+    }
+
+    public static void isSystemConfigEntityValid(SystemConfigEntity systemConfigEntity) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(systemConfigEntity)) {
+            throw new SyncDuoException("isSystemConfigEntityValid failed. systemConfigEntity is null");
+        }
+        if (ObjectUtils.isEmpty(systemConfigEntity.getSystemConfigId())) {
+            throw new SyncDuoException("isSystemConfigEntityValid failed. systemConfigId is null");
+        }
+        // 不为空的 config
+        if (StringUtils.isAnyBlank(
+                systemConfigEntity.getBackupStoragePath()
+        )) {
+            throw new SyncDuoException("isSystemConfigEntityValid failed. backupStoragePath is null");
+        }
+        // 可以为空的 config, 填充默认值
     }
 }

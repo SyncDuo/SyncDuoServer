@@ -59,6 +59,8 @@ class SyncDuoServerApplicationTests {
 
     private static final String contentFolderPath = contentFolderParentPath + "/" + sourceFolderName;
 
+    private static final String backupStoragePath = testParentPath + "/backupStoragePath";
+
     // delay 函数延迟的时间, 单位"秒"
     private static final int DELAY_UNIT = 18;
 
@@ -226,7 +228,7 @@ class SyncDuoServerApplicationTests {
         );
         // write system storage path config
         SystemConfigEntity systemConfigEntity = new SystemConfigEntity();
-        systemConfigEntity.setSyncStoragePath(contentFolderParentPath);
+        systemConfigEntity.setBackupStoragePath(backupStoragePath);
         this.systemConfigService.updateSystemConfig(systemConfigEntity);
         log.info("initial finish");
     }

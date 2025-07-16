@@ -61,6 +61,7 @@ public class FilesystemEventHandler {
                     // 过滤
                     if (ObjectUtils.isEmpty(filesystemEvent) ||
                             FileEventTypeEnum.FILE_DELETED.equals(filesystemEvent.getFileEventTypeEnum())) {
+                        log.debug("filtered fileEvent: {}", filesystemEvent);
                         continue;
                     }
                     // debounce task

@@ -31,14 +31,13 @@ CREATE TABLE sync_flow (
 
 CREATE TABLE system_config (
 -- define columns (name / type / default value / nullable)
-                           system_config_id bigint auto_increment,
+                           system_config_id int unsigned auto_increment,
                            created_user varchar(255),
                            created_time timestamp,
                            last_updated_user varchar(255),
                            last_updated_time varchar(255),
                            record_deleted int,
-                           sync_storage_path varchar(255),
-                           backup_storage_path varchar(255),
+                           backup_storage_path varchar(4095),
 -- select one of the defined columns as the Primary Key
                            CONSTRAINT system_config_pk PRIMARY KEY (system_config_id)
 );

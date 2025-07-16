@@ -10,9 +10,7 @@ import lombok.EqualsAndHashCode;
 public class SystemConfigEntity extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
-    private Long systemConfigId;
-
-    private String syncStoragePath;
+    private Integer systemConfigId; // int id, 用于传递给前端
 
     private String backupStoragePath;
 }
