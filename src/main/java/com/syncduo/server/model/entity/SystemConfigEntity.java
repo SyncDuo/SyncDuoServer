@@ -13,4 +13,6 @@ public class SystemConfigEntity extends BaseEntity {
     private Integer systemConfigId; // int id, 用于传递给前端
 
     private String backupStoragePath;
+
+    private long backupIntervalMillis;
 }

@@ -6,11 +6,15 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.SystemConfigEntity;
 import com.syncduo.server.service.bussiness.SystemManagementService;
 import com.syncduo.server.service.db.impl.SystemConfigService;
+import com.syncduo.server.service.restic.ResticFacadeService;
+import com.syncduo.server.util.EntityValidationUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @Configuration
 @Slf4j
@@ -19,38 +23,46 @@ public class ApplicationLifeCycleConfig {
     @Value("${spring.profiles.active:prod}")
     private String activeProfile;
 
-    @Value("${syncduo.server.backup.storage.path}")
-    private String backupStoragePath;
-
     private final SystemManagementService systemManagementService;
 
     private final FilesystemEventHandler filesystemEventHandler;
 
     private final SystemConfigService systemConfigService;
 
+    private final ResticFacadeService resticFacadeService;
+
     @Autowired
     public ApplicationLifeCycleConfig(
             SystemManagementService systemManagementService,
             FilesystemEventHandler filesystemEventHandler,
-            SystemConfigService systemConfigService) {
+            SystemConfigService systemConfigService,
+            ResticFacadeService resticFacadeService) {
         this.systemManagementService = systemManagementService;
         this.filesystemEventHandler = filesystemEventHandler;
         this.systemConfigService = systemConfigService;
+        this.resticFacadeService = resticFacadeService;
     }
 
     @PostConstruct
     public void startUp() throws SyncDuoException {
-        // 设置备份目录
-        SystemConfigEntity systemConfig = new SystemConfigEntity();
-        systemConfig.setBackupStoragePath(backupStoragePath);
-        this.systemConfigService.createSystemConfig(systemConfig);
+        // todo: temporary for dev
+        SystemConfigEntity systemConfigDev = new SystemConfigEntity();
+        systemConfigDev.setBackupStoragePath(
+                "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/backupStoragePath"
+        );
+        // 4 hours interval backup
+        systemConfigDev.setBackupIntervalMillis(4L * 3600000L);
+        this.systemConfigService.createSystemConfig(systemConfigDev);
+        // 初始化 restic 并启动 backup
+        SystemConfigEntity systemConfig = this.systemConfigService.getSystemConfig();
+        if (ObjectUtils.isEmpty(systemConfig)) {
+            log.info("System config is not initialized yet.");
+        } else {
+            this.resticFacadeService.init();
+        }
         // 系统启动扫描
         if ("prod".equals(activeProfile)) {
             log.info("Starting up production environment");
-            // 检查全部 sync-flow 是否同步
-            // @PostConstruct 在 @BeforeEach 前面, 会导致在 "旧的folder" 上添加 watcher
-            // "旧的folder" 在 @BeforeEach 中删除, 后续触发的事件会发生异常
-            // 所以需要判断当前 profile 是否为 test, 不为 test 才执行 systemStartUp
             this.systemManagementService.systemStartUp();
         } else {
             log.info("Starting up development environment");

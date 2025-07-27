@@ -37,7 +37,8 @@ CREATE TABLE system_config (
                                last_updated_user varchar(255),
                                last_updated_time varchar(255),
                                record_deleted int,
-                               backup_storage_path varchar(4095),
+                               backup_storage_path varchar(4095) NOT NULL,
+                               backup_interval_millis bigint unsigned NOT NULL,
 -- select one of the defined columns as the Primary Key
                                CONSTRAINT system_config_pk PRIMARY KEY (system_config_id)
 );
@@ -59,5 +60,26 @@ CREATE TABLE copy_job (
                           rclone_job_id int,
                           sync_flow_id bigint,
 -- select one of the defined columns as the Primary Key
-                          CONSTRAINT copy_job_log_pk PRIMARY KEY (copy_job_id)
+                          CONSTRAINT copy_job_pk PRIMARY KEY (copy_job_id)
+);
+
+CREATE TABLE backup_job (
+-- define columns (name / type / default value / nullable)
+                            backup_job_id bigint auto_increment,
+                            created_user varchar(255),
+                            created_time timestamp,
+                            last_updated_user varchar(255),
+                            last_updated_time varchar(255),
+                            record_deleted int,
+                            error_message text,
+                            success_message text,
+                            started_at timestamp,
+                            finished_at timestamp,
+                            backup_job_status varchar(255),
+                            backup_files bigint,
+                            backup_bytes bigint,
+                            snapshot_id text,
+                            sync_flow_id bigint,
+-- select one of the defined columns as the Primary Key
+                            CONSTRAINT backup_job_pk PRIMARY KEY (backup_job_id)
 );

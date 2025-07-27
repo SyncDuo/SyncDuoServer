@@ -11,9 +11,7 @@ import com.syncduo.server.model.entity.SystemConfigEntity;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 
 public class EntityValidationUtil {
 
@@ -146,18 +144,38 @@ public class EntityValidationUtil {
         }
     }
 
-    public static void isSystemConfigEntityValid(SystemConfigEntity systemConfigEntity) throws SyncDuoException {
+    public static void isCreateSystemConfigValid(
+            SystemConfigEntity systemConfigEntity) throws SyncDuoException {
         if (ObjectUtils.isEmpty(systemConfigEntity)) {
-            throw new SyncDuoException("isSystemConfigEntityValid failed. systemConfigEntity is null");
+            throw new SyncDuoException("isCreateSystemConfigValid failed. systemConfigEntity is null");
+        }
+        if (ObjectUtils.isNotEmpty(systemConfigEntity.getSystemConfigId())) {
+            throw new SyncDuoException("isCreateSystemConfigValid failed. systemConfigEntity isn't null");
+        }
+        checkSystemConfigEntityValue(systemConfigEntity);
+    }
+
+    public static void isUpdateSystemConfigRequestValid(
+            SystemConfigEntity systemConfigEntity) throws SyncDuoException {
+        if (ObjectUtils.isEmpty(systemConfigEntity)) {
+            throw new SyncDuoException("isUpdateSystemConfigRequestValid failed. systemConfigEntity is null");
         }
         if (ObjectUtils.isEmpty(systemConfigEntity.getSystemConfigId())) {
-            throw new SyncDuoException("isSystemConfigEntityValid failed. systemConfigId is null");
+            throw new SyncDuoException("isUpdateSystemConfigRequestValid failed. systemConfigId is null");
         }
+        checkSystemConfigEntityValue(systemConfigEntity);
+    }
+
+    public static void checkSystemConfigEntityValue(
+            SystemConfigEntity systemConfigEntity) throws SyncDuoException {
         // 不为空的 config
         if (StringUtils.isAnyBlank(
                 systemConfigEntity.getBackupStoragePath()
         )) {
-            throw new SyncDuoException("isSystemConfigEntityValid failed. backupStoragePath is null");
+            throw new SyncDuoException("checkSystemConfigEntityValue failed. backupStoragePath is null");
+        }
+        if (systemConfigEntity.getBackupIntervalMillis() < 0) {
+            throw new SyncDuoException("checkSystemConfigEntityValue failed. " + "backupIntervalMillis is zero");
         }
         // 可以为空的 config, 填充默认值
     }

@@ -64,7 +64,20 @@
             <scope>test</scope>
         </dependency>
 
-        <!--        mybatis plus-->
+        <!-- jackson handle field to Instant -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-exec -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-exec</artifactId>
+            <version>1.5.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.baomidou/mybatis-plus-spring-boot3-starter -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
@@ -99,6 +112,7 @@
             <version>4.4</version>
         </dependency>
 
+        <!-- h2 database -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

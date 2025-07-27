@@ -58,7 +58,8 @@ public class SystemConfigService
             throw new SyncDuoException("updateSystemConfig failed. systemConfigEntity is null");
         }
         if (ObjectUtils.isEmpty(systemConfigEntity.getSystemConfigId())) {
-            throw new SyncDuoException("updateSystemConfig failed. systemConfigId is null");
+            throw new SyncDuoException("updateSystemConfig failed. systemConfigId is null." +
+                    "are you creating system config?");
         }
         // 如果有主键 ID, 则覆盖或新增缓存
         boolean updated = this.updateById(systemConfigEntity);

@@ -65,7 +65,7 @@ public class ThreadPoolConfig {
 
     private static ThreadPoolTaskScheduler getSystemManagementTaskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(1);  // Number of threads for scheduled tasks
+        scheduler.setPoolSize(2);  // Number of threads for scheduled tasks
         scheduler.setThreadNamePrefix("System-Management-Thread-"); // Thread name prefix
         scheduler.setWaitForTasksToCompleteOnShutdown(true);
         scheduler.setAwaitTerminationSeconds(30);

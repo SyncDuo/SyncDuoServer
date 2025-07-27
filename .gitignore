@@ -36,3 +36,10 @@ build/
 /logs/
 /.mvn/
 /.mvn/
+/restic/password.txt
+/src/main/resources/secrets/
+/src/test/resources/secrets/
+/src/main/resources/secrets.properties
+/src/test/resources/secrets.properties
+/src/test/resources/backupStoragePath/
+/src/test/resources/contentParentFolder/

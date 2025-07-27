@@ -1,6 +1,7 @@
 package com.syncduo.server;
 
 import com.syncduo.server.controller.SyncFlowController;
+import com.syncduo.server.enums.BackupJobStatusEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.syncflow.*;
@@ -8,11 +9,19 @@ import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.model.rclone.operations.check.CheckRequest;
 import com.syncduo.server.model.rclone.sync.copy.SyncCopyRequest;
+import com.syncduo.server.model.restic.backup.Error;
+import com.syncduo.server.model.restic.backup.Summary;
+import com.syncduo.server.model.restic.global.ResticExecResult;
+import com.syncduo.server.model.restic.init.Init;
+import com.syncduo.server.model.restic.stats.Stats;
 import com.syncduo.server.service.db.impl.*;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.rclone.RcloneService;
+import com.syncduo.server.service.restic.ResticFacadeService;
+import com.syncduo.server.service.restic.ResticService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +56,12 @@ class SyncDuoServerApplicationTests {
 
     private final RcloneFacadeService rcloneFacadeService;
 
+    private final ResticFacadeService resticFacadeService;
+
+    private final CopyJobService copyJobService;
+
+    private final BackupJobService backupJobService;
+
     private SyncFlowEntity syncFlowEntity;
 
     private static final String testParentPath = "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources";
@@ -71,13 +86,41 @@ class SyncDuoServerApplicationTests {
             SyncSettingService syncSettingService,
             FolderWatcher folderWatcher,
             SystemConfigService systemConfigService,
-            RcloneFacadeService rcloneFacadeService) {
+            RcloneFacadeService rcloneFacadeService,
+            ResticFacadeService resticFacadeService,
+            CopyJobService copyJobService,
+            BackupJobService backupJobService) {
         this.syncFlowController = syncFlowController;
         this.syncFlowService = syncFlowService;
         this.systemConfigService = systemConfigService;
         this.syncSettingService = syncSettingService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
+        this.resticFacadeService = resticFacadeService;
+        this.copyJobService = copyJobService;
+        this.backupJobService = backupJobService;
+    }
+
+    @Test
+    void ShouldReturnTrueWhenBackup() throws SyncDuoException {
+        // 创建 syncflow
+        createSyncFlow(null);
+        // 手动 init restic
+        this.resticFacadeService.init();
+        // 手动触发 backup job
+        this.resticFacadeService.backup();
+        // 获取 copy job
+        List<BackupJobEntity> result = this.backupJobService.getBySyncFlowId(this.syncFlowEntity.getSyncFlowId());
+        assert CollectionUtils.isNotEmpty(result);
+        for (BackupJobEntity backupJobEntity : result) {
+            log.debug("backJobEntity is {}", backupJobEntity.toString());
+            assert backupJobEntity.getBackupJobStatus().equals(BackupJobStatusEnum.SUCCESS.name());
+        }
+        // 手动触发, snapshot 不应该被创建
+        this.resticFacadeService.backup();
+        // 获取 copy job
+        BackupJobEntity dbResult = this.backupJobService.getBySyncFlowId(this.syncFlowEntity.getSyncFlowId()).get(1);
+        assert StringUtils.isBlank(dbResult.getSnapshotId());
     }
 
     @Test
@@ -229,7 +272,8 @@ class SyncDuoServerApplicationTests {
         // write system storage path config
         SystemConfigEntity systemConfigEntity = new SystemConfigEntity();
         systemConfigEntity.setBackupStoragePath(backupStoragePath);
-        this.systemConfigService.updateSystemConfig(systemConfigEntity);
+        systemConfigEntity.setBackupIntervalMillis(4 * 3600000);
+        this.systemConfigService.createSystemConfig(systemConfigEntity);
         log.info("initial finish");
     }
 
@@ -240,13 +284,19 @@ class SyncDuoServerApplicationTests {
             // delete source folder
             FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
         } catch (IOException e) {
-            log.warn("删除文件夹失败.", e);
+            log.warn("删除source文件夹失败.", e);
         }
         try {
             // delete dest folder
             FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(contentFolderParentPath));
         } catch (IOException e) {
-            log.error("删除文件夹失败.", e);
+            log.error("删除dest文件夹失败.", e);
+        }
+        try {
+            // delete backup folder
+            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(backupStoragePath));
+        } catch (IOException e) {
+            log.error("删除backup文件夹失败.", e);
         }
         // delete system config cache
         this.systemConfigService.clearCache();
@@ -267,11 +317,25 @@ class SyncDuoServerApplicationTests {
                     syncSettingEntities.stream().map(SyncSettingEntity::getSyncSettingId).collect(Collectors.toList())
             );
         }
-        // system config mapping truncate
+        // system config truncate
         List<SystemConfigEntity> systemConfigEntities = this.systemConfigService.list();
         if (CollectionUtils.isNotEmpty(systemConfigEntities)) {
             this.systemConfigService.removeBatchByIds(
                     systemConfigEntities.stream().map(SystemConfigEntity::getSystemConfigId).toList()
+            );
+        }
+        // copy job truncate
+        List<CopyJobEntity> copyJobEntities = this.copyJobService.list();
+        if (CollectionUtils.isNotEmpty(copyJobEntities)) {
+            this.copyJobService.removeBatchByIds(
+                    copyJobEntities.stream().map(CopyJobEntity::getCopyJobId).collect(Collectors.toList())
+            );
+        }
+        // backup job truncate
+        List<BackupJobEntity> backupJobEntities = this.backupJobService.list();
+        if (CollectionUtils.isNotEmpty(backupJobEntities)) {
+            this.backupJobService.removeBatchByIds(
+                    backupJobEntities.stream().map(BackupJobEntity::getBackupJobId).collect(Collectors.toList())
             );
         }
         log.info("truncate all table");
