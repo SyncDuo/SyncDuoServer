@@ -9,26 +9,21 @@ import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.model.entity.SyncSettingEntity;
 import com.syncduo.server.model.api.syncsettings.UpdateFilterCriteriaRequest;
 import com.syncduo.server.service.db.impl.*;
-import com.syncduo.server.service.bussiness.SystemManagementService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
-import com.syncduo.server.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 
 @RestController
@@ -293,7 +288,7 @@ public class SyncFlowController {
     }
 
     private SyncFlowResponse generateSyncFlowErrorResponse(String errorMessage, SyncDuoException e) {
-        SyncFlowResponse syncFlowResponse = SyncFlowResponse.onError(errorMessage);
+        SyncFlowResponse syncFlowResponse = SyncFlowResponse.onError(errorMessage + e.getMessage());
         log.warn(errorMessage, e);
         return syncFlowResponse;
     }

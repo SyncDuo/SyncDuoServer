@@ -174,8 +174,10 @@ public class EntityValidationUtil {
         )) {
             throw new SyncDuoException("checkSystemConfigEntityValue failed. backupStoragePath is null");
         }
-        if (systemConfigEntity.getBackupIntervalMillis() < 0) {
-            throw new SyncDuoException("checkSystemConfigEntityValue failed. " + "backupIntervalMillis is zero");
+        // 禁止备份间隔小于一小时
+        if (systemConfigEntity.getBackupIntervalMillis() < 3600000) {
+            throw new SyncDuoException("checkSystemConfigEntityValue failed. " +
+                    "backupIntervalMillis is below 1 hours");
         }
         // 可以为空的 config, 填充默认值
     }
