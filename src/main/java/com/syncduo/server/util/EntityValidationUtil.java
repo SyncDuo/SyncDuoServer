@@ -5,6 +5,7 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.syncflow.ChangeSyncFlowStatusRequest;
 import com.syncduo.server.model.api.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.api.syncflow.DeleteSyncFlowRequest;
+import com.syncduo.server.model.api.syncflow.ManualBackupRequest;
 import com.syncduo.server.model.api.syncsettings.UpdateFilterCriteriaRequest;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SystemConfigEntity;
@@ -80,8 +81,14 @@ public class EntityValidationUtil {
         if (ObjectUtils.isEmpty(deleteSyncFlowRequest)) {
             throw new SyncDuoException("isDeleteSyncFlowRequestValid failed. deleteSyncFlowRequest is null");
         }
-        if (ObjectUtils.isEmpty(deleteSyncFlowRequest.getSyncFlowId())) {
+        if (StringUtils.isBlank(deleteSyncFlowRequest.getSyncFlowId())) {
             throw new SyncDuoException("isDeleteSyncFlowRequestValid failed. syncFlowId is null");
+        }
+        // 解析 syncflow id
+        try {
+            deleteSyncFlowRequest.setInnerSyncFlowId(Long.parseLong(deleteSyncFlowRequest.getSyncFlowId()));
+        } catch (NumberFormatException e) {
+            throw new SyncDuoException("isDeleteSyncFlowRequestValid failed. syncFlowId is not a number");
         }
     }
 
@@ -168,17 +175,36 @@ public class EntityValidationUtil {
 
     public static void checkSystemConfigEntityValue(
             SystemConfigEntity systemConfigEntity) throws SyncDuoException {
-        // 不为空的 config
+        // 不为空的 config field
         if (StringUtils.isAnyBlank(
-                systemConfigEntity.getBackupStoragePath()
+                systemConfigEntity.getBackupStoragePath(),
+                systemConfigEntity.getBackupPassword()
         )) {
-            throw new SyncDuoException("checkSystemConfigEntityValue failed. backupStoragePath is null");
+            throw new SyncDuoException("checkSystemConfigEntityValue failed. " +
+                    "backupStoragePath or backupPassword " +
+                    "is null");
         }
         // 禁止备份间隔小于一小时
         if (systemConfigEntity.getBackupIntervalMillis() < 3600000) {
             throw new SyncDuoException("checkSystemConfigEntityValue failed. " +
                     "backupIntervalMillis is below 1 hours");
         }
-        // 可以为空的 config, 填充默认值
+    }
+
+    public static void isManualBackupRequestValid(ManualBackupRequest manualBackupRequest) throws SyncDuoException {
+        if (ObjectUtils.anyNull(manualBackupRequest)) {
+            throw new SyncDuoException("isManualBackupRequestValid failed. " +
+                    "manualBackupRequest is null");
+        }
+        if (StringUtils.isBlank(manualBackupRequest.getSyncFlowId())) {
+            throw new SyncDuoException("isManualBackupRequestValid failed. " +
+                    "syncFlowId is null");
+        }
+        // 解析 syncflow id
+        try {
+            manualBackupRequest.setInnerSyncFlowId(Long.parseLong(manualBackupRequest.getSyncFlowId()));
+        } catch (NumberFormatException e) {
+            throw new SyncDuoException("isManualBackupRequestValid failed. syncFlowId is not a number");
+        }
     }
 }

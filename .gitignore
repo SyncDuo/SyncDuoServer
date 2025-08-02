@@ -35,7 +35,6 @@ build/
 /src/test/resources/contentWarehouse/
 /logs/
 /.mvn/
-/.mvn/
 /restic/password.txt
 /src/main/resources/secrets/
 /src/test/resources/secrets/
@@ -43,3 +42,4 @@ build/
 /src/test/resources/secrets.properties
 /src/test/resources/backupStoragePath/
 /src/test/resources/contentParentFolder/
+/src/main/resources/secret/

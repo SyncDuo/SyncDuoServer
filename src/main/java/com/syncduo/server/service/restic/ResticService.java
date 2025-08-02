@@ -7,12 +7,10 @@ import com.syncduo.server.model.restic.cat.CatConfig;
 import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.model.restic.init.Init;
 import com.syncduo.server.model.restic.stats.Stats;
-import com.syncduo.server.service.db.impl.SystemConfigService;
 import com.syncduo.server.util.FilesystemUtil;
 import com.syncduo.server.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,15 +20,14 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class ResticService {
 
-    @Value("${syncduo.server.restic.password}")
-    private String RESTIC_PASSWORD;
-
-    public ResticExecResult<Init, Void> init(String backupStoragePath) throws SyncDuoException {
+    public ResticExecResult<Init, Void> init(
+            String backupStoragePath,
+            String backupPassword) throws SyncDuoException {
         FilesystemUtil.isFolderPathValid(backupStoragePath);
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("init");
         ResticParser<Init, Void> resticParser = new ResticParser<>(
-                RESTIC_PASSWORD,
+                backupPassword,
                 backupStoragePath,
                 commandLine
         );
@@ -49,6 +46,7 @@ public class ResticService {
 
     public ResticExecResult<Summary, Error> backup(
             String backupStoragePath,
+            String backupPassword,
             String folderPathString) throws SyncDuoException {
         FilesystemUtil.isFolderPathValid(backupStoragePath);
         FilesystemUtil.isFolderPathValid(folderPathString);
@@ -57,7 +55,7 @@ public class ResticService {
         commandLine.addArgument(".");
         commandLine.addArgument("--skip-if-unchanged");
         ResticParser<Summary, Error> resticParser = new ResticParser<>(
-                RESTIC_PASSWORD,
+                backupPassword,
                 backupStoragePath,
                 commandLine
         );
@@ -74,14 +72,16 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<Stats, Void> stats(String backupStoragePath) throws SyncDuoException {
+    public ResticExecResult<Stats, Void> stats(
+            String backupStoragePath,
+            String backupPassword) throws SyncDuoException {
         FilesystemUtil.isFolderPathValid(backupStoragePath);
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("stats");
         commandLine.addArgument("--mode");
         commandLine.addArgument("blobs-per-file");
         ResticParser<Stats, Void> resticParser = new ResticParser<>(
-                RESTIC_PASSWORD,
+                backupPassword,
                 backupStoragePath,
                 commandLine
         );
@@ -98,13 +98,15 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<CatConfig, Void> catConfig(String backupStoragePath) throws SyncDuoException {
+    public ResticExecResult<CatConfig, Void> catConfig(
+            String backupStoragePath,
+            String backupPassword) throws SyncDuoException {
         FilesystemUtil.isFolderPathValid(backupStoragePath);
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("cat");
         commandLine.addArgument("config");
         ResticParser<CatConfig, Void> resticParser = new ResticParser<>(
-                RESTIC_PASSWORD,
+                backupPassword,
                 backupStoragePath,
                 commandLine
         );

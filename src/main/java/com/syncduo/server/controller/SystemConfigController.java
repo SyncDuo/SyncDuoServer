@@ -4,6 +4,7 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.entity.SystemConfigEntity;
 import com.syncduo.server.model.api.systemconfig.SystemConfigResponse;
 import com.syncduo.server.service.db.impl.*;
+import com.syncduo.server.service.restic.ResticFacadeService;
 import com.syncduo.server.util.EntityValidationUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -19,9 +20,14 @@ public class SystemConfigController {
 
     private final SystemConfigService systemConfigService;
 
+    private final ResticFacadeService resticFacadeService;
+
     @Autowired
-    public SystemConfigController(SystemConfigService systemConfigService) {
+    public SystemConfigController(
+            SystemConfigService systemConfigService,
+            ResticFacadeService resticFacadeService) {
         this.systemConfigService = systemConfigService;
+        this.resticFacadeService = resticFacadeService;
     }
 
     @GetMapping("/get-system-config")
@@ -38,6 +44,8 @@ public class SystemConfigController {
         try {
             EntityValidationUtil.isCreateSystemConfigValid(systemConfigEntity);
             this.systemConfigService.createSystemConfig(systemConfigEntity);
+            // 初始化 restic
+            this.resticFacadeService.init();
             return SystemConfigResponse.onSuccess("创建 system config 成功", systemConfigEntity);
         } catch (SyncDuoException e) {
             log.error("createSystemConfig failed.", e);

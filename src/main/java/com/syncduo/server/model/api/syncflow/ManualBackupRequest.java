@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 @Data
-public class DeleteSyncFlowRequest {
+public class ManualBackupRequest {
     private String syncFlowId;
 
     @JsonIgnore

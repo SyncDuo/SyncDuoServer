@@ -13,19 +13,19 @@ import com.syncduo.server.model.restic.stats.Stats;
 import com.syncduo.server.service.db.impl.BackupJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.db.impl.SystemConfigService;
+import com.syncduo.server.service.secret.RsaService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
+// Restic 设计为单备份仓库, 单密码
 @Slf4j
 @Service
 public class ResticFacadeService {
@@ -40,70 +40,79 @@ public class ResticFacadeService {
 
     private final SyncFlowService syncFlowService;
 
+    private final RsaService rsaService;
+
+    private String RESTIC_PASSWORD;
+
+    private String RESTIC_STORAGE_PATH;
+
+    private boolean RESTIC_INITIALIZED = false;
+
     public ResticFacadeService(
             ResticService resticService,
             SystemConfigService systemConfigService,
             BackupJobService backupJobService,
             ThreadPoolTaskScheduler systemManagementTaskScheduler,
-            SyncFlowService syncFlowService) {
+            SyncFlowService syncFlowService,
+            RsaService rsaService) {
         this.resticService = resticService;
         this.systemConfigService = systemConfigService;
         this.backupJobService = backupJobService;
         this.systemManagementTaskScheduler = systemManagementTaskScheduler;
         this.syncFlowService = syncFlowService;
+        this.rsaService = rsaService;
     }
 
     public void init() throws SyncDuoException {
         SystemConfigEntity systemConfig = this.systemConfigService.getSystemConfig();
         EntityValidationUtil.checkSystemConfigEntityValue(systemConfig);
-        String backupStoragePath = systemConfig.getBackupStoragePath();
+        RESTIC_STORAGE_PATH = systemConfig.getBackupStoragePath();
+        RESTIC_PASSWORD = this.rsaService.decrypt(systemConfig.getBackupPassword());
+        RESTIC_INITIALIZED = true;
         // 检查是否已经初始化
-        ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig(backupStoragePath);
+        ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig(
+                this.RESTIC_STORAGE_PATH,
+                this.RESTIC_PASSWORD
+        );
+        // 没有初始化则初始化
         if (!catConfigResult.isSuccess()) {
-            ResticExecResult<Init, Void> resticExecResult = this.resticService.init(backupStoragePath);
+            ResticExecResult<Init, Void> resticExecResult = this.resticService.init(
+                    this.RESTIC_STORAGE_PATH,
+                    this.RESTIC_PASSWORD
+            );
             if (!resticExecResult.isSuccess()) {
                 throw new SyncDuoException("init failed.", resticExecResult.getSyncDuoException());
             }
         }
         // 启动定时任务
         this.systemManagementTaskScheduler.scheduleWithFixedDelay(
-                this::backup,
+                this::periodicalBackup,
                 Instant.now().plus(Duration.ofHours(1)),
                 Duration.ofMillis(systemConfig.getBackupIntervalMillis())
         );
     }
 
-    public void backup() {
+    public void manualBackup(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        try {
+            EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity, "");
+            this.backup(syncFlowEntity);
+        } catch (SyncDuoException e) {
+            throw new SyncDuoException("backup failed.", e);
+        }
+    }
+
+    public void periodicalBackup() {
+        if (!RESTIC_INITIALIZED) {
+            log.error("RESTIC is not initialized.");
+            return;
+        }
         List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
         if (CollectionUtils.isEmpty(allSyncFlow)) {
             return;
         }
-        String backupStoragePath = this.systemConfigService.getSystemConfig().getBackupStoragePath();
         for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
-            String destFolderPath = syncFlowEntity.getDestFolderPath();
             try {
-                // SYNC 状态的 syncflow, 才执行backup
-                SyncFlowStatusEnum syncFlowStatusEnum = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
-                if (!syncFlowStatusEnum.equals(SyncFlowStatusEnum.SYNC)) {
-                    continue;
-                }
-                // backup
-                ResticExecResult<Summary, Error> backupResult = this.resticService.backup(
-                        backupStoragePath,
-                        destFolderPath
-                );
-                // 记录 backup job
-                if (backupResult.isSuccess()) {
-                    this.backupJobService.addSuccessBackupJob(
-                            syncFlowEntity.getSyncFlowId(),
-                            backupResult.getData()
-                    );
-                } else {
-                    this.backupJobService.addFailBackupJob(
-                            syncFlowEntity.getSyncFlowId(),
-                            backupResult.getSyncDuoException().getMessage()
-                    );
-                }
+                this.backup(syncFlowEntity);
             } catch (SyncDuoException e) {
                 log.error("backup failed. syncFlowEntity is {}", syncFlowEntity, e);
             }
@@ -111,16 +120,51 @@ public class ResticFacadeService {
     }
 
     public Stats getStats(String backupStoragePath) throws SyncDuoException {
+        if (!RESTIC_INITIALIZED) {
+            throw new SyncDuoException("RESTIC is not initialized.");
+        }
         FilesystemUtil.isFolderPathValid(backupStoragePath);
-        ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig(backupStoragePath);
+        ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig(
+                this.RESTIC_STORAGE_PATH,
+                this.RESTIC_PASSWORD
+        );
         if (!catConfigResult.isSuccess()) {
             throw new SyncDuoException("getStats failed. repository isn't initialized",
                     catConfigResult.getSyncDuoException());
         }
-        ResticExecResult<Stats, Void> statsResult = this.resticService.stats(backupStoragePath);
+        ResticExecResult<Stats, Void> statsResult = this.resticService.stats(
+                this.RESTIC_STORAGE_PATH,
+                this.RESTIC_PASSWORD
+        );
         if (!statsResult.isSuccess()) {
             throw new SyncDuoException("getStats failed. ", statsResult.getSyncDuoException());
         }
         return statsResult.getData();
+    }
+
+    private void backup(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        // SYNC 状态的 syncflow, 才执行backup
+        SyncFlowStatusEnum syncFlowStatusEnum = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
+        if (!syncFlowStatusEnum.equals(SyncFlowStatusEnum.SYNC)) {
+            return;
+        }
+        // backup
+        ResticExecResult<Summary, Error> backupResult = this.resticService.backup(
+                this.RESTIC_STORAGE_PATH,
+                this.RESTIC_PASSWORD,
+                syncFlowEntity.getDestFolderPath()
+        );
+        // 记录 backup job
+        if (backupResult.isSuccess()) {
+            this.backupJobService.addSuccessBackupJob(
+                    syncFlowEntity.getSyncFlowId(),
+                    backupResult.getData()
+            );
+        } else {
+            this.backupJobService.addFailBackupJob(
+                    syncFlowEntity.getSyncFlowId(),
+                    backupResult.getSyncDuoException().getMessage()
+            );
+        }
     }
 }

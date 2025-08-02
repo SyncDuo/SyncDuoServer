@@ -7,6 +7,7 @@ import com.syncduo.server.model.entity.SystemConfigEntity;
 import com.syncduo.server.service.bussiness.SystemManagementService;
 import com.syncduo.server.service.db.impl.SystemConfigService;
 import com.syncduo.server.service.restic.ResticFacadeService;
+import com.syncduo.server.service.secret.RsaService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -29,20 +30,27 @@ public class ApplicationLifeCycleConfig {
 
     private final ResticFacadeService resticFacadeService;
 
+    private final RsaService rsaService;
+
     @Autowired
     public ApplicationLifeCycleConfig(
             SystemManagementService systemManagementService,
             FilesystemEventHandler filesystemEventHandler,
             SystemConfigService systemConfigService,
-            ResticFacadeService resticFacadeService) {
+            ResticFacadeService resticFacadeService,
+            RsaService rsaService) {
         this.systemManagementService = systemManagementService;
         this.filesystemEventHandler = filesystemEventHandler;
         this.systemConfigService = systemConfigService;
         this.resticFacadeService = resticFacadeService;
+        this.rsaService = rsaService;
     }
 
     @PostConstruct
     public void startUp() throws SyncDuoException {
+        // 初始化 RSA
+        this.rsaService.init();
+        // 获取 system config
         SystemConfigEntity systemConfig = this.systemConfigService.getSystemConfig();
         if (ObjectUtils.isEmpty(systemConfig)) {
             log.info("System config is not initialized yet.");

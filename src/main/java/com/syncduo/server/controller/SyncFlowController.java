@@ -10,6 +10,7 @@ import com.syncduo.server.model.entity.SyncSettingEntity;
 import com.syncduo.server.model.api.syncsettings.UpdateFilterCriteriaRequest;
 import com.syncduo.server.service.db.impl.*;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
+import com.syncduo.server.service.restic.ResticFacadeService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -42,18 +43,22 @@ public class SyncFlowController {
 
     private final RcloneFacadeService rcloneFacadeService;
 
+    private final ResticFacadeService resticFacadeService;
+
     @Autowired
     public SyncFlowController(
             ThreadPoolTaskScheduler generalTaskScheduler,
             SyncFlowService syncFlowService,
             SyncSettingService syncSettingService,
             FolderWatcher folderWatcher,
-            RcloneFacadeService rcloneFacadeService) {
+            RcloneFacadeService rcloneFacadeService,
+            ResticFacadeService resticFacadeService) {
         this.generalTaskScheduler = generalTaskScheduler;
         this.syncFlowService = syncFlowService;
         this.syncSettingService = syncSettingService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
+        this.resticFacadeService = resticFacadeService;
     }
 
     @PostMapping("/update-filter-criteria")
@@ -88,6 +93,24 @@ public class SyncFlowController {
                     "updateFilterCriteria failed.",
                     e
             );
+        }
+    }
+
+    @PostMapping("/backup")
+    public SyncFlowResponse backup(@RequestBody ManualBackupRequest manualBackupRequest) {
+        try {
+            EntityValidationUtil.isManualBackupRequestValid(manualBackupRequest);
+            // 查询 syncflow
+            SyncFlowEntity syncFlowEntity =
+                    this.syncFlowService.getBySyncFlowId(manualBackupRequest.getInnerSyncFlowId());
+            if (ObjectUtils.isEmpty(syncFlowEntity)) {
+                return SyncFlowResponse.onError("backup failed. SyncFlow is deleted");
+            }
+            // backup
+            this.resticFacadeService.manualBackup(syncFlowEntity);
+            return SyncFlowResponse.onSuccess("backup success");
+        } catch (SyncDuoException e) {
+            return this.generateSyncFlowErrorResponse("backup failed.", e);
         }
     }
 
@@ -210,7 +233,9 @@ public class SyncFlowController {
         try {
             EntityValidationUtil.isDeleteSyncFlowRequestValid(deleteSyncFlowRequest);
             // search
-            SyncFlowEntity dbResult = this.syncFlowService.getBySyncFlowId(deleteSyncFlowRequest.getSyncFlowId());
+            SyncFlowEntity dbResult = this.syncFlowService.getBySyncFlowId(
+                    deleteSyncFlowRequest.getInnerSyncFlowId()
+            );
             if (ObjectUtils.isEmpty(dbResult)) {
                 return SyncFlowResponse.onSuccess("删除 syncFlow 成功. syncflow 不存在");
             }

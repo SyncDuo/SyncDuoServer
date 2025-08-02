@@ -7,23 +7,12 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
-import com.syncduo.server.model.rclone.operations.check.CheckRequest;
-import com.syncduo.server.model.rclone.sync.copy.SyncCopyRequest;
-import com.syncduo.server.model.restic.backup.Error;
-import com.syncduo.server.model.restic.backup.Summary;
-import com.syncduo.server.model.restic.global.ResticExecResult;
-import com.syncduo.server.model.restic.init.Init;
-import com.syncduo.server.model.restic.stats.Stats;
 import com.syncduo.server.service.db.impl.*;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
-import com.syncduo.server.service.rclone.RcloneService;
 import com.syncduo.server.service.restic.ResticFacadeService;
-import com.syncduo.server.service.restic.ResticService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +22,6 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -108,7 +96,7 @@ class SyncDuoServerApplicationTests {
         // 手动 init restic
         this.resticFacadeService.init();
         // 手动触发 backup job
-        this.resticFacadeService.backup();
+        this.resticFacadeService.periodicalBackup();
         // 获取 copy job
         List<BackupJobEntity> result = this.backupJobService.getBySyncFlowId(this.syncFlowEntity.getSyncFlowId());
         assert CollectionUtils.isNotEmpty(result);
@@ -117,7 +105,7 @@ class SyncDuoServerApplicationTests {
             assert backupJobEntity.getBackupJobStatus().equals(BackupJobStatusEnum.SUCCESS.name());
         }
         // 手动触发, snapshot 不应该被创建
-        this.resticFacadeService.backup();
+        this.resticFacadeService.periodicalBackup();
         // 获取 copy job
         BackupJobEntity dbResult = this.backupJobService.getBySyncFlowId(this.syncFlowEntity.getSyncFlowId()).get(1);
         assert StringUtils.isBlank(dbResult.getSnapshotId());
@@ -156,7 +144,7 @@ class SyncDuoServerApplicationTests {
         waitAllFileHandle();
         // 删除 syncflow
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
-        deleteSyncFlowRequest.setSyncFlowId(syncFlowEntity.getSyncFlowId());
+        deleteSyncFlowRequest.setSyncFlowId(syncFlowEntity.getSyncFlowId().toString());
         this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
         // 源文件夹创建文件
         FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
@@ -219,7 +207,7 @@ class SyncDuoServerApplicationTests {
         createSyncFlow(null);
 
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
-        deleteSyncFlowRequest.setSyncFlowId(this.syncFlowEntity.getSyncFlowId());
+        deleteSyncFlowRequest.setSyncFlowId(this.syncFlowEntity.getSyncFlowId().toString());
         SyncFlowResponse syncFlowResponse1 = this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
         assert syncFlowResponse1.getCode() == 200;
     }

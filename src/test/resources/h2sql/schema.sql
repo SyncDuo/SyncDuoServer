@@ -39,6 +39,7 @@ CREATE TABLE system_config (
                                record_deleted int,
                                backup_storage_path varchar(4095) NOT NULL,
                                backup_interval_millis bigint unsigned NOT NULL,
+                               backup_password text NOT NULL,
 -- select one of the defined columns as the Primary Key
                                CONSTRAINT system_config_pk PRIMARY KEY (system_config_id)
 );

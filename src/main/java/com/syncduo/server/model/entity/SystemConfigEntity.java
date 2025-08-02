@@ -15,4 +15,6 @@ public class SystemConfigEntity extends BaseEntity {
     private String backupStoragePath;
 
     private long backupIntervalMillis;
+
+    private String backupPassword;
 }
