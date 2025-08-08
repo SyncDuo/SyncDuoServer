@@ -7,7 +7,7 @@ import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.model.entity.SyncSettingEntity;
-import com.syncduo.server.model.api.syncsettings.UpdateFilterCriteriaRequest;
+import com.syncduo.server.model.api.syncflow.UpdateFilterCriteriaRequest;
 import com.syncduo.server.service.db.impl.*;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;

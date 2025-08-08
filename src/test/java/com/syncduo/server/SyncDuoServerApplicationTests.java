@@ -1,9 +1,12 @@
 package com.syncduo.server;
 
+import com.syncduo.server.controller.SnapshotsController;
 import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.enums.BackupJobStatusEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.api.snapshots.SnapshotsInfo;
+import com.syncduo.server.model.api.snapshots.SnapshotsResponse;
 import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
@@ -12,6 +15,7 @@ import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +54,8 @@ class SyncDuoServerApplicationTests {
 
     private final BackupJobService backupJobService;
 
+    private final SnapshotsController snapshotsController;
+
     private SyncFlowEntity syncFlowEntity;
 
     private static final String testParentPath = "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources";
@@ -77,7 +83,8 @@ class SyncDuoServerApplicationTests {
             RcloneFacadeService rcloneFacadeService,
             ResticFacadeService resticFacadeService,
             CopyJobService copyJobService,
-            BackupJobService backupJobService) {
+            BackupJobService backupJobService,
+            SnapshotsController snapshotsController) {
         this.syncFlowController = syncFlowController;
         this.syncFlowService = syncFlowService;
         this.systemConfigService = systemConfigService;
@@ -87,6 +94,27 @@ class SyncDuoServerApplicationTests {
         this.resticFacadeService = resticFacadeService;
         this.copyJobService = copyJobService;
         this.backupJobService = backupJobService;
+        this.snapshotsController = snapshotsController;
+    }
+
+    @Test
+    void ShouldReturnTrueWhenGetSnapshotInfo() throws SyncDuoException {
+        // 创建 syncflow
+        createSyncFlow(null);
+        // 手动 init restic
+        this.resticFacadeService.init();
+        // 手动触发 backup job
+        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        // 获取 snapshot info
+        SnapshotsResponse snapshots = this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert MapUtils.isNotEmpty(snapshots.getSnapshots());
+        // 再手动触发 backup
+        this.resticFacadeService.manualBackup(syncFlowEntity);
+        snapshots = this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert MapUtils.isNotEmpty(snapshots.getSnapshots());
+        List<SnapshotsInfo> snapshotsInfoList =
+                snapshots.getSnapshots().get(this.syncFlowEntity.getSyncFlowId().toString());
+        assert StringUtils.isBlank(snapshotsInfoList.get(0).getSnapshotId());
     }
 
     @Test
@@ -96,7 +124,7 @@ class SyncDuoServerApplicationTests {
         // 手动 init restic
         this.resticFacadeService.init();
         // 手动触发 backup job
-        this.resticFacadeService.periodicalBackup();
+        this.resticFacadeService.manualBackup(this.syncFlowEntity);
         // 获取 copy job
         List<BackupJobEntity> result = this.backupJobService.getBySyncFlowId(this.syncFlowEntity.getSyncFlowId());
         assert CollectionUtils.isNotEmpty(result);
@@ -105,7 +133,7 @@ class SyncDuoServerApplicationTests {
             assert backupJobEntity.getBackupJobStatus().equals(BackupJobStatusEnum.SUCCESS.name());
         }
         // 手动触发, snapshot 不应该被创建
-        this.resticFacadeService.periodicalBackup();
+        this.resticFacadeService.manualBackup(this.syncFlowEntity);
         // 获取 copy job
         BackupJobEntity dbResult = this.backupJobService.getBySyncFlowId(this.syncFlowEntity.getSyncFlowId()).get(1);
         assert StringUtils.isBlank(dbResult.getSnapshotId());
@@ -261,6 +289,7 @@ class SyncDuoServerApplicationTests {
         SystemConfigEntity systemConfigEntity = new SystemConfigEntity();
         systemConfigEntity.setBackupStoragePath(backupStoragePath);
         systemConfigEntity.setBackupIntervalMillis(4 * 3600000);
+        systemConfigEntity.setBackupPassword("AEZOncxFFM1waTnXvh0WpITH+E4ohKrgXSJllL8qYpSpFlJw2HEXsJiEHXR6LA5SsXEHIJSxbQK5CGfhPH1AS0u3lK+HuB/qZMVIfKHpPAUzdAGaRr6C+prPAF5+Vy5QoTadSW1sp46Dyi0t0qQINPTEP/7YPjs8epMqdu04Uf9gKqi6TnniD9dOHy4mnBrVNWuIT9Xg2mOCLV6Vu9I60fDkTNLHDb1n0qtP7ALmuqaebXMWfJxuaZRMfA0nVo4NAy6bouIFg2IhlJBGfElebjqNOSsBrP6ylH9/zAehyIgu5hrJC9HEiHZzgxjsMbH+GSKOpQbpB3po2Eu1an5iDQ=="); // 0608
         this.systemConfigService.createSystemConfig(systemConfigEntity);
         log.info("initial finish");
     }

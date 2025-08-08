@@ -84,38 +84,38 @@ public class FilesystemUtil {
         return Arrays.asList(fileCount.get(), subFolderCount.get(), totalSize.get());
     }
 
-    public static Path isFilePathValid(String filePath)
+    public static Path isFilePathValid(String filePathString)
             throws SyncDuoException {
-        if (StringUtils.isBlank(filePath)) {
-            throw new SyncDuoException("isFilePathValid failed. filePath is null");
+        if (StringUtils.isBlank(filePathString)) {
+            throw new SyncDuoException("isFilePathValid failed. filePathString is null");
         }
-        Path sourceFile = Paths.get(filePath);
-        if (Files.exists(sourceFile)) {
-            return sourceFile;
+        Path file = Paths.get(filePathString);
+        if (Files.exists(file)) {
+            return file;
         } else {
-            throw new SyncDuoException(("isFilePathValid failed. filePath not exist. " +
-                    "filePath is %s").formatted(filePath));
+            throw new SyncDuoException(("isFilePathValid failed. filePathString not exist. " +
+                    "filePathString is %s").formatted(filePathString));
         }
     }
 
-    public static Path isFolderPathValid(String path) throws SyncDuoException {
-        if (StringUtils.isBlank(path)) {
-            throw new SyncDuoException("isFolderPathValid failed. path is null");
+    public static Path isFolderPathValid(String folderPathString) throws SyncDuoException {
+        if (StringUtils.isBlank(folderPathString)) {
+            throw new SyncDuoException("isFolderPathValid failed. folderPathString is null");
         }
-        Path folderPath = Paths.get(path);
-        if (Files.exists(folderPath) && Files.isDirectory(folderPath)) {
-            return folderPath;
+        Path folder = Paths.get(folderPathString);
+        if (Files.exists(folder) && Files.isDirectory(folder)) {
+            return folder;
         } else {
-            throw new SyncDuoException(("isFolderPathValid failed. path doesn't exist or is not folder." +
-                    "path is %s").formatted(path));
+            throw new SyncDuoException(("isFolderPathValid failed. folderPathString doesn't exist or is not folder." +
+                    "folderPathString is %s").formatted(folderPathString));
         }
     }
 
-    public static List<Path> getSubFolders(String path) throws SyncDuoException {
-        if (StringUtils.isBlank(path)) {
-            throw new SyncDuoException("getSubfolders failed. path is null");
+    public static List<Path> getSubFolders(String folderPathString) throws SyncDuoException {
+        if (StringUtils.isBlank(folderPathString)) {
+            throw new SyncDuoException("getSubfolders failed. folderPathString is null");
         }
-        Path folder = Paths.get(path);
+        Path folder = Paths.get(folderPathString);
         // 如果输入的路径不存在, 则寻找它的父路径, 如果父路径也不存在, 则抛出异常
         if (!Files.exists(folder) || !Files.isDirectory(folder)) {
             folder = isFolderPathValid(folder.getParent().toAbsolutePath().toString());
@@ -128,7 +128,7 @@ public class FilesystemUtil {
                 }
             }
         } catch (IOException e) {
-            throw new SyncDuoException("getSubfolders failed. path is %s".formatted(path), e);
+            throw new SyncDuoException("getSubfolders failed. folderPathString is %s".formatted(folderPathString), e);
         }
         return result;
     }

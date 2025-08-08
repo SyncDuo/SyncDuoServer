@@ -19,14 +19,18 @@ public class SyncFlowResponse {
         this.message = message;
     }
 
+    private SyncFlowResponse(Integer code, String message, List<SyncFlowInfo> syncFlowInfoList) {
+        this.code = code;
+        this.message = message;
+        this.syncFlowInfoList = syncFlowInfoList;
+    }
+
     public static SyncFlowResponse onSuccess(String message) {
         return new SyncFlowResponse(200, message);
     }
 
     public static SyncFlowResponse onSuccess(String message, List<SyncFlowInfo> syncFlowInfoList) {
-        SyncFlowResponse syncFlowResponse = new SyncFlowResponse(200, message);
-        syncFlowResponse.setSyncFlowInfoList(syncFlowInfoList);
-        return syncFlowResponse;
+        return new SyncFlowResponse(200, message, syncFlowInfoList);
     }
 
     public static SyncFlowResponse onError(String message) {

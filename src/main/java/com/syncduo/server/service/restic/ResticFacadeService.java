@@ -2,6 +2,7 @@ package com.syncduo.server.service.restic;
 
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SystemConfigEntity;
 import com.syncduo.server.model.restic.backup.Error;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 
 // Restic 设计为单备份仓库, 单密码
@@ -140,6 +142,15 @@ public class ResticFacadeService {
             throw new SyncDuoException("getStats failed. ", statsResult.getSyncDuoException());
         }
         return statsResult.getData();
+    }
+
+    public List<SnapshotFileInfo> getSnapshotFileInfo(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        if (!RESTIC_INITIALIZED) {
+            throw new SyncDuoException("RESTIC is not initialized.");
+        }
+        String destFolderPath = syncFlowEntity.getDestFolderPath();
+
+        return Collections.emptyList();
     }
 
     private void backup(SyncFlowEntity syncFlowEntity) throws SyncDuoException {

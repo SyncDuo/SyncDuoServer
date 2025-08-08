@@ -6,7 +6,7 @@ import com.syncduo.server.model.api.syncflow.ChangeSyncFlowStatusRequest;
 import com.syncduo.server.model.api.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.api.syncflow.DeleteSyncFlowRequest;
 import com.syncduo.server.model.api.syncflow.ManualBackupRequest;
-import com.syncduo.server.model.api.syncsettings.UpdateFilterCriteriaRequest;
+import com.syncduo.server.model.api.syncflow.UpdateFilterCriteriaRequest;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SystemConfigEntity;
 import org.apache.commons.lang3.ObjectUtils;

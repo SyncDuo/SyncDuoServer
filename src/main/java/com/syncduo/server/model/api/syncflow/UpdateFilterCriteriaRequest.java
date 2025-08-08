@@ -1,9 +1,7 @@
-package com.syncduo.server.model.api.syncsettings;
+package com.syncduo.server.model.api.syncflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 public class UpdateFilterCriteriaRequest {
