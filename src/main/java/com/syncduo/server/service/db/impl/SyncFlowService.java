@@ -35,22 +35,25 @@ public class SyncFlowService
             throw new SyncDuoException("createSyncFlow failed." +
                     "sourceFolderPath:%s or destFolderPath:%s is null".formatted(sourceFolderPath, destFolderPath));
         }
-        SyncFlowEntity dbResult = this.getBySourceAndDestFolderPath(sourceFolderPath, destFolderPath);
-        if (ObjectUtils.isEmpty(dbResult)) {
-            // 创建 sync flow
-            dbResult = new SyncFlowEntity();
-            dbResult.setSourceFolderPath(sourceFolderPath);
-            dbResult.setDestFolderPath(destFolderPath);
-            dbResult.setSyncFlowName(syncFlowName);
-            dbResult.setLastSyncTime(null);
-            dbResult.setSyncStatus(SyncFlowStatusEnum.RUNNING.name());
-            boolean saved = this.save(dbResult);
-            if (!saved) {
-                throw new SyncDuoException("创建 Sync Flow 失败, 无法保存到数据库");
-            }
+        // 检查是否重名
+        SyncFlowEntity dbResult = this.getBySyncFlowName(syncFlowName);
+        if (ObjectUtils.isNotEmpty(dbResult)) {
+            throw new SyncDuoException("createSyncFlow failed. syncFlowName is duplicate");
         }
-        // 返回
-        return dbResult;
+        dbResult = this.getBySourceAndDestFolderPath(sourceFolderPath, destFolderPath);
+        if (ObjectUtils.isNotEmpty(dbResult)) {
+            throw new SyncDuoException("createSyncFlow failed. " +
+                    "sourceFolderPath and destFolderPath already created.");
+        }
+        // 创建
+        SyncFlowEntity syncFlowEntity = new SyncFlowEntity();
+        syncFlowEntity.setSyncFlowName(syncFlowName);
+        syncFlowEntity.setSourceFolderPath(sourceFolderPath);
+        syncFlowEntity.setDestFolderPath(destFolderPath);
+        syncFlowEntity.setSyncStatus(SyncFlowStatusEnum.RUNNING.name());
+        syncFlowEntity.setLastSyncTime(null);
+        this.save(syncFlowEntity);
+        return syncFlowEntity;
     }
 
     public SyncFlowEntity getBySyncFlowId(Long syncFlowId) throws SyncDuoException {
@@ -59,6 +62,16 @@ public class SyncFlowService
         }
         LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SyncFlowEntity::getSyncFlowId, syncFlowId);
+        queryWrapper.eq(SyncFlowEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
+        return this.getOne(queryWrapper);
+    }
+
+    public SyncFlowEntity getBySyncFlowName(String syncFlowName) throws SyncDuoException {
+        if (StringUtils.isBlank(syncFlowName)) {
+            throw new SyncDuoException("getBySyncFlowName failed. syncFlowName is null");
+        }
+        LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SyncFlowEntity::getSyncFlowName, syncFlowName);
         queryWrapper.eq(SyncFlowEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
         return this.getOne(queryWrapper);
     }

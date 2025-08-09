@@ -96,24 +96,6 @@ public class SyncFlowController {
         }
     }
 
-    @PostMapping("/backup")
-    public SyncFlowResponse backup(@RequestBody ManualBackupRequest manualBackupRequest) {
-        try {
-            EntityValidationUtil.isManualBackupRequestValid(manualBackupRequest);
-            // 查询 syncflow
-            SyncFlowEntity syncFlowEntity =
-                    this.syncFlowService.getBySyncFlowId(manualBackupRequest.getInnerSyncFlowId());
-            if (ObjectUtils.isEmpty(syncFlowEntity)) {
-                return SyncFlowResponse.onError("backup failed. SyncFlow is deleted");
-            }
-            // backup
-            this.resticFacadeService.manualBackup(syncFlowEntity);
-            return SyncFlowResponse.onSuccess("backup success");
-        } catch (SyncDuoException e) {
-            return this.generateSyncFlowErrorResponse("backup failed.", e);
-        }
-    }
-
     // change to pause, scan
     @PostMapping("/change-sync-flow-status")
     public SyncFlowResponse changeSyncFlowStatus(
@@ -281,15 +263,6 @@ public class SyncFlowController {
 
     private void isCreateSyncFlowRequestValid(CreateSyncFlowRequest createSyncFlowRequest) throws SyncDuoException {
         EntityValidationUtil.isCreateSyncFlowRequestValid(createSyncFlowRequest);
-        // 检查数据库是否有重复记录
-        SyncFlowEntity dbResult = this.syncFlowService.getBySourceAndDestFolderPath(
-                createSyncFlowRequest.getSourceFolderFullPath(),
-                createSyncFlowRequest.getDestFolderFullPath()
-        );
-        if (ObjectUtils.isNotEmpty(dbResult)) {
-            throw new SyncDuoException("isCreateSyncFlowRequestValid failed. " +
-                    "syncFlow %s already exists.".formatted(dbResult));
-        }
         // 检查 source folder 是否存在
         if (!this.rcloneFacadeService.isSourceFolderExist(createSyncFlowRequest.getSourceFolderFullPath())) {
             throw new SyncDuoException("isCreateSyncFlowRequestValid failed. " +

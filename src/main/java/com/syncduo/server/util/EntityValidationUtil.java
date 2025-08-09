@@ -52,10 +52,18 @@ public class EntityValidationUtil {
             throw new SyncDuoException("isCreateSyncFlowRequestValid failed. " +
                     "createSyncFlowRequest is null");
         }
-        // 检查 syncflow name
-        if (StringUtils.isBlank(createSyncFlowRequest.getSyncFlowName())) {
+        // 检查 syncflow name, source folder 和 dest folder
+        if (StringUtils.isAnyBlank(
+                createSyncFlowRequest.getSyncFlowName(),
+                createSyncFlowRequest.getSourceFolderFullPath(),
+                createSyncFlowRequest.getDestFolderFullPath()
+        )) {
             throw new SyncDuoException("isCreateSyncFlowRequestValid failed. " +
-                    "syncFlowName is null");
+                    "syncFlowName: %s, sourceFolderPath:%s or destFolderPath:%s is null".formatted(
+                            createSyncFlowRequest.getSyncFlowName(),
+                            createSyncFlowRequest.getSourceFolderFullPath(),
+                            createSyncFlowRequest.getDestFolderFullPath()
+                    ));
         }
         // 检查过滤条件
         String filterCriteria = createSyncFlowRequest.getFilterCriteria();

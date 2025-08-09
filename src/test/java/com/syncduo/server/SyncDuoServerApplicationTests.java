@@ -5,7 +5,7 @@ import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.enums.BackupJobStatusEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.api.snapshots.SnapshotsInfo;
+import com.syncduo.server.model.api.snapshots.SnapshotInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotsResponse;
 import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.*;
@@ -58,7 +58,9 @@ class SyncDuoServerApplicationTests {
 
     private SyncFlowEntity syncFlowEntity;
 
-    private static final String testParentPath = "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources";
+    private static final String testParentPath = "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/resources";
+
+//    private static final String testParentPath = "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources";
 
     private static final String sourceFolderName = "sourceFolder";
 
@@ -107,14 +109,13 @@ class SyncDuoServerApplicationTests {
         this.resticFacadeService.manualBackup(this.syncFlowEntity);
         // 获取 snapshot info
         SnapshotsResponse snapshots = this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
-        assert MapUtils.isNotEmpty(snapshots.getSnapshots());
+        assert CollectionUtils.isNotEmpty(snapshots.getSyncFlowSnapshotsInfoList());
         // 再手动触发 backup
         this.resticFacadeService.manualBackup(syncFlowEntity);
         snapshots = this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
-        assert MapUtils.isNotEmpty(snapshots.getSnapshots());
-        List<SnapshotsInfo> snapshotsInfoList =
-                snapshots.getSnapshots().get(this.syncFlowEntity.getSyncFlowId().toString());
-        assert StringUtils.isBlank(snapshotsInfoList.get(0).getSnapshotId());
+        assert CollectionUtils.isNotEmpty(snapshots.getSyncFlowSnapshotsInfoList());
+        List<SnapshotInfo> snapshotInfoList = snapshots.getSyncFlowSnapshotsInfoList().get(0).getSnapshotInfoList();
+        assert StringUtils.isBlank(snapshotInfoList.get(0).getSnapshotId());
     }
 
     @Test
@@ -289,6 +290,7 @@ class SyncDuoServerApplicationTests {
         SystemConfigEntity systemConfigEntity = new SystemConfigEntity();
         systemConfigEntity.setBackupStoragePath(backupStoragePath);
         systemConfigEntity.setBackupIntervalMillis(4 * 3600000);
+        // hardcode for testing
         systemConfigEntity.setBackupPassword("AEZOncxFFM1waTnXvh0WpITH+E4ohKrgXSJllL8qYpSpFlJw2HEXsJiEHXR6LA5SsXEHIJSxbQK5CGfhPH1AS0u3lK+HuB/qZMVIfKHpPAUzdAGaRr6C+prPAF5+Vy5QoTadSW1sp46Dyi0t0qQINPTEP/7YPjs8epMqdu04Uf9gKqi6TnniD9dOHy4mnBrVNWuIT9Xg2mOCLV6Vu9I60fDkTNLHDb1n0qtP7ALmuqaebXMWfJxuaZRMfA0nVo4NAy6bouIFg2IhlJBGfElebjqNOSsBrP6ylH9/zAehyIgu5hrJC9HEiHZzgxjsMbH+GSKOpQbpB3po2Eu1an5iDQ=="); // 0608
         this.systemConfigService.createSystemConfig(systemConfigEntity);
         log.info("initial finish");

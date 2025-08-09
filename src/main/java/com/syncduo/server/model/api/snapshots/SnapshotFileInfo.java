@@ -22,8 +22,7 @@ public class SnapshotFileInfo {
             String lastModifiedTime,
             int size,
             int files,
-            int folders
-    ) {
+            int folders) {
         SnapshotFileInfo fileInfo = new SnapshotFileInfo();
         fileInfo.fileName = fileName;
         fileInfo.lastModifiedTime = lastModifiedTime;
@@ -38,8 +37,7 @@ public class SnapshotFileInfo {
     public static SnapshotFileInfo file(
             String fileName,
             String lastModifiedTime,
-            int size
-    ) {
+            int size) {
         SnapshotFileInfo fileInfo = new SnapshotFileInfo();
         fileInfo.fileName = fileName;
         fileInfo.lastModifiedTime = lastModifiedTime;

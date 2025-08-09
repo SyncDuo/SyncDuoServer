@@ -12,22 +12,22 @@ public class SnapshotsResponse {
 
     private String message;
 
-    private Map<String, List<SnapshotsInfo>> snapshots;
+    private List<SyncFlowSnapshotsInfo> syncFlowSnapshotsInfoList;
 
     private SnapshotsResponse(int code, String message) {
         this.code = code;
         this.message = message;
     }
 
-    private SnapshotsResponse(int code, String message, Map<String, List<SnapshotsInfo>> snapshots) {
+    private SnapshotsResponse(int code, String message, List<SyncFlowSnapshotsInfo> syncFlowSnapshotsInfoList) {
         this.code = code;
         this.message = message;
-        this.snapshots = snapshots;
+        this.syncFlowSnapshotsInfoList = syncFlowSnapshotsInfoList;
     }
 
     public static SnapshotsResponse onSuccess(
             String message,
-            Map<String, List<SnapshotsInfo>> snapshots) {
+            List<SyncFlowSnapshotsInfo> snapshots) {
         return new SnapshotsResponse(200, message, snapshots);
     }
 

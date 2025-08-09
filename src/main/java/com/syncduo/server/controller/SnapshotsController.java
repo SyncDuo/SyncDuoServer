@@ -1,13 +1,19 @@
 package com.syncduo.server.controller;
 
 import com.syncduo.server.bus.FolderWatcher;
-import com.syncduo.server.model.api.snapshots.SnapshotsInfo;
+import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.api.snapshots.SnapshotInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotsResponse;
+import com.syncduo.server.model.api.snapshots.SyncFlowSnapshotsInfo;
+import com.syncduo.server.model.api.syncflow.ManualBackupRequest;
+import com.syncduo.server.model.api.syncflow.SyncFlowResponse;
 import com.syncduo.server.model.entity.BackupJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.service.db.impl.BackupJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
+import com.syncduo.server.service.restic.ResticFacadeService;
+import com.syncduo.server.util.EntityValidationUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -19,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -29,24 +34,37 @@ import java.util.*;
 @CrossOrigin
 public class SnapshotsController {
 
-    private final FolderWatcher folderWatcher;
-
     private final SyncFlowService syncFlowService;
 
-    private final RcloneFacadeService rcloneFacadeService;
-
     private final BackupJobService backupJobService;
+    private final ResticFacadeService resticFacadeService;
 
     @Autowired
     public SnapshotsController(
             SyncFlowService syncFlowService,
-            FolderWatcher folderWatcher,
-            RcloneFacadeService rcloneFacadeService,
-            BackupJobService backupJobService) {
+            BackupJobService backupJobService,
+            ResticFacadeService resticFacadeService) {
         this.syncFlowService = syncFlowService;
-        this.folderWatcher = folderWatcher;
-        this.rcloneFacadeService = rcloneFacadeService;
         this.backupJobService = backupJobService;
+        this.resticFacadeService = resticFacadeService;
+    }
+
+    @PostMapping("/backup")
+    public SnapshotsResponse backup(@RequestBody ManualBackupRequest manualBackupRequest) {
+        try {
+            EntityValidationUtil.isManualBackupRequestValid(manualBackupRequest);
+            // 查询 syncflow
+            SyncFlowEntity syncFlowEntity =
+                    this.syncFlowService.getBySyncFlowId(manualBackupRequest.getInnerSyncFlowId());
+            if (ObjectUtils.isEmpty(syncFlowEntity)) {
+                return SnapshotsResponse.onError("backup failed. SyncFlow is deleted");
+            }
+            // backup
+            this.resticFacadeService.manualBackup(syncFlowEntity);
+            return SnapshotsResponse.onSuccess("backup success");
+        } catch (SyncDuoException e) {
+            return SnapshotsResponse.onError("backup failed. ex is %s".formatted(e.getMessage()));
+        }
     }
 
     @GetMapping("/get-snapshots")
@@ -58,9 +76,13 @@ public class SnapshotsController {
                 if (CollectionUtils.isEmpty(allSyncFlow)) {
                     return SnapshotsResponse.onSuccess("没有可用的 syncflow");
                 }
-                Map<String, List<SnapshotsInfo>> result = new HashMap<>();
+                List<SyncFlowSnapshotsInfo> result = new ArrayList<>();
                 for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
-                    result.put(syncFlowEntity.getSyncFlowId().toString(), this.getSnapshotsInfo(syncFlowEntity));
+                    SyncFlowSnapshotsInfo tmp = this.getSyncFlowSnapshotsInfo(syncFlowEntity);
+                    if (ObjectUtils.isEmpty(tmp)) {
+                        continue;
+                    }
+                    result.add(tmp);
                 }
                 return SnapshotsResponse.onSuccess("成功", result);
             } else {
@@ -71,61 +93,76 @@ public class SnapshotsController {
                 if (ObjectUtils.isEmpty(syncFlowEntity)) {
                     return SnapshotsResponse.onSuccess("syncflow not found");
                 }
-                HashMap<String, List<SnapshotsInfo>> result = new HashMap<>();
-                result.put(syncFlowEntity.getSyncFlowId().toString(), this.getSnapshotsInfo(syncFlowEntity));
-                return SnapshotsResponse.onSuccess("成功", result);
+                SyncFlowSnapshotsInfo result = this.getSyncFlowSnapshotsInfo(syncFlowEntity);
+                return SnapshotsResponse.onSuccess("成功", Collections.singletonList(result));
             }
         } catch (Exception e) {
             return SnapshotsResponse.onError("获取 snapshots 失败. ex 是" + e.getMessage());
         }
     }
 
-    private List<SnapshotsInfo> getSnapshotsInfo(SyncFlowEntity syncFlowEntity) {
+    private SyncFlowSnapshotsInfo getSyncFlowSnapshotsInfo(SyncFlowEntity syncFlowEntity) {
         List<BackupJobEntity> backupJobEntityList =
                 this.backupJobService.getBySyncFlowId(syncFlowEntity.getSyncFlowId());
         if (CollectionUtils.isEmpty(backupJobEntityList)) {
-            return Collections.emptyList();
+            return getSyncFlowSnapshotsInfo(syncFlowEntity, Collections.emptyList());
         }
         // 排序, 时间倒排
         backupJobEntityList.sort(Comparator.comparing(
-                BackupJobEntity::getFinishedAt,
-                        Comparator.nullsLast(Timestamp::compareTo))
-                .reversed());
-        // 结果集
-        List<SnapshotsInfo> result = new ArrayList<>();
-        // 格式化使用的变量
+                (backupJobEntity) -> (
+                        backupJobEntity.getFinishedAt() != null) ?
+                        backupJobEntity.getFinishedAt() :
+                        backupJobEntity.getLastUpdatedTime(),
+                Comparator.nullsLast(Comparator.reverseOrder())));
+        // snapshot 结果集
+        List<SnapshotInfo> snapshotInfos = new ArrayList<>();
+        // snapshot 格式化使用的变量
         BigDecimal mbDivider = new BigDecimal(1024 * 1024);
         DecimalFormat decimalFormat = new DecimalFormat("0.00");
         for (BackupJobEntity backupJobEntity : backupJobEntityList) {
-            SnapshotsInfo snapshotsInfo = new SnapshotsInfo();
-            snapshotsInfo.setDestFolderPath(syncFlowEntity.getDestFolderPath());
+            SnapshotInfo snapshotInfo = new SnapshotInfo();
             // fall back 处理, 如果两值为空, 使用 audit field
             if (ObjectUtils.anyNull(backupJobEntity.getStartedAt(), backupJobEntity.getFinishedAt())) {
-                snapshotsInfo.setStartedAt(backupJobEntity.getCreatedTime().toString());
-                snapshotsInfo.setFinishedAt(backupJobEntity.getLastUpdatedTime().toString());
+                snapshotInfo.setStartedAt(backupJobEntity.getCreatedTime().toString());
+                snapshotInfo.setFinishedAt(backupJobEntity.getLastUpdatedTime().toString());
             } else {
-                snapshotsInfo.setStartedAt(backupJobEntity.getStartedAt().toString());
-                snapshotsInfo.setFinishedAt(backupJobEntity.getFinishedAt().toString());
+                snapshotInfo.setStartedAt(backupJobEntity.getStartedAt().toString());
+                snapshotInfo.setFinishedAt(backupJobEntity.getFinishedAt().toString());
             }
             // 防止空指针
             if (ObjectUtils.isNotEmpty(backupJobEntity.getSnapshotId())) {
-                snapshotsInfo.setSnapshotId(backupJobEntity.getSnapshotId());
+                snapshotInfo.setSnapshotId(backupJobEntity.getSnapshotId());
             }
             // 格式化 size
             BigInteger backupBytes = backupJobEntity.getBackupBytes();
             if (ObjectUtils.isNotEmpty(backupBytes)) {
                 BigDecimal backupMb = new BigDecimal(backupBytes).divide(mbDivider, 2, RoundingMode.HALF_UP);
-                snapshotsInfo.setSnapshotSize(decimalFormat.format(backupMb));
+                snapshotInfo.setSnapshotSize(decimalFormat.format(backupMb));
             }
             // 防止空指针
             if (ObjectUtils.isNotEmpty(backupJobEntity.getBackupFiles())) {
-                snapshotsInfo.setBackupFiles(backupJobEntity.getBackupFiles().toString());
+                snapshotInfo.setBackupFiles(backupJobEntity.getBackupFiles().toString());
             }
-            snapshotsInfo.setBackupJobStatus(backupJobEntity.getBackupJobStatus());
-            snapshotsInfo.setBackupErrorMessage(backupJobEntity.getErrorMessage());
+            snapshotInfo.setBackupJobStatus(backupJobEntity.getBackupJobStatus());
+            snapshotInfo.setBackupErrorMessage(backupJobEntity.getErrorMessage());
             // 添加到结果集
-            result.add(snapshotsInfo);
+            snapshotInfos.add(snapshotInfo);
         }
-        return result;
+        // 处理 syncflow entity
+        return getSyncFlowSnapshotsInfo(syncFlowEntity, snapshotInfos);
+    }
+
+    private static SyncFlowSnapshotsInfo getSyncFlowSnapshotsInfo(
+            SyncFlowEntity syncFlowEntity,
+            List<SnapshotInfo> snapshotInfos) {
+        SyncFlowSnapshotsInfo syncFlowSnapshotsInfo = new SyncFlowSnapshotsInfo();
+        syncFlowSnapshotsInfo.setSyncFlowId(syncFlowEntity.getSyncFlowId().toString());
+        syncFlowSnapshotsInfo.setSyncFlowName(syncFlowEntity.getSyncFlowName());
+        syncFlowSnapshotsInfo.setSourceFolderPath(syncFlowEntity.getSourceFolderPath());
+        syncFlowSnapshotsInfo.setDestFolderPath(syncFlowEntity.getDestFolderPath());
+        if (CollectionUtils.isNotEmpty(snapshotInfos)) {
+            syncFlowSnapshotsInfo.setSnapshotInfoList(snapshotInfos);
+        }
+        return syncFlowSnapshotsInfo;
     }
 }
