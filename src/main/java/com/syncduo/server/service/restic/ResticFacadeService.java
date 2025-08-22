@@ -2,7 +2,6 @@ package com.syncduo.server.service.restic;
 
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.entity.SystemConfigEntity;
 import com.syncduo.server.model.restic.backup.Error;
@@ -10,6 +9,7 @@ import com.syncduo.server.model.restic.backup.Summary;
 import com.syncduo.server.model.restic.cat.CatConfig;
 import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.model.restic.init.Init;
+import com.syncduo.server.model.restic.ls.Node;
 import com.syncduo.server.model.restic.stats.Stats;
 import com.syncduo.server.service.db.impl.BackupJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
@@ -19,12 +19,12 @@ import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 
 // Restic 设计为单备份仓库, 单密码
@@ -144,13 +144,24 @@ public class ResticFacadeService {
         return statsResult.getData();
     }
 
-    public List<SnapshotFileInfo> getSnapshotFileInfo(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+    public List<Node> getSnapshotFileInfo(String snapshotId, String pathString) throws SyncDuoException {
         if (!RESTIC_INITIALIZED) {
-            throw new SyncDuoException("RESTIC is not initialized.");
+            throw new SyncDuoException("getSnapshotFileInfo failed. RESTIC is not initialized.");
         }
-        String destFolderPath = syncFlowEntity.getDestFolderPath();
-
-        return Collections.emptyList();
+        if (StringUtils.isAnyBlank(snapshotId, pathString)) {
+            throw new SyncDuoException("getSnapshotFileInfo failed. " +
+                    "snapshotsId or pathString is null");
+        }
+        ResticExecResult<Node, Void> lsResult = this.resticService.ls(
+                RESTIC_STORAGE_PATH,
+                RESTIC_PASSWORD,
+                snapshotId,
+                pathString
+        );
+        if (!lsResult.isSuccess()) {
+            throw new SyncDuoException("getSnapshotFileInfo failed.", lsResult.getSyncDuoException());
+        }
+        return lsResult.getAggData();
     }
 
     private void backup(SyncFlowEntity syncFlowEntity) throws SyncDuoException {

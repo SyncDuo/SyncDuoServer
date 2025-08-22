@@ -20,6 +20,9 @@ public class ResticExecResult<T1, T2> {
     // success with result
     private T1 data;
 
+    // success with aggregate result
+    private List<T1> aggData;
+
     // partial error
     private List<T2> aggErrors;
 
@@ -40,6 +43,17 @@ public class ResticExecResult<T1, T2> {
         result.setSuccess(true);
         result.setExitCode(resticExitCodeEnum);
         result.setData(data);
+        return result;
+    }
+
+    // 成功响应工厂
+    public static <T1, T2> ResticExecResult<T1, T2> success(
+            ResticExitCodeEnum resticExitCodeEnum,
+            List<T1> aggData) {
+        ResticExecResult<T1, T2> result = new ResticExecResult<>();
+        result.setSuccess(true);
+        result.setExitCode(resticExitCodeEnum);
+        result.setAggData(aggData);
         return result;
     }
 

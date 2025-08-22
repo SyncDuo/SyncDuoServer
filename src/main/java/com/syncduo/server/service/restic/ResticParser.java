@@ -6,6 +6,7 @@ import com.syncduo.server.model.restic.global.ExitErrors;
 import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.exec.*;
 import org.apache.commons.lang3.ObjectUtils;
@@ -43,6 +44,7 @@ public class ResticParser<T1, T2> {
     public CompletableFuture<ResticExecResult<T1, T2>> execute(
             String workingDirectory,
             OnProcessSuccess<T1> onSuccessHandler,
+            OnProcessSuccessAgg<T1> onSuccessAggHandler,
             OnProcessFailedAgg<T2> onFailedAggHandler,
             OnProcessFailed<T2> onFailedHandler
     ) throws SyncDuoException {
@@ -51,6 +53,10 @@ public class ResticParser<T1, T2> {
         if (ObjectUtils.allNotNull(onFailedAggHandler, onFailedHandler)) {
             throw new SyncDuoException("onFailedAggHandler and onFailedHandler are both not null");
         }
+        // 判断使用的成功结果handler
+        // 0: onSuccessHandler, 1: onSuccessAggHandler
+        int stdOutHandlerFlag = ObjectUtils.isEmpty(onSuccessHandler) ? 1 : 0;
+        // 判断使用的错误结果handler
         // 0: exitErrorHandler, 1: stdAggregateHandler, 2: onFailedHandler
         int stdErrHandlerFlag;
         if (ObjectUtils.allNull(onFailedAggHandler, onFailedHandler)) {
@@ -76,11 +82,19 @@ public class ResticParser<T1, T2> {
                 @Override
                 public void onProcessComplete(int exitCode) {
                     try {
-                        T1 result = onSuccessHandler.apply(getStdAsString(stdout));
-                        if (ObjectUtils.isEmpty(result)) {
-                            throw new SyncDuoException("onProcessComplete failed. result is null.");
+                        if (stdOutHandlerFlag == 0) {
+                            T1 result = onSuccessHandler.apply(getStdAsString(stdout));
+                            if (ObjectUtils.isEmpty(result)) {
+                                throw new SyncDuoException("onProcessComplete failed. result is null.");
+                            }
+                            future.complete(ResticExecResult.success(ResticExitCodeEnum.SUCCESS, result));
+                        } else {
+                            List<T1> result = onSuccessAggHandler.apply(getStdAsString(stdout));
+                            if (CollectionUtils.isEmpty(result)) {
+                                throw new SyncDuoException("onProcessComplete failed. result is null.");
+                            }
+                            future.complete(ResticExecResult.success(ResticExitCodeEnum.SUCCESS, result));
                         }
-                        future.complete(ResticExecResult.success(ResticExitCodeEnum.SUCCESS, result));
                     } catch (Exception e) {
                         future.complete(ResticExecResult.failed(e));
                     }
@@ -144,6 +158,11 @@ public class ResticParser<T1, T2> {
     @FunctionalInterface
     public interface OnProcessSuccess<T> {
         T apply(String stdout) throws Exception;
+    }
+
+    @FunctionalInterface
+    public interface OnProcessSuccessAgg<T> {
+        List<T> apply(String stdout) throws Exception;
     }
 
     @FunctionalInterface

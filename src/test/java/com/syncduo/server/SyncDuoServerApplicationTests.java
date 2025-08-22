@@ -5,8 +5,10 @@ import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.enums.BackupJobStatusEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotsResponse;
+import com.syncduo.server.model.api.snapshots.SyncFlowWithSnapshots;
 import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
@@ -15,7 +17,6 @@ import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -100,6 +101,26 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
+    void ShouldReturnTrueWhenGetSnapshotFileInfo() throws SyncDuoException {
+        // 创建 syncflow
+        createSyncFlow(null);
+        // 手动 init restic
+        this.resticFacadeService.init();
+        // 手动触发 backup job
+        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        // 获取 snapshot info
+        SnapshotsResponse<SyncFlowWithSnapshots> snapshots =
+                this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
+        // 获取 snapshot file info
+        SnapshotsResponse<SnapshotFileInfo> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
+                snapshots.getDataList().get(0).getSnapshotInfoList().get(0).getSnapshotId(),
+                "/"
+        );
+        assert CollectionUtils.isNotEmpty(snapshotFileInfoResponse.getDataList());
+    }
+
+    @Test
     void ShouldReturnTrueWhenGetSnapshotInfo() throws SyncDuoException {
         // 创建 syncflow
         createSyncFlow(null);
@@ -108,13 +129,14 @@ class SyncDuoServerApplicationTests {
         // 手动触发 backup job
         this.resticFacadeService.manualBackup(this.syncFlowEntity);
         // 获取 snapshot info
-        SnapshotsResponse snapshots = this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
-        assert CollectionUtils.isNotEmpty(snapshots.getSyncFlowSnapshotsInfoList());
+        SnapshotsResponse<SyncFlowWithSnapshots> snapshots =
+                this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
         // 再手动触发 backup
         this.resticFacadeService.manualBackup(syncFlowEntity);
         snapshots = this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
-        assert CollectionUtils.isNotEmpty(snapshots.getSyncFlowSnapshotsInfoList());
-        List<SnapshotInfo> snapshotInfoList = snapshots.getSyncFlowSnapshotsInfoList().get(0).getSnapshotInfoList();
+        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
+        List<SnapshotInfo> snapshotInfoList = snapshots.getDataList().get(0).getSnapshotInfoList();
         assert StringUtils.isBlank(snapshotInfoList.get(0).getSnapshotId());
     }
 

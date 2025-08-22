@@ -1,49 +1,44 @@
 package com.syncduo.server.model.api.snapshots;
 
+import com.syncduo.server.enums.ResticNodeTypeEnum;
+import com.syncduo.server.model.restic.ls.Node;
 import lombok.Data;
+import org.apache.commons.lang3.ObjectUtils;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
 
 @Data
 public class SnapshotFileInfo {
+
+    String path;
 
     String fileName;
 
     String lastModifiedTime;
 
-    int size;
+    String size;
 
-    int files;
+    String type;
 
-    int folders;
-
-    boolean isFolder;
-
-    public static SnapshotFileInfo folder(
-            String fileName,
-            String lastModifiedTime,
-            int size,
-            int files,
-            int folders) {
-        SnapshotFileInfo fileInfo = new SnapshotFileInfo();
-        fileInfo.fileName = fileName;
-        fileInfo.lastModifiedTime = lastModifiedTime;
-        fileInfo.size = size;
-        fileInfo.files = files;
-        fileInfo.folders = folders;
-        fileInfo.isFolder = true;
-
-        return fileInfo;
-    }
-
-    public static SnapshotFileInfo file(
-            String fileName,
-            String lastModifiedTime,
-            int size) {
-        SnapshotFileInfo fileInfo = new SnapshotFileInfo();
-        fileInfo.fileName = fileName;
-        fileInfo.lastModifiedTime = lastModifiedTime;
-        fileInfo.size = size;
-        fileInfo.isFolder = false;
-
-        return fileInfo;
+    public static SnapshotFileInfo getFromResticNode(Node node) {
+        SnapshotFileInfo result = new SnapshotFileInfo();
+        if (ObjectUtils.isEmpty(node)) {
+            return result;
+        }
+        result.setPath(node.getPath());
+        result.setFileName(node.getName());
+        result.setLastModifiedTime(Timestamp.from(node.getMtime()).toString());
+        if (ObjectUtils.isNotEmpty(node.getSize())) {
+            // BigInteger 格式化使用的变量, bytes -> MB
+            BigDecimal mbDivider = new BigDecimal(1024 * 1024);
+            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+            BigDecimal backupMb = new BigDecimal(node.getSize()).divide(mbDivider, 2, RoundingMode.HALF_UP);
+            result.setSize(decimalFormat.format(backupMb));
+        }
+        result.setType(ResticNodeTypeEnum.fromString(node.getType()).getType());
+        return result;
     }
 }

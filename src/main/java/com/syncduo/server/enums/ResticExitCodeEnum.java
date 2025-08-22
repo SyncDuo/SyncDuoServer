@@ -1,7 +1,9 @@
 package com.syncduo.server.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+@AllArgsConstructor
 @Getter
 public enum ResticExitCodeEnum {
 
@@ -26,11 +28,6 @@ public enum ResticExitCodeEnum {
     private final int code;
 
     private final String message;
-
-    ResticExitCodeEnum(int code, String message) {
-        this.code = code;
-        this.message = message;
-    }
 
     public static ResticExitCodeEnum fromCode(int code) {
         for (ResticExitCodeEnum value : values()) {
