@@ -33,6 +33,7 @@ public class SnapshotsController {
     private final SyncFlowService syncFlowService;
 
     private final BackupJobService backupJobService;
+
     private final ResticFacadeService resticFacadeService;
 
     @Autowired
@@ -65,14 +66,29 @@ public class SnapshotsController {
 
     @GetMapping("/get-snapshot-files")
     public SnapshotsResponse<SnapshotFileInfo> getSnapshotFiles(
-            @Param("snapshotId") String snapshotId,
+            @Param("backupJobId") String backupJobId,
             @Param("pathString") String pathString) {
         try {
-            if (StringUtils.isAnyBlank(snapshotId, pathString)) {
+            if (StringUtils.isAnyBlank(backupJobId, pathString)) {
                 return SnapshotsResponse.onError("getSnapshotsFile failed. " +
-                        "snapshotId or path is null.");
+                        "backupJobId or path is null.");
             }
-            List<Node> nodeList = this.resticFacadeService.getSnapshotFileInfo(snapshotId, pathString);
+            // 判断 backup id 是否有 snapshot
+            BackupJobEntity backupJobEntity = this.backupJobService.getByBackupJobId(Long.parseLong(backupJobId));
+            if (ObjectUtils.isEmpty(backupJobEntity)) {
+                return SnapshotsResponse.onError("getSnapshotsFile failed. backupJobId not found.");
+            }
+            if (StringUtils.isBlank(backupJobEntity.getSnapshotId())) {
+                backupJobEntity = this.backupJobService.getFirstValidSnapshotId(backupJobEntity);
+                if (ObjectUtils.isEmpty(backupJobEntity) ||
+                        StringUtils.isBlank(backupJobEntity.getSnapshotId())) {
+                    return SnapshotsResponse.onSuccess("getSnapshotsFile success. there is no snapshot");
+                }
+            }
+            List<Node> nodeList = this.resticFacadeService.getSnapshotFileInfo(
+                    backupJobEntity.getSnapshotId(),
+                    pathString
+            );
             if (CollectionUtils.isEmpty(nodeList)) {
                 return SnapshotsResponse.onSuccess("getSnapshotsFile success. there is no file.");
             }
@@ -96,7 +112,7 @@ public class SnapshotsController {
             // 文件夹在最前面
             result.sort(Comparator.comparing(snapshotFileInfo -> {
                 ResticNodeTypeEnum type = ResticNodeTypeEnum.fromString(snapshotFileInfo.getType());
-                return type.equals(ResticNodeTypeEnum.DIRECTORY) ? 1 : -1;
+                return type.equals(ResticNodeTypeEnum.DIRECTORY) ? -1 : 1;
             }));
             return SnapshotsResponse.onSuccess("getSnapshotsFile success.", result);
         } catch (Exception e) {

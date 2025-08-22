@@ -14,6 +14,7 @@ import com.syncduo.server.model.rclone.job.status.JobStatusResponse;
 import com.syncduo.server.model.restic.backup.Summary;
 import com.syncduo.server.service.db.IBackupJobService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -76,6 +77,27 @@ public class BackupJobService
         if (!saved) {
             throw new SyncDuoException("addFailBackupJob failed. can't write to database.");
         }
+    }
+
+    public BackupJobEntity getByBackupJobId(long backupJobId) {
+        LambdaQueryWrapper<BackupJobEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(BackupJobEntity::getBackupJobId, backupJobId);
+        queryWrapper.eq(BackupJobEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
+
+        List<BackupJobEntity> dbResult = this.list(queryWrapper);
+        return CollectionUtils.isEmpty(dbResult) ? null : dbResult.get(0);
+    }
+
+    public BackupJobEntity getFirstValidSnapshotId(BackupJobEntity current) {
+        LambdaQueryWrapper<BackupJobEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.isNotNull(BackupJobEntity::getSnapshotId);
+        queryWrapper.le(BackupJobEntity::getLastUpdatedTime, current.getLastUpdatedTime());
+        queryWrapper.eq(BackupJobEntity::getBackupJobStatus, BackupJobStatusEnum.SUCCESS.name());
+        queryWrapper.eq(BackupJobEntity::getSyncFlowId, current.getSyncFlowId());
+        queryWrapper.eq(BackupJobEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
+
+        List<BackupJobEntity> dbResult = this.list(queryWrapper);
+        return CollectionUtils.isEmpty(dbResult) ? null : dbResult.get(0);
     }
 
     public List<BackupJobEntity> getBySyncFlowId(long syncFlowId) {

@@ -114,7 +114,7 @@ class SyncDuoServerApplicationTests {
         assert CollectionUtils.isNotEmpty(snapshots.getDataList());
         // 获取 snapshot file info
         SnapshotsResponse<SnapshotFileInfo> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
-                snapshots.getDataList().get(0).getSnapshotInfoList().get(0).getSnapshotId(),
+                snapshots.getDataList().get(0).getSnapshotInfoList().get(0).getBackupJobId(),
                 "/"
         );
         assert CollectionUtils.isNotEmpty(snapshotFileInfoResponse.getDataList());

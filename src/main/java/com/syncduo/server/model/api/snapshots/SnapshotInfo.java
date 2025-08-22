@@ -12,6 +12,8 @@ import java.text.DecimalFormat;
 @Data
 public class SnapshotInfo {
 
+    private String backupJobId;
+
     private String startedAt; // timestamp
 
     private String finishedAt; // timestamp
@@ -31,6 +33,7 @@ public class SnapshotInfo {
             return null;
         }
         SnapshotInfo snapshotInfo = new SnapshotInfo();
+        snapshotInfo.setBackupJobId(backupJobEntity.getBackupJobId().toString());
         // fall back 处理, 如果两值为空, 使用 audit field
         if (ObjectUtils.anyNull(backupJobEntity.getStartedAt(), backupJobEntity.getFinishedAt())) {
             snapshotInfo.setStartedAt(backupJobEntity.getCreatedTime().toString());
