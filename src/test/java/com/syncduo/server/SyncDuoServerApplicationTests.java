@@ -3,6 +3,7 @@ package com.syncduo.server;
 import com.syncduo.server.controller.SnapshotsController;
 import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.enums.BackupJobStatusEnum;
+import com.syncduo.server.enums.ResticNodeTypeEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
@@ -15,13 +16,21 @@ import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.service.db.impl.*;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
+import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -41,11 +50,7 @@ class SyncDuoServerApplicationTests {
 
     private final SyncFlowService syncFlowService;
 
-    private final SyncSettingService syncSettingService;
-
     private final FolderWatcher folderWatcher;
-
-    private final SystemConfigService systemConfigService;
 
     private final RcloneFacadeService rcloneFacadeService;
 
@@ -59,19 +64,17 @@ class SyncDuoServerApplicationTests {
 
     private SyncFlowEntity syncFlowEntity;
 
-    private static final String testParentPath = "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/resources";
+    @Value("${syncduo.server.test.source.folder}")
+    private String sourceFolderPath;
 
-//    private static final String testParentPath = "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources";
+    @Value("${syncduo.server.test.content.parent.folder}")
+    private String contentFolderParentPath;
 
-    private static final String sourceFolderName = "sourceFolder";
+    @Value("${syncduo.server.restic.backup.path}")
+    private String backupPath;
 
-    private static final String sourceFolderPath = testParentPath + "/" + sourceFolderName;
-
-    private static final String contentFolderParentPath = testParentPath + "/contentParentFolder";
-
-    private static final String contentFolderPath = contentFolderParentPath + "/" + sourceFolderName;
-
-    private static final String backupStoragePath = testParentPath + "/backupStoragePath";
+    @Value("${syncduo.server.restic.restore.path}")
+    private String restorePath;
 
     // delay 函数延迟的时间, 单位"秒"
     private static final int DELAY_UNIT = 18;
@@ -80,9 +83,7 @@ class SyncDuoServerApplicationTests {
     SyncDuoServerApplicationTests(
             SyncFlowController syncFlowController,
             SyncFlowService syncFlowService,
-            SyncSettingService syncSettingService,
             FolderWatcher folderWatcher,
-            SystemConfigService systemConfigService,
             RcloneFacadeService rcloneFacadeService,
             ResticFacadeService resticFacadeService,
             CopyJobService copyJobService,
@@ -90,14 +91,73 @@ class SyncDuoServerApplicationTests {
             SnapshotsController snapshotsController) {
         this.syncFlowController = syncFlowController;
         this.syncFlowService = syncFlowService;
-        this.systemConfigService = systemConfigService;
-        this.syncSettingService = syncSettingService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
         this.resticFacadeService = resticFacadeService;
         this.copyJobService = copyJobService;
         this.backupJobService = backupJobService;
         this.snapshotsController = snapshotsController;
+    }
+
+    @Test
+    void ShouldReturnTrueWhenDownloadFile() throws SyncDuoException, IOException {
+        // 创建 syncflow
+        createSyncFlow(null);
+        // 手动 init restic
+        this.resticFacadeService.init();
+        // 手动触发 backup job
+        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        // 获取 snapshot info
+        SnapshotsResponse<SyncFlowWithSnapshots> snapshots =
+                this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
+        // 获取 snapshot file info
+        SnapshotsResponse<SnapshotFileInfo> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
+                snapshots.getDataList().get(0).getSnapshotInfoList().get(0).getBackupJobId(),
+                "/"
+        );
+        // 下载文件
+        for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoResponse.getDataList()) {
+            if (snapshotFileInfo.getType().equals(ResticNodeTypeEnum.FILE.getType())) {
+                ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFile(snapshotFileInfo);
+                assert response.getStatusCode() == HttpStatus.OK;
+                assert ObjectUtils.isNotEmpty(response.getBody());
+                assert response.getBody().contentLength() > 0;
+                String headersString = response.getHeaders().toString();
+                assert headersString.contains(HttpHeaders.CONTENT_DISPOSITION) &&
+                        headersString.contains(snapshotFileInfo.getFileName());
+                assert headersString.contains(MediaType.APPLICATION_OCTET_STREAM.toString());
+            }
+        }
+    }
+
+    @Test
+    void ShouldReturnTrueWhenDownloadFiles() throws SyncDuoException, IOException {
+        // 创建 syncflow
+        createSyncFlow(null);
+        // 手动 init restic
+        this.resticFacadeService.init();
+        // 手动触发 backup job
+        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        // 获取 snapshot info
+        SnapshotsResponse<SyncFlowWithSnapshots> snapshots =
+                this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
+        // 获取 snapshot file info
+        SnapshotsResponse<SnapshotFileInfo> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
+                snapshots.getDataList().get(0).getSnapshotInfoList().get(0).getBackupJobId(),
+                "/"
+        );
+        // 下载多个文件
+        ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFiles(
+                snapshotFileInfoResponse.getDataList()
+        );
+        assert response.getStatusCode() == HttpStatus.OK;
+        assert ObjectUtils.isNotEmpty(response.getBody());
+        assert response.getBody().contentLength() > 0;
+        String headersString = response.getHeaders().toString();
+        assert headersString.contains(HttpHeaders.CONTENT_DISPOSITION) && headersString.contains("zip");
+        assert headersString.contains(MediaType.APPLICATION_OCTET_STREAM.toString());
     }
 
     @Test
@@ -243,11 +303,11 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenCreateSyncFlowWithFilter() throws IOException {
+    void ShouldReturnTrueWhenCreateSyncFlowWithFilter() throws SyncDuoException {
         String filterCriteria = "[\"*.bin\"]";
         createSyncFlow(filterCriteria);
 
-        List<Path> allFile = FileOperationTestUtil.getAllFile(Path.of(this.syncFlowEntity.getDestFolderPath()));
+        List<Path> allFile = FilesystemUtil.getAllFile(Path.of(this.syncFlowEntity.getDestFolderPath()));
         for (Path path : allFile) {
             assert !path.getFileName().toString().contains("bin");
         }
@@ -266,20 +326,25 @@ class SyncDuoServerApplicationTests {
     void createSyncFlow(String filterCriteria) {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
-        createSyncFlowRequest.setDestFolderFullPath(contentFolderPath);
+        createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath + "/random1");
         createSyncFlowRequest.setSyncFlowName("test");
         if (StringUtils.isNotBlank(filterCriteria)) {
             createSyncFlowRequest.setFilterCriteria(filterCriteria);
         }
         SyncFlowResponse syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
         assert syncFlowResponse.getCode() == 200;
-
-        waitAllFileHandle();
-        this.syncFlowEntity = this.syncFlowService.getById(
-                Long.valueOf(
-                        syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
-        );
-        assert syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
+        // 至多重试一次, 直到syncflow status 是 SYNC
+        for (int i = 0; i < 2; i++) {
+            waitAllFileHandle();
+            this.syncFlowEntity = this.syncFlowService.getById(
+                    Long.valueOf(
+                            syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
+            );
+            if (this.syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name())) {
+                break;
+            }
+        }
+        assert this.syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
     }
 
     void waitAllFileHandle() {
@@ -301,26 +366,20 @@ class SyncDuoServerApplicationTests {
 
     @BeforeEach
     void prepareEnvironment() throws IOException, SyncDuoException {
-        this.cleanUp();
+        // 清空数据库
+        this.truncateAllTable();
+        // 清空文件夹
+        this.deleteFolder();
         // create folder
         FileOperationTestUtil.createFolders(
                 sourceFolderPath,
                 4,
                 3
         );
-        // write system storage path config
-        SystemConfigEntity systemConfigEntity = new SystemConfigEntity();
-        systemConfigEntity.setBackupStoragePath(backupStoragePath);
-        systemConfigEntity.setBackupIntervalMillis(4 * 3600000);
-        // hardcode for testing
-        systemConfigEntity.setBackupPassword("AEZOncxFFM1waTnXvh0WpITH+E4ohKrgXSJllL8qYpSpFlJw2HEXsJiEHXR6LA5SsXEHIJSxbQK5CGfhPH1AS0u3lK+HuB/qZMVIfKHpPAUzdAGaRr6C+prPAF5+Vy5QoTadSW1sp46Dyi0t0qQINPTEP/7YPjs8epMqdu04Uf9gKqi6TnniD9dOHy4mnBrVNWuIT9Xg2mOCLV6Vu9I60fDkTNLHDb1n0qtP7ALmuqaebXMWfJxuaZRMfA0nVo4NAy6bouIFg2IhlJBGfElebjqNOSsBrP6ylH9/zAehyIgu5hrJC9HEiHZzgxjsMbH+GSKOpQbpB3po2Eu1an5iDQ=="); // 0608
-        this.systemConfigService.createSystemConfig(systemConfigEntity);
         log.info("initial finish");
     }
 
-    void cleanUp() {
-        // truncate database
-        this.truncateAllTable();
+    void deleteFolder() {
         try {
             // delete source folder
             FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
@@ -335,12 +394,16 @@ class SyncDuoServerApplicationTests {
         }
         try {
             // delete backup folder
-            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(backupStoragePath));
+            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(backupPath));
         } catch (IOException e) {
             log.error("删除backup文件夹失败.", e);
         }
-        // delete system config cache
-        this.systemConfigService.clearCache();
+        try {
+            // delete restore folder
+            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(restorePath));
+        } catch (IOException e) {
+            log.error("删除restore文件夹失败.", e);
+        }
     }
 
     void truncateAllTable() {
@@ -349,20 +412,6 @@ class SyncDuoServerApplicationTests {
         if (CollectionUtils.isNotEmpty(syncFlowEntities)) {
             this.syncFlowService.removeBatchByIds(
                     syncFlowEntities.stream().map(SyncFlowEntity::getSyncFlowId).collect(Collectors.toList())
-            );
-        }
-        // sync setting truncate
-        List<SyncSettingEntity> syncSettingEntities = this.syncSettingService.list();
-        if (CollectionUtils.isNotEmpty(syncSettingEntities)) {
-            this.syncSettingService.removeBatchByIds(
-                    syncSettingEntities.stream().map(SyncSettingEntity::getSyncSettingId).collect(Collectors.toList())
-            );
-        }
-        // system config truncate
-        List<SystemConfigEntity> systemConfigEntities = this.systemConfigService.list();
-        if (CollectionUtils.isNotEmpty(systemConfigEntities)) {
-            this.systemConfigService.removeBatchByIds(
-                    systemConfigEntities.stream().map(SystemConfigEntity::getSystemConfigId).toList()
             );
         }
         // copy job truncate

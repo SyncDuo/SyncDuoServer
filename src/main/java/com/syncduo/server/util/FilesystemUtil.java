@@ -1,28 +1,33 @@
 package com.syncduo.server.util;
 
 import com.syncduo.server.exception.SyncDuoException;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @Component
 public class FilesystemUtil {
+
+    private static final String ALL_LETTER = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+    private static final Random RANDOM = new Random();
+
+    private static final int MAX_ATTEMPTS = 5;
+
+    private static final int NAME_LENGTH = 9;
+
     /**
      * Splits a full file path into srcFs and srcRemote.
      * srcFs is the top-level base path (e.g., /home/user/source)
@@ -131,5 +136,88 @@ public class FilesystemUtil {
             throw new SyncDuoException("getSubfolders failed. folderPathString is %s".formatted(folderPathString), e);
         }
         return result;
+    }
+
+    public static String createRandomEnglishFolder(String parentFolderPathString) throws SyncDuoException {
+        Path parentFolder = isFolderPathValid(parentFolderPathString);
+        // 获取随机文件夹名称
+        StringBuilder sb = new StringBuilder(NAME_LENGTH);
+        for (int i = 0; i < NAME_LENGTH; i++) {
+            int index = RANDOM.nextInt(ALL_LETTER.length());
+            sb.append(ALL_LETTER.charAt(index));
+        }
+        // 拼接路径
+        for (int i = 0; i < MAX_ATTEMPTS; i++) {
+            Path newFolderTmp = parentFolder.resolve(sb.toString()).normalize();
+            if (Files.exists(newFolderTmp)) {
+                continue;
+            }
+            // 创建文件夹
+            try {
+                Path newFolder = Files.createDirectory(newFolderTmp);
+                return newFolder.toAbsolutePath().toString();
+            } catch (IOException e) {
+                throw new SyncDuoException("createRandomEnglishFolder failed. ", e);
+            }
+        }
+        throw new SyncDuoException("createRandomEnglishFolder failed. " +
+                "After all attempts, createFolder failed.");
+    }
+
+    public static List<Path> getAllFile(Path folder) throws SyncDuoException {
+        try(Stream<Path> list = Files.list(folder)) {
+            return list.filter(Files::isRegularFile).toList();
+        } catch (IOException e) {
+            throw new SyncDuoException("getAllFile failed.", e);
+        }
+    }
+
+    public static Path zipAllFile(String folderPathString, String prefix) throws SyncDuoException {
+        // 检查参数
+        Path folder = isFolderPathValid(folderPathString);
+        // 获取随机zip文件名称
+        StringBuilder sb = new StringBuilder(prefix + "-");
+        for (int i = 0; i < NAME_LENGTH; i++) {
+            int index = RANDOM.nextInt(ALL_LETTER.length());
+            sb.append(ALL_LETTER.charAt(index));
+        }
+        Path zipFile = folder.resolve(sb.append(".zip").toString());
+        // 遍历所有文件和文件夹
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            Files.walkFileTree(folder, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    // 跳过ZIP文件自身
+                    if (dir.equals(zipFile)) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+                    // 计算相对路径
+                    String zipEntryName = folder.relativize(dir).toString().replace("\\", "/");
+                    if (!zipEntryName.isEmpty()) {
+                        zos.putNextEntry(new ZipEntry(zipEntryName + "/"));
+                        zos.closeEntry();
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    // 跳过ZIP文件自身
+                    if (file.equals(zipFile)) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+                    // 计算相对路径
+                    String zipEntryName = folder.relativize(file).toString().replace("\\", "/");
+                    // 处理文件：写入ZIP条目
+                    zos.putNextEntry(new ZipEntry(zipEntryName));
+                    Files.copy(file, zos);
+                    zos.closeEntry();
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new SyncDuoException("zipAllFile failed.", e);
+        }
+        return zipFile;
     }
 }

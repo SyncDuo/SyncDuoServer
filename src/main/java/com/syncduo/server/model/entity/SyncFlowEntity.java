@@ -23,4 +23,6 @@ public class SyncFlowEntity extends BaseEntity {
     private String syncStatus;
 
     private Timestamp lastSyncTime;
+
+    private String filterCriteria;
 }

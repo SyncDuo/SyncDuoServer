@@ -2,34 +2,29 @@ package com.syncduo.server.util;
 
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.api.syncflow.ChangeSyncFlowStatusRequest;
 import com.syncduo.server.model.api.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.api.syncflow.DeleteSyncFlowRequest;
 import com.syncduo.server.model.api.syncflow.ManualBackupRequest;
 import com.syncduo.server.model.api.syncflow.UpdateFilterCriteriaRequest;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.model.entity.SystemConfigEntity;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class EntityValidationUtil {
 
     public static void isSyncFlowEntityValid(
-            SyncFlowEntity syncFlowEntity,
-            String onThrowingMessage) throws SyncDuoException {
+            SyncFlowEntity syncFlowEntity) throws SyncDuoException {
         if (ObjectUtils.isEmpty(syncFlowEntity)) {
-            throw new SyncDuoException(
-                    onThrowingMessage,
-                    new SyncDuoException("isSyncFlowEntityValid failed. syncFlowEntity is null")
-            );
+            throw new SyncDuoException("isSyncFlowEntityValid failed. syncFlowEntity is null");
         }
         if (ObjectUtils.isEmpty(syncFlowEntity.getSyncFlowId())) {
-            throw new SyncDuoException(
-                    onThrowingMessage,
-                    new SyncDuoException("isSyncFlowEntityValid failed. syncFlowId is null")
-            );
+            throw new SyncDuoException("isSyncFlowEntityValid failed. syncFlowId is null");
         }
         if (StringUtils.isAnyBlank(
                 syncFlowEntity.getSourceFolderPath(),
@@ -37,12 +32,9 @@ public class EntityValidationUtil {
                 syncFlowEntity.getSyncFlowName(),
                 syncFlowEntity.getSyncStatus()
         )) {
-            throw new SyncDuoException(
-                    onThrowingMessage,
-                    new SyncDuoException("isSyncFlowEntityValid failed. " +
+            throw new SyncDuoException("isSyncFlowEntityValid failed. " +
                             "sourceFolderPath, destFolderPath, syncFlowName or syncStatus is null." +
-                            "syncFlowEntity is " + syncFlowEntity)
-            );
+                            "syncFlowEntity is " + syncFlowEntity);
         }
     }
 
@@ -62,8 +54,7 @@ public class EntityValidationUtil {
                     "syncFlowName: %s, sourceFolderPath:%s or destFolderPath:%s is null".formatted(
                             createSyncFlowRequest.getSyncFlowName(),
                             createSyncFlowRequest.getSourceFolderFullPath(),
-                            createSyncFlowRequest.getDestFolderFullPath()
-                    ));
+                            createSyncFlowRequest.getDestFolderFullPath()));
         }
         // 检查过滤条件
         String filterCriteria = createSyncFlowRequest.getFilterCriteria();
@@ -159,46 +150,6 @@ public class EntityValidationUtil {
         }
     }
 
-    public static void isCreateSystemConfigValid(
-            SystemConfigEntity systemConfigEntity) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(systemConfigEntity)) {
-            throw new SyncDuoException("isCreateSystemConfigValid failed. systemConfigEntity is null");
-        }
-        if (ObjectUtils.isNotEmpty(systemConfigEntity.getSystemConfigId())) {
-            throw new SyncDuoException("isCreateSystemConfigValid failed. systemConfigEntity isn't null");
-        }
-        checkSystemConfigEntityValue(systemConfigEntity);
-    }
-
-    public static void isUpdateSystemConfigRequestValid(
-            SystemConfigEntity systemConfigEntity) throws SyncDuoException {
-        if (ObjectUtils.isEmpty(systemConfigEntity)) {
-            throw new SyncDuoException("isUpdateSystemConfigRequestValid failed. systemConfigEntity is null");
-        }
-        if (ObjectUtils.isEmpty(systemConfigEntity.getSystemConfigId())) {
-            throw new SyncDuoException("isUpdateSystemConfigRequestValid failed. systemConfigId is null");
-        }
-        checkSystemConfigEntityValue(systemConfigEntity);
-    }
-
-    public static void checkSystemConfigEntityValue(
-            SystemConfigEntity systemConfigEntity) throws SyncDuoException {
-        // 不为空的 config field
-        if (StringUtils.isAnyBlank(
-                systemConfigEntity.getBackupStoragePath(),
-                systemConfigEntity.getBackupPassword()
-        )) {
-            throw new SyncDuoException("checkSystemConfigEntityValue failed. " +
-                    "backupStoragePath or backupPassword " +
-                    "is null");
-        }
-        // 禁止备份间隔小于一小时
-        if (systemConfigEntity.getBackupIntervalMillis() < 3600000) {
-            throw new SyncDuoException("checkSystemConfigEntityValue failed. " +
-                    "backupIntervalMillis is below 1 hours");
-        }
-    }
-
     public static void isManualBackupRequestValid(ManualBackupRequest manualBackupRequest) throws SyncDuoException {
         if (ObjectUtils.anyNull(manualBackupRequest)) {
             throw new SyncDuoException("isManualBackupRequestValid failed. " +
@@ -213,6 +164,29 @@ public class EntityValidationUtil {
             manualBackupRequest.setInnerSyncFlowId(Long.parseLong(manualBackupRequest.getSyncFlowId()));
         } catch (NumberFormatException e) {
             throw new SyncDuoException("isManualBackupRequestValid failed. syncFlowId is not a number");
+        }
+    }
+
+    public static void isSnapshotFileInfoListValid(
+            List<SnapshotFileInfo> snapshotFileInfoList) throws SyncDuoException {
+        if (CollectionUtils.isEmpty(snapshotFileInfoList)) {
+            throw new SyncDuoException("isSnapshotFileInfoListValid failed. snapshotFileInfoList is null");
+        }
+        for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoList) {
+            if (ObjectUtils.isEmpty(snapshotFileInfo)) {
+                throw new SyncDuoException("isSnapshotFileInfoListValid failed. snapshotFileInfo is null");
+            }
+            if (ObjectUtils.anyNull(
+                    snapshotFileInfo.getSnapshotId(),
+                    snapshotFileInfo.getFileName(),
+                    snapshotFileInfo.getPath()
+            )) {
+                throw new SyncDuoException("isSnapshotFileInfoListValid failed. " +
+                        "snapshotId, fileName or path is null");
+            }
+            if (StringUtils.isBlank(snapshotFileInfo.getType())) {
+                throw new SyncDuoException("isSnapshotFileInfoListValid failed. type is null");
+            }
         }
     }
 }

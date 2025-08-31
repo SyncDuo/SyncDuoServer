@@ -6,8 +6,11 @@ import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.SyncFlowMapper;
+import com.syncduo.server.model.api.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.service.db.ISyncFlowService;
+import com.syncduo.server.util.EntityValidationUtil;
+import com.syncduo.server.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -24,26 +27,22 @@ public class SyncFlowService
         extends ServiceImpl<SyncFlowMapper, SyncFlowEntity>
         implements ISyncFlowService {
 
-    public SyncFlowEntity createSyncFlow(
-            String sourceFolderPath,
-            String destFolderPath,
-            String syncFlowName) throws SyncDuoException {
-        if (StringUtils.isBlank(syncFlowName)) {
-            throw new SyncDuoException("createSyncFlow failed, syncFlowName is null");
-        }
-        if (StringUtils.isAnyBlank(sourceFolderPath, destFolderPath)) {
-            throw new SyncDuoException("createSyncFlow failed." +
-                    "sourceFolderPath:%s or destFolderPath:%s is null".formatted(sourceFolderPath, destFolderPath));
-        }
+    public SyncFlowEntity createSyncFlow(CreateSyncFlowRequest createSyncFlowRequest) throws SyncDuoException {
         // 检查是否重名
+        String syncFlowName = createSyncFlowRequest.getSyncFlowName();
         SyncFlowEntity dbResult = this.getBySyncFlowName(syncFlowName);
         if (ObjectUtils.isNotEmpty(dbResult)) {
             throw new SyncDuoException("createSyncFlow failed. syncFlowName is duplicate");
         }
+        // 检查 syncflow 是否重复
+        String sourceFolderPath = createSyncFlowRequest.getSourceFolderFullPath();
+        String destFolderPath = createSyncFlowRequest.getDestFolderFullPath();
         dbResult = this.getBySourceAndDestFolderPath(sourceFolderPath, destFolderPath);
         if (ObjectUtils.isNotEmpty(dbResult)) {
             throw new SyncDuoException("createSyncFlow failed. " +
-                    "sourceFolderPath and destFolderPath already created.");
+                    "sourceFolderPath:%s and destFolderPath:%s already created.".formatted(
+                            sourceFolderPath, destFolderPath
+                    ));
         }
         // 创建
         SyncFlowEntity syncFlowEntity = new SyncFlowEntity();
@@ -52,6 +51,7 @@ public class SyncFlowService
         syncFlowEntity.setDestFolderPath(destFolderPath);
         syncFlowEntity.setSyncStatus(SyncFlowStatusEnum.RUNNING.name());
         syncFlowEntity.setLastSyncTime(null);
+        syncFlowEntity.setFilterCriteria(createSyncFlowRequest.getFilterCriteria());
         this.save(syncFlowEntity);
         return syncFlowEntity;
     }
@@ -181,5 +181,10 @@ public class SyncFlowService
             throw new SyncDuoException("deleteSyncFlow failed." +
                     "can't write to database");
         }
+    }
+
+    public List<String> getFilterCriteriaAsList(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+        EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
+        return JsonUtil.deserializeStringToList(syncFlowEntity.getFilterCriteria());
     }
 }

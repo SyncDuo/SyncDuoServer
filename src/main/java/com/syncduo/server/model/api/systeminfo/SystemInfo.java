@@ -1,18 +1,12 @@
 package com.syncduo.server.model.api.systeminfo;
 
-import com.syncduo.server.model.api.FolderStats;
+import com.syncduo.server.model.api.global.FolderStats;
 import lombok.Data;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 import java.time.Duration;
 
 @Data
-public class SystemInfoResponse {
-
-    private int code;
-
-    private String message;
+public class SystemInfo {
 
     private String hostName;
 
@@ -25,18 +19,6 @@ public class SystemInfoResponse {
     private int watchers;
 
     private String uptime; // HH:MM
-
-    public SystemInfoResponse onSuccess(String message) {
-        this.setCode(200);
-        this.setMessage(message);
-        return this;
-    }
-
-    public SystemInfoResponse onFailed(String message) {
-        this.setCode(500);
-        this.setMessage(message);
-        return this;
-    }
 
     public void setFileCopyRate(double fileCopyRate) {
         this.fileCopyRate = String.format("%.2f", fileCopyRate);

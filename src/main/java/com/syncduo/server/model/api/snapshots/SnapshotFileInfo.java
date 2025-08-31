@@ -13,18 +13,23 @@ import java.text.DecimalFormat;
 @Data
 public class SnapshotFileInfo {
 
-    String path;
+    private String snapshotId;
 
-    String fileName;
+    private String path;
 
-    String lastModifiedTime;
+    private String fileName;
 
-    String size;
+    private String lastModifiedTime;
 
-    String type;
+    private String size;
 
-    public static SnapshotFileInfo getFromResticNode(Node node) {
+    private String type;
+
+    private SnapshotFileInfo() {}
+
+    public static SnapshotFileInfo getFromResticNode(String snapshotId, Node node) {
         SnapshotFileInfo result = new SnapshotFileInfo();
+        result.setSnapshotId(snapshotId);
         if (ObjectUtils.isEmpty(node)) {
             return result;
         }

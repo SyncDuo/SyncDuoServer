@@ -35,7 +35,7 @@ public class SystemManagementService {
         this.rcloneFacadeService = rcloneFacadeService;
     }
 
-    public void systemStartUp() {
+    public void checkAllSyncFlowStatus() {
         // 获取全部 syncflow
         List<SyncFlowEntity> syncFlowEntityList = this.syncFlowService.getAllSyncFlow();
         if (CollectionUtils.isEmpty(syncFlowEntityList)) {
@@ -60,14 +60,15 @@ public class SystemManagementService {
                 // source folder add watcher
                 this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
             } catch (SyncDuoException e) {
-                log.error("systemStartUp failed.", e);
+                log.error("systemStartUp has error.", e);
             }
         }
     }
 
     // initial delay 5 minutes, fixDelay 30 minutes. unit is millisecond
-    @Scheduled(initialDelay = 1000 * 60 * 5, fixedDelayString = "${syncduo.server.check.folder.insync.interval:1800000}")
-    private void periodicalScan() {
+    @Scheduled(initialDelay = 1000 * 60 * 5,
+            fixedDelayString = "${syncduo.server.system.check.syncflow.insync.interval.millis:1800000}")
+    private void periodicalCheckSyncFlowStatus() {
         // 获取全部 syncflow
         List<SyncFlowEntity> syncFlowEntityList = this.syncFlowService.getAllSyncFlow();
         if (CollectionUtils.isEmpty(syncFlowEntityList)) {

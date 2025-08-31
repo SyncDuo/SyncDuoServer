@@ -2,9 +2,10 @@ package com.syncduo.server.controller;
 
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.api.FolderStats;
+import com.syncduo.server.model.api.global.FolderStats;
+import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
+import com.syncduo.server.model.api.systeminfo.SystemInfo;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.model.api.systeminfo.SystemInfoResponse;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsResponse;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.management.ManagementFactory;
@@ -43,33 +45,33 @@ public class SystemInfoController {
     }
 
     @GetMapping("/get-system-info")
-    public SystemInfoResponse getSystemInfo() {
-        SystemInfoResponse systemInfoResponse = new SystemInfoResponse();
+    public SyncDuoHttpResponse<SystemInfo> getSystemInfo() throws SyncDuoException {
+        SystemInfo systemInfo = new SystemInfo();
         try {
             // hostname
             String hostName = SystemInfoUtil.getHostName();
-            systemInfoResponse.setHostName(hostName);
+            systemInfo.setHostName(hostName);
             // uptime
             RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
             if (ObjectUtils.isEmpty(runtimeMXBean)) {
                 throw new SyncDuoException("spring boot runtimeMXBean is null");
             }
             long uptimeMillis = runtimeMXBean.getUptime();
-            systemInfoResponse.setUptime(uptimeMillis);
+            systemInfo.setUptime(uptimeMillis);
             // fileCopyRate
             CoreStatsResponse coreStatsResponse = this.rcloneFacadeService.getCoreStats();
             double totalMB = coreStatsResponse.getTotalBytes() / 1024.0 / 1024.0;
             double transferTime = coreStatsResponse.getTransferTime();
-            systemInfoResponse.setFileCopyRate(totalMB / transferTime);
+            systemInfo.setFileCopyRate(totalMB / transferTime);
             // watchers
-            systemInfoResponse.setWatchers(this.folderWatcher.getWatcherNumber());
+            systemInfo.setWatchers(this.folderWatcher.getWatcherNumber());
             // syncFlowNumber and folder stats
             List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
             if (CollectionUtils.isEmpty(allSyncFlow)) {
-                systemInfoResponse.setSyncFlowNumber(0);
-                return systemInfoResponse.onSuccess("获取 systemInfo 成功");
+                systemInfo.setSyncFlowNumber(0);
+                return SyncDuoHttpResponse.success(systemInfo);
             }
-            systemInfoResponse.setSyncFlowNumber(allSyncFlow.size());
+            systemInfo.setSyncFlowNumber(allSyncFlow.size());
             // 遍历 sync flow 累加 folder stats
             long[] folderStatsArray = {0, 0, 0};
             for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
@@ -79,10 +81,14 @@ public class SystemInfoController {
                 folderStatsArray[2] += folderInfo.get(2);
             }
             FolderStats folderStats = new FolderStats(folderStatsArray);
-            systemInfoResponse.setFolderStats(folderStats);
-            return systemInfoResponse.onSuccess("获取 systemInfo 成功");
+            systemInfo.setFolderStats(folderStats);
+            return SyncDuoHttpResponse.success(systemInfo);
         } catch (SyncDuoException e) {
-            return systemInfoResponse.onFailed("getSystemInfo failed. %s".formatted(e.getMessage()));
+            throw new SyncDuoException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "getSystemInfo failed. ",
+                    e
+            );
         }
     }
 }

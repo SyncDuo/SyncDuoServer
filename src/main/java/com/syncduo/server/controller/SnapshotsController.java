@@ -20,8 +20,12 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.Path;
 import java.util.*;
 
 @RestController
@@ -78,6 +82,7 @@ public class SnapshotsController {
             if (ObjectUtils.isEmpty(backupJobEntity)) {
                 return SnapshotsResponse.onError("getSnapshotsFile failed. backupJobId not found.");
             }
+            // 如果 backup 没有产生 snapshot, 则使用最新的 snapshot
             if (StringUtils.isBlank(backupJobEntity.getSnapshotId())) {
                 backupJobEntity = this.backupJobService.getFirstValidSnapshotId(backupJobEntity);
                 if (ObjectUtils.isEmpty(backupJobEntity) ||
@@ -94,7 +99,7 @@ public class SnapshotsController {
             }
             List<SnapshotFileInfo> result = new ArrayList<>();
             for (Node node : nodeList) {
-                result.add(SnapshotFileInfo.getFromResticNode(node));
+                result.add(SnapshotFileInfo.getFromResticNode(backupJobEntity.getSnapshotId(), node));
             }
             // restic ls 命令, 使用形如 /<folder1>/ 的方式查询, 还是会把 folder1 包含在查询结果中
             // 所以需要去除 pathString 的结果
@@ -151,6 +156,55 @@ public class SnapshotsController {
             }
         } catch (Exception e) {
             return SnapshotsResponse.onError("getSnapshots 失败. ex 是" + e.getMessage());
+        }
+    }
+
+    @PostMapping("/download-snapshot-files")
+    public ResponseEntity<Resource> downloadSnapshotFiles(
+            @RequestBody List<SnapshotFileInfo> snapshotFileInfoList) throws SyncDuoException {
+        try {
+            EntityValidationUtil.isSnapshotFileInfoListValid(snapshotFileInfoList);
+        } catch (SyncDuoException e) {
+            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "downloadSnapshotFiles failed. " + e.getMessage());
+        }
+        try {
+            Path zipFile = this.resticFacadeService.restoreFiles(snapshotFileInfoList);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + zipFile.getFileName() + "\"")
+                    .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new UrlResource(zipFile.toUri()));
+        } catch (Exception e) {
+            throw new SyncDuoException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "downloadSnapshotFiles failed. Ex: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/download-snapshot-file")
+    public ResponseEntity<Resource> downloadSnapshotFile(
+            @RequestBody SnapshotFileInfo snapshotFileInfo) throws SyncDuoException {
+        try {
+            EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
+            if (!ResticNodeTypeEnum.FILE.getType().equals(snapshotFileInfo.getType())) {
+                throw new SyncDuoException("downloadSnapshotFile failed. snapshotFileInfo is not a file.");
+            }
+        } catch (SyncDuoException e) {
+            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "downloadSnapshotFile failed. " + e.getMessage());
+        }
+        try {
+            Path restoreFile = this.resticFacadeService.restoreFile(snapshotFileInfo);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + snapshotFileInfo.getFileName() + "\"")
+                    .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new UrlResource(restoreFile.toUri()));
+        } catch (Exception e) {
+            throw new SyncDuoException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "downloadSnapshotFile failed. Ex: " + e.getMessage());
         }
     }
 

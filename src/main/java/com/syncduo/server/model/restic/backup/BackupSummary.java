@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.time.Instant;
 
 @Data
-public class Summary {
+public class BackupSummary {
     @JsonProperty("message_type")
     private String messageType;
 

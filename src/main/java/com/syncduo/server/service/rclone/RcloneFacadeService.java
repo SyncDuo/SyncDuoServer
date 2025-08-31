@@ -19,7 +19,6 @@ import com.syncduo.server.model.rclone.operations.stats.StatsResponse;
 import com.syncduo.server.model.rclone.sync.copy.SyncCopyRequest;
 import com.syncduo.server.service.db.impl.CopyJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
-import com.syncduo.server.service.db.impl.SyncSettingService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -42,10 +41,10 @@ import java.util.concurrent.ScheduledFuture;
 @Slf4j
 public class RcloneFacadeService {
 
-    @Value("${syncduo.server.rclone.job.status.track.timeout:5}")
+    @Value("${syncduo.server.rclone.job.status.track.timeout.minute:5}")
     private int TIMEOUT;
 
-    @Value("${syncduo.server.rclone.job.status.track.interval:5}")
+    @Value("${syncduo.server.rclone.job.status.track.interval.sec:5}")
     private int INTERVAL;
 
     private final Map<Long, ScheduledFuture<?>> scheduledTaskMap = new ConcurrentHashMap<>();
@@ -56,8 +55,6 @@ public class RcloneFacadeService {
 
     private final RcloneService rcloneService;
 
-    private final SyncSettingService syncSettingService;
-
     private final SyncFlowService syncFlowService;
 
     @Autowired
@@ -65,13 +62,15 @@ public class RcloneFacadeService {
             ThreadPoolTaskScheduler rcloneTaskScheduler,
             CopyJobService copyJobService,
             RcloneService rcloneService,
-            SyncSettingService syncSettingService,
             SyncFlowService syncFlowService) {
         this.rcloneTaskScheduler = rcloneTaskScheduler;
         this.copyJobService = copyJobService;
         this.rcloneService = rcloneService;
-        this.syncSettingService = syncSettingService;
         this.syncFlowService = syncFlowService;
+    }
+
+    public void init() throws SyncDuoException {
+        // todo:
     }
 
     public CoreStatsResponse getCoreStats() throws SyncDuoException {
@@ -109,10 +108,11 @@ public class RcloneFacadeService {
     }
 
     public boolean oneWayCheck(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
-        EntityValidationUtil.isSyncFlowEntityValid(
-                syncFlowEntity,
-                "oneWayCheck failed."
-        );
+        try {
+            EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
+        } catch (SyncDuoException e) {
+            throw new SyncDuoException("oneWayCheck failed.", e);
+        }
         CheckRequest checkRequest = new CheckRequest(
                 syncFlowEntity.getSourceFolderPath(),
                 syncFlowEntity.getDestFolderPath()
@@ -147,15 +147,15 @@ public class RcloneFacadeService {
             );
             // 数据库插入 copy job
             CopyJobEntity copyJobEntity = this.copyJobService.addCopyJob(syncFlowEntity.getSyncFlowId());
+            // 获取 filter criteria as list
+            List<String> filterCriteriaAsList = this.syncFlowService.getFilterCriteriaAsList(syncFlowEntity);
             // 创建 copyFileRequest
-            List<String> filterCriteria =
-                    this.syncSettingService.getFilterCriteria(syncFlowEntity.getSyncFlowId());
             CopyFileRequest copyFileRequest = new CopyFileRequest(
                     sourceFolderPath,
                     fileRelativePath,
                     syncFlowEntity.getDestFolderPath(),
                     fileRelativePath,
-                    filterCriteria
+                    filterCriteriaAsList
             );
             // 发起请求
             RcloneResponse<RcloneAsyncResponse> rcloneResponse = this.rcloneService.copyFile(copyFileRequest);
@@ -166,10 +166,11 @@ public class RcloneFacadeService {
     }
 
     public void syncCopy(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
-        EntityValidationUtil.isSyncFlowEntityValid(
-                syncFlowEntity,
-                "syncCopy failed."
-        );
+        try {
+            EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
+        } catch (SyncDuoException e) {
+            throw new SyncDuoException("syncCopy failed. ", e);
+        }
         // 数据库插入 copy job
         CopyJobEntity copyJobEntity = this.copyJobService.addCopyJob(syncFlowEntity.getSyncFlowId());
         // 创建 sync copy request
@@ -178,7 +179,7 @@ public class RcloneFacadeService {
                 syncFlowEntity.getDestFolderPath()
         );
         // 如果有过滤条件,则加入 sync copy request
-        List<String> filterCriteria = this.syncSettingService.getFilterCriteria(syncFlowEntity.getSyncFlowId());
+        List<String> filterCriteria = this.syncFlowService.getFilterCriteriaAsList(syncFlowEntity);
         if (CollectionUtils.isNotEmpty(filterCriteria)) {
             syncCopyRequest.exclude(filterCriteria);
         }

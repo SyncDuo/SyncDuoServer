@@ -1,17 +1,20 @@
 package com.syncduo.server.service.restic;
 
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.restic.backup.Error;
-import com.syncduo.server.model.restic.backup.Summary;
+import com.syncduo.server.model.restic.backup.BackupError;
+import com.syncduo.server.model.restic.backup.BackupSummary;
 import com.syncduo.server.model.restic.cat.CatConfig;
 import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.model.restic.init.Init;
 import com.syncduo.server.model.restic.ls.Node;
+import com.syncduo.server.model.restic.restore.RestoreError;
+import com.syncduo.server.model.restic.restore.RestoreSummary;
 import com.syncduo.server.model.restic.stats.Stats;
 import com.syncduo.server.util.FilesystemUtil;
 import com.syncduo.server.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.*;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -47,7 +50,7 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<Summary, Error> backup(
+    public ResticExecResult<BackupSummary, BackupError> backup(
             String backupStoragePath,
             String backupPassword,
             String folderPathString) throws SyncDuoException {
@@ -57,16 +60,16 @@ public class ResticService {
         commandLine.addArgument("backup");
         commandLine.addArgument(".");
         commandLine.addArgument("--skip-if-unchanged");
-        ResticParser<Summary, Error> resticParser = new ResticParser<>(
+        ResticParser<BackupSummary, BackupError> resticParser = new ResticParser<>(
                 backupPassword,
                 backupStoragePath,
                 commandLine
         );
-        CompletableFuture<ResticExecResult<Summary, Error>> future = resticParser.execute(
+        CompletableFuture<ResticExecResult<BackupSummary, BackupError>> future = resticParser.execute(
                 folderPathString,
-                stdout -> JsonUtil.parseResticJsonLine(stdout, Summary.getCondition(), Summary.class),
+                stdout -> JsonUtil.parseResticJsonLine(stdout, BackupSummary.getCondition(), BackupSummary.class),
                 null,
-                stderr -> JsonUtil.parseResticJsonLines(stderr, Error.getCondition(), Error.class),
+                stderr -> JsonUtil.parseResticJsonLines(stderr, BackupError.getCondition(), BackupError.class),
                 null
         );
         try {
@@ -160,6 +163,51 @@ public class ResticService {
             return future.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new SyncDuoException("ls failed. future get failed. ", e);
+        }
+    }
+
+    public ResticExecResult<RestoreSummary, RestoreError> restore(
+            String backupStoragePath,
+            String backupPassword,
+            String snapshotId,
+            String[] pathStrings,
+            String targetString) throws SyncDuoException {
+        if (StringUtils.isAnyBlank(snapshotId, targetString)) {
+            throw new SyncDuoException("restoreFile failed. snapshotsId or targetString is null");
+        }
+        if (ArrayUtils.isEmpty(pathStrings)) {
+            throw new SyncDuoException("restoreFile failed. pathStrings is empty");
+        }
+        CommandLine restoreCommandLine = getDefaultCommandLine();
+        restoreCommandLine.addArgument("restore");
+        restoreCommandLine.addArgument(snapshotId);
+        restoreCommandLine.addArgument("--target");
+        restoreCommandLine.addArgument(targetString);
+        for (String filePathString : pathStrings) {
+            if (StringUtils.isBlank(filePathString)) {
+                throw new SyncDuoException("restore failed. pathStrings has blank string");
+            }
+            restoreCommandLine.addArgument("--include");
+            restoreCommandLine.addArgument(filePathString);
+        }
+        ResticParser<RestoreSummary, RestoreError> resticParser = new ResticParser<>(
+                backupPassword,
+                backupStoragePath,
+                restoreCommandLine
+        );
+        CompletableFuture<ResticExecResult<RestoreSummary, RestoreError>> future = resticParser.execute(
+                null,
+                stdout ->
+                        JsonUtil.parseResticJsonLine(stdout, RestoreSummary.getCondition(), RestoreSummary.class),
+                null,
+                stderr ->
+                        JsonUtil.parseResticJsonLines(stderr, RestoreError.getCondition(), RestoreError.class),
+                null
+        );
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new SyncDuoException("restoreFile failed. future get failed. ", e);
         }
     }
 

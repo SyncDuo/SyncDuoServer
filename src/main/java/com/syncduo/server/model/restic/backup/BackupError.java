@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class Error {
+public class BackupError {
     @JsonProperty("message_type")
     private String messageType;
 

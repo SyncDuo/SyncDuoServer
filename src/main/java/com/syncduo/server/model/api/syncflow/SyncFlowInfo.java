@@ -1,8 +1,7 @@
 package com.syncduo.server.model.api.syncflow;
 
-import com.syncduo.server.model.api.FolderStats;
+import com.syncduo.server.model.api.global.FolderStats;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.model.entity.SyncSettingEntity;
 import lombok.*;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -19,7 +18,7 @@ public class SyncFlowInfo {
 
     private String syncStatus;
 
-    private String lastSyncTimeStamp;
+    private String lastSyncTimeStamp = "";
 
     private String ignorePatten;
 
@@ -29,21 +28,16 @@ public class SyncFlowInfo {
         this.syncFlowId = syncFlowEntity.getSyncFlowId().toString();
     }
 
-    public SyncFlowInfo(
-            SyncFlowEntity syncFlowEntity,
-            SyncSettingEntity syncSettingEntity,
-            FolderStats folderStats) {
+    public SyncFlowInfo(SyncFlowEntity syncFlowEntity, FolderStats folderStats) {
         this.syncFlowId = syncFlowEntity.getSyncFlowId().toString();
         this.syncFlowName = syncFlowEntity.getSyncFlowName();
         this.sourceFolderPath = syncFlowEntity.getSourceFolderPath();
         this.destFolderPath = syncFlowEntity.getDestFolderPath();
         this.syncStatus = syncFlowEntity.getSyncStatus();
-        if (ObjectUtils.isEmpty(syncFlowEntity.getLastSyncTime())) {
-            this.lastSyncTimeStamp = "";
-        } else {
+        if (ObjectUtils.isNotEmpty(syncFlowEntity.getLastSyncTime())) {
             this.lastSyncTimeStamp = syncFlowEntity.getLastSyncTime().toString();
         }
-        this.ignorePatten = syncSettingEntity.getFilterCriteria();
+        this.ignorePatten = syncFlowEntity.getFilterCriteria();
         this.destFolderStats = folderStats;
     }
 }

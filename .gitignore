@@ -38,8 +38,11 @@ build/
 /restic/password.txt
 /src/main/resources/secrets/
 /src/test/resources/secrets/
-/src/main/resources/secrets.properties
 /src/test/resources/secrets.properties
 /src/test/resources/backupStoragePath/
 /src/test/resources/contentParentFolder/
 /src/main/resources/secret/
+/src/test/resources/restorePath/
+/src/main/resources/backupPath/
+/src/main/resources/restorePath/
+/src/main/resources/destPath/

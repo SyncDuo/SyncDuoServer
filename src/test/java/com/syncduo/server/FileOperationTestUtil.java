@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
 
+import static com.syncduo.server.util.FilesystemUtil.getAllFile;
+
 @Slf4j
 public class FileOperationTestUtil {
 
@@ -122,7 +124,7 @@ public class FileOperationTestUtil {
         return new ImmutablePair<>(txtFile, binFile);
     }
 
-    public static List<Path> modifyFile(Path folderPath, int number) throws IOException {
+    public static List<Path> modifyFile(Path folderPath, int number) throws IOException, SyncDuoException {
         List<Path> files = new ArrayList<>(number);
         // 获取所有文件
         List<Path> allFile = getAllFile(folderPath);
@@ -158,12 +160,6 @@ public class FileOperationTestUtil {
             files.add(file);
         }
         return files;
-    }
-
-    public static List<Path> getAllFile(Path folder) throws IOException {
-        try(Stream<Path> list = Files.list(folder)) {
-           return list.filter(Files::isRegularFile).toList();
-        }
     }
 
     public static void writeToTextFile(Path file) throws IOException {

@@ -12,7 +12,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -22,7 +21,7 @@ import java.util.concurrent.*;
 @Slf4j
 public class FilesystemEventHandler {
 
-    @Value("${syncduo.server.event.debounce.window:5}")
+    @Value("${syncduo.server.system.event.debounce.window.sec:5}")
     private int DEBOUNCE_WINDOW;
 
     private final Map<Path, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
@@ -48,7 +47,7 @@ public class FilesystemEventHandler {
         } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
         } catch (ClassCastException | NullPointerException | IllegalArgumentException e) {
-            throw new SyncDuoException(e);
+            throw new SyncDuoException("sendFileEvent failed. ", e);
         }
     }
 

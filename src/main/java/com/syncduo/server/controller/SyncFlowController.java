@@ -2,11 +2,10 @@ package com.syncduo.server.controller;
 
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.api.FolderStats;
+import com.syncduo.server.model.api.global.FolderStats;
 import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.bus.FolderWatcher;
-import com.syncduo.server.model.entity.SyncSettingEntity;
 import com.syncduo.server.model.api.syncflow.UpdateFilterCriteriaRequest;
 import com.syncduo.server.service.db.impl.*;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
@@ -37,28 +36,20 @@ public class SyncFlowController {
 
     private final SyncFlowService syncFlowService;
 
-    private final SyncSettingService syncSettingService;
-
     private final FolderWatcher folderWatcher;
 
     private final RcloneFacadeService rcloneFacadeService;
-
-    private final ResticFacadeService resticFacadeService;
 
     @Autowired
     public SyncFlowController(
             ThreadPoolTaskScheduler generalTaskScheduler,
             SyncFlowService syncFlowService,
-            SyncSettingService syncSettingService,
             FolderWatcher folderWatcher,
-            RcloneFacadeService rcloneFacadeService,
-            ResticFacadeService resticFacadeService) {
+            RcloneFacadeService rcloneFacadeService) {
         this.generalTaskScheduler = generalTaskScheduler;
         this.syncFlowService = syncFlowService;
-        this.syncSettingService = syncSettingService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
-        this.resticFacadeService = resticFacadeService;
     }
 
     @PostMapping("/update-filter-criteria")
@@ -67,10 +58,8 @@ public class SyncFlowController {
         try {
             // 参数检查
             EntityValidationUtil.isUpdateFilterCriteriaRequestValid(updateFilterCriteriaRequest);
-
             // 反序列化
             long syncFlowId = updateFilterCriteriaRequest.getSyncFlowIdInner();
-
             // pause 的 sync flow, 才能 update filter criteria
             SyncFlowEntity syncFlowEntity = this.syncFlowService.getBySyncFlowId(syncFlowId);
             if (ObjectUtils.isEmpty(syncFlowEntity)) {
@@ -79,20 +68,13 @@ public class SyncFlowController {
             if (!SyncFlowStatusEnum.PAUSE.name().equals(syncFlowEntity.getSyncStatus())) {
                 return SyncFlowResponse.onError("updateFilterCriteria failed. sync flow status is not PAUSE");
             }
-            // 查找 syncSetting
-            SyncSettingEntity syncSettingEntity = this.syncSettingService.getBySyncFlowId(syncFlowId);
-            if (ObjectUtils.isEmpty(syncSettingEntity)) {
-                return SyncFlowResponse.onSuccess("updateFilterCriteria success. SyncSetting is deleted");
-            }
-            syncSettingEntity.setFilterCriteria(updateFilterCriteriaRequest.getFilterCriteria());
-            this.syncSettingService.updateById(syncSettingEntity);
+            // 更新 filter
+            syncFlowEntity.setFilterCriteria(updateFilterCriteriaRequest.getFilterCriteria());
+            this.syncFlowService.updateById(syncFlowEntity);
             // 修改完成
             return SyncFlowResponse.onSuccess("updateFilterCriteria success");
         } catch (SyncDuoException e) {
-            return this.generateSyncFlowErrorResponse(
-                    "updateFilterCriteria failed.",
-                    e
-            );
+            return this.generateSyncFlowErrorResponse("updateFilterCriteria failed.", e);
         }
     }
 
@@ -188,16 +170,7 @@ public class SyncFlowController {
             // 参数检查
             this.isCreateSyncFlowRequestValid(createSyncFlowRequest);
             // 创建 syncflow
-            SyncFlowEntity syncFlowEntity = this.syncFlowService.createSyncFlow(
-                    createSyncFlowRequest.getSourceFolderFullPath(),
-                    createSyncFlowRequest.getDestFolderFullPath(),
-                    createSyncFlowRequest.getSyncFlowName()
-            );
-            // 创建 sync setting
-            this.syncSettingService.createSyncSetting(
-                    syncFlowEntity.getSyncFlowId(),
-                    createSyncFlowRequest.getFilterCriteria()
-            );
+            SyncFlowEntity syncFlowEntity = this.syncFlowService.createSyncFlow(createSyncFlowRequest);
             // 创建 watcher
             this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
             // 初始化, 触发一次 sync copy
@@ -261,7 +234,8 @@ public class SyncFlowController {
         return SyncFlowResponse.onSuccess("getSyncFlow success.", result);
     }
 
-    private void isCreateSyncFlowRequestValid(CreateSyncFlowRequest createSyncFlowRequest) throws SyncDuoException {
+    private void isCreateSyncFlowRequestValid(
+            CreateSyncFlowRequest createSyncFlowRequest) throws SyncDuoException {
         EntityValidationUtil.isCreateSyncFlowRequestValid(createSyncFlowRequest);
         // 检查 source folder 是否存在
         if (!this.rcloneFacadeService.isSourceFolderExist(createSyncFlowRequest.getSourceFolderFullPath())) {
@@ -274,15 +248,8 @@ public class SyncFlowController {
     private SyncFlowInfo getSyncFlowInfo(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
         // 本地获取 folderStat
         List<Long> folderInfo = FilesystemUtil.getFolderInfo(syncFlowEntity.getDestFolderPath());
-        // 获取 sync setting
-        SyncSettingEntity syncSettingEntity =
-                this.syncSettingService.getBySyncFlowId(syncFlowEntity.getSyncFlowId());
         FolderStats folderStats = new FolderStats(folderInfo.get(0), folderInfo.get(1), folderInfo.get(2));
-        return new SyncFlowInfo(
-                syncFlowEntity,
-                syncSettingEntity,
-                folderStats
-        );
+        return new SyncFlowInfo(syncFlowEntity, folderStats);
     }
 
     private SyncFlowResponse generateSyncFlowErrorResponse(String errorMessage, SyncDuoException e) {

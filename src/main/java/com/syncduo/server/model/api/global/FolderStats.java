@@ -1,4 +1,4 @@
-package com.syncduo.server.model.api;
+package com.syncduo.server.model.api.global;
 
 import lombok.Data;
 import lombok.ToString;
