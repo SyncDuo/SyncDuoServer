@@ -17,6 +17,7 @@ import com.syncduo.server.model.rclone.operations.copyfile.CopyFileRequest;
 import com.syncduo.server.model.rclone.operations.stats.StatsRequest;
 import com.syncduo.server.model.rclone.operations.stats.StatsResponse;
 import com.syncduo.server.model.rclone.sync.copy.SyncCopyRequest;
+import com.syncduo.server.service.bussiness.DebounceService;
 import com.syncduo.server.service.db.impl.CopyJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.util.EntityValidationUtil;
@@ -47,9 +48,7 @@ public class RcloneFacadeService {
     @Value("${syncduo.server.rclone.job.status.track.interval.sec:5}")
     private int INTERVAL;
 
-    private final Map<Long, ScheduledFuture<?>> scheduledTaskMap = new ConcurrentHashMap<>();
-
-    private final ThreadPoolTaskScheduler rcloneTaskScheduler;
+    private final DebounceService.ModuleDebounceService moduleDebounceService;
 
     private final CopyJobService copyJobService;
 
@@ -59,11 +58,11 @@ public class RcloneFacadeService {
 
     @Autowired
     public RcloneFacadeService(
-            ThreadPoolTaskScheduler rcloneTaskScheduler,
+            DebounceService debounceService,
             CopyJobService copyJobService,
             RcloneService rcloneService,
             SyncFlowService syncFlowService) {
-        this.rcloneTaskScheduler = rcloneTaskScheduler;
+        this.moduleDebounceService = debounceService.forModule(RcloneFacadeService.class.getSimpleName());
         this.copyJobService = copyJobService;
         this.rcloneService = rcloneService;
         this.syncFlowService = syncFlowService;
@@ -221,12 +220,11 @@ public class RcloneFacadeService {
             }
             // track status
             new RcloneJobTracker(
-                    scheduledTaskMap,
+                    moduleDebounceService,
                     copyJobEntity,
                     rcloneService,
                     copyJobService,
                     syncFlowService,
-                    rcloneTaskScheduler,
                     INTERVAL,
                     Duration.ofMinutes(TIMEOUT)).start();
         } catch (SyncDuoException e) {
@@ -237,7 +235,7 @@ public class RcloneFacadeService {
     // Inner class for polling a single job
     static class RcloneJobTracker {
 
-        private final Map<Long, ScheduledFuture<?>> scheduledTaskMap;
+        private final DebounceService.ModuleDebounceService moduleDebounceService;
 
         private final CopyJobEntity copyJobEntity;
 
@@ -249,8 +247,6 @@ public class RcloneFacadeService {
 
         private final SyncFlowService syncFlowService;
 
-        private final ThreadPoolTaskScheduler scheduler;
-
         private final int interval;
 
         private final Duration timeout;
@@ -258,20 +254,18 @@ public class RcloneFacadeService {
         private final Instant startTime;
 
         public RcloneJobTracker(
-                Map<Long, ScheduledFuture<?>> scheduledTaskMap,
+                DebounceService.ModuleDebounceService moduleDebounceService,
                 CopyJobEntity copyJobEntity,
                 RcloneService rcloneService,
                 CopyJobService copyJobService,
                 SyncFlowService syncFlowService,
-                ThreadPoolTaskScheduler scheduler,
                 int interval,
                 Duration timeout) {
-            this.scheduledTaskMap = scheduledTaskMap;
+            this.moduleDebounceService = moduleDebounceService;
             this.copyJobEntity = copyJobEntity;
             this.rcloneService = rcloneService;
             this.copyJobService = copyJobService;
             this.syncFlowService = syncFlowService;
-            this.scheduler = scheduler;
             this.interval = interval;
             this.timeout = timeout;
             this.startTime = Instant.now();
@@ -282,7 +276,7 @@ public class RcloneFacadeService {
         }
 
         private void scheduleTask(Runnable task) {
-            scheduler.schedule(task, Instant.now().plusSeconds(interval));
+            this.moduleDebounceService.schedule(task, interval);
         }
 
         private void pollJobStatus() {
@@ -353,35 +347,17 @@ public class RcloneFacadeService {
                 } else {
                     this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatusResponse, rcloneResponse.getData());
                 }
-                this.updateSyncFlowStatus(copyJobEntity);
+                this.moduleDebounceService.debounce(
+                        copyJobId.toString(),
+                        () -> this.syncFlowService.updateSyncFlowStatus(
+                                copyJobEntity.getSyncFlowId(),
+                                SyncFlowStatusEnum.SYNC
+                        ),
+                        interval
+                );
             } catch (SyncDuoException e) {
                 log.error("getCoreStatsAndUpdate failed.", e);
             }
-        }
-
-        private void updateSyncFlowStatus(CopyJobEntity copyJobEntity) {
-            // Cancel existing scheduled task
-            Long syncFlowId = copyJobEntity.getSyncFlowId();
-            ScheduledFuture<?> previous = scheduledTaskMap.get(syncFlowId);
-            if (ObjectUtils.isNotEmpty(previous)) {
-                previous.cancel(false);
-            }
-            // Schedule new task
-            ScheduledFuture<?> future = scheduler.schedule(() -> {
-                try {
-                    this.syncFlowService.updateSyncFlowStatus(
-                            syncFlowId,
-                            SyncFlowStatusEnum.SYNC
-                    );
-                } catch (SyncDuoException e) {
-                    log.error("debounceSyncFlowTasks failed. ", e);
-                } finally {
-                    scheduledTaskMap.remove(syncFlowId); // clean up
-                }
-            }, Instant.now().plusSeconds(interval));
-            log.debug("debounceSyncFlowTasks {}", future);
-            // add to map
-            scheduledTaskMap.put(syncFlowId, future);
         }
     }
 }

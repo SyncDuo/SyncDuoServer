@@ -7,6 +7,7 @@ import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.model.api.syncflow.UpdateFilterCriteriaRequest;
+import com.syncduo.server.service.bussiness.DebounceService;
 import com.syncduo.server.service.db.impl.*;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
@@ -32,7 +33,7 @@ import java.util.List;
 @CrossOrigin
 public class SyncFlowController {
 
-    private final ThreadPoolTaskScheduler generalTaskScheduler;
+    private final DebounceService.ModuleDebounceService moduleDebounceService;
 
     private final SyncFlowService syncFlowService;
 
@@ -42,11 +43,11 @@ public class SyncFlowController {
 
     @Autowired
     public SyncFlowController(
-            ThreadPoolTaskScheduler generalTaskScheduler,
+            DebounceService debounceService,
             SyncFlowService syncFlowService,
             FolderWatcher folderWatcher,
             RcloneFacadeService rcloneFacadeService) {
-        this.generalTaskScheduler = generalTaskScheduler;
+        this.moduleDebounceService = debounceService.forModule(SyncFlowController.class.getSimpleName());
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
@@ -200,7 +201,7 @@ public class SyncFlowController {
                     SyncFlowStatusEnum.PAUSE
             );
             // delay and delete
-            this.generalTaskScheduler.schedule(
+            this.moduleDebounceService.schedule(
                     () -> {
                         try {
                             this.syncFlowService.deleteSyncFlow(dbResult);
@@ -208,7 +209,7 @@ public class SyncFlowController {
                             log.error("deleteSyncFlow failed.", e);
                         }
                     },
-                    Instant.now().plus(Duration.ofMinutes(5))
+                    300
             );
             return SyncFlowResponse.onSuccess("deleteSyncFlow success.");
         } catch (SyncDuoException e) {
