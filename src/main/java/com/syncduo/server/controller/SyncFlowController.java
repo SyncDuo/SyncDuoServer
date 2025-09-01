@@ -10,18 +10,15 @@ import com.syncduo.server.model.api.syncflow.UpdateFilterCriteriaRequest;
 import com.syncduo.server.service.bussiness.DebounceService;
 import com.syncduo.server.service.db.impl.*;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
-import com.syncduo.server.service.restic.ResticFacadeService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +37,9 @@ public class SyncFlowController {
     private final FolderWatcher folderWatcher;
 
     private final RcloneFacadeService rcloneFacadeService;
+
+    @Value("${syncduo.server.system.syncflow.delay.delete.sec}")
+    private long delayDeleteSec;
 
     @Autowired
     public SyncFlowController(
@@ -209,7 +209,7 @@ public class SyncFlowController {
                             log.error("deleteSyncFlow failed.", e);
                         }
                     },
-                    300
+                    delayDeleteSec
             );
             return SyncFlowResponse.onSuccess("deleteSyncFlow success.");
         } catch (SyncDuoException e) {

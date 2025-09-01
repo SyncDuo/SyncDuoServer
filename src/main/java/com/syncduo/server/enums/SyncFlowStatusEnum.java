@@ -11,6 +11,8 @@ import java.util.Set;
 
 public enum SyncFlowStatusEnum {
 
+    FAIL,
+
     RUNNING,
 
     SYNC,

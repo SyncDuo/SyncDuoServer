@@ -1,9 +1,9 @@
 package com.syncduo.server.configuration;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @Configuration
@@ -11,7 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 public class ThreadPoolConfig {
 
     @Bean(name = "generalTaskScheduler")
-    public ThreadPoolTaskScheduler generalTaskScheduler() {
+    public TaskScheduler generalTaskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(30);  // Number of threads for scheduled tasks
         scheduler.setThreadNamePrefix("General-Task-Scheduled-Thread-"); // Thread name prefix
@@ -23,7 +23,7 @@ public class ThreadPoolConfig {
 
     // 注解启动的定时任务, 使用这个
     @Bean(name = "systemManagementTaskScheduler")
-    public ThreadPoolTaskScheduler systemManagementTaskScheduler() {
+    public TaskScheduler systemManagementTaskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(5);  // Number of threads for scheduled tasks
         scheduler.setThreadNamePrefix("System-Management-Thread-"); // Thread name prefix

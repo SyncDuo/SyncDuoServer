@@ -64,6 +64,9 @@ class SyncDuoServerApplicationTests {
 
     private SyncFlowEntity syncFlowEntity;
 
+    @Value("${syncduo.server.system.syncflow.delay.delete.sec}")
+    private long delayDeleteSec;
+
     @Value("${syncduo.server.test.source.folder}")
     private String sourceFolderPath;
 
@@ -249,7 +252,7 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenDeleteSyncFlow() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenDeleteSyncFlow() throws IOException, SyncDuoException, InterruptedException {
         // 创建 syncflow
         createSyncFlow("[\"txt\"]");
         waitAllFileHandle();
@@ -257,6 +260,8 @@ class SyncDuoServerApplicationTests {
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
         deleteSyncFlowRequest.setSyncFlowId(syncFlowEntity.getSyncFlowId().toString());
         this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
+        Thread.sleep(delayDeleteSec * 2);
+        assert ObjectUtils.isEmpty(this.syncFlowService.getBySyncFlowId(syncFlowEntity.getSyncFlowId()));
         // 源文件夹创建文件
         FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
         // 等待文件处理

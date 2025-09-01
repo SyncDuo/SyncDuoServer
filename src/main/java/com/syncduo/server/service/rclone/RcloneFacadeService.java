@@ -28,21 +28,19 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
 public class RcloneFacadeService {
 
-    @Value("${syncduo.server.rclone.job.status.track.timeout.minute:5}")
+    @Value("${syncduo.server.rclone.job.status.track.timeout.sec:5}")
     private int TIMEOUT;
 
     @Value("${syncduo.server.rclone.job.status.track.interval.sec:5}")
@@ -157,10 +155,7 @@ public class RcloneFacadeService {
                     filterCriteriaAsList
             );
             // 发起请求
-            RcloneResponse<RcloneAsyncResponse> rcloneResponse = this.rcloneService.copyFile(copyFileRequest);
-            log.debug("copy file {}", copyFileRequest);
-            // 处理异步请求
-            this.handleAsyncRcloneJob(copyJobEntity, rcloneResponse);
+            this.createAndStartRcloneJob(syncFlowEntity, () -> rcloneService.copyFile(copyFileRequest));
         }
     }
 
@@ -183,181 +178,75 @@ public class RcloneFacadeService {
             syncCopyRequest.exclude(filterCriteria);
         }
         // 发起请求
-        RcloneResponse<RcloneAsyncResponse> rcloneResponse = this.rcloneService.syncCopy(syncCopyRequest);
-        log.debug("sync copy {}", syncCopyRequest);
-        // 处理异步 response
-        this.handleAsyncRcloneJob(copyJobEntity, rcloneResponse);
+        this.createAndStartRcloneJob(syncFlowEntity, () -> this.rcloneService.syncCopy(syncCopyRequest));
     }
 
-    private void handleAsyncRcloneJob(
-            CopyJobEntity copyJobEntity,
-            RcloneResponse<RcloneAsyncResponse> rcloneResponse) {
-        try {
-            // 请求失败
-            if (ObjectUtils.isEmpty(rcloneResponse)) {
-                this.copyJobService.markCopyJobAsFailed(
-                        copyJobEntity.getCopyJobId(),
-                        "handleAsyncRcloneJob failed. rcloneResponse is empty"
-                );
-                return;
-            }
-            // 请求失败
-            if (!rcloneResponse.isSuccess()) {
-                this.copyJobService.markCopyJobAsFailed(
-                        copyJobEntity.getCopyJobId(),
-                        "handleAsyncRcloneJob failed. rcloneResponse is not success. " +
-                                "Error is %s".formatted(rcloneResponse.getSyncDuoException())
-                );
-                return;
-            }
-            // 请求成功
-            copyJobEntity = this.copyJobService.updateCopyJobRcloneJobId(
-                    copyJobEntity.getCopyJobId(),
-                    rcloneResponse.getData().getJobId()
-            );
-            if (ObjectUtils.isEmpty(copyJobEntity)) {
-                throw new SyncDuoException("handleAsyncRcloneJob failed. copyJobEntity is empty");
-            }
-            // track status
-            new RcloneJobTracker(
-                    moduleDebounceService,
-                    copyJobEntity,
-                    rcloneService,
-                    copyJobService,
-                    syncFlowService,
-                    INTERVAL,
-                    Duration.ofMinutes(TIMEOUT)).start();
-        } catch (SyncDuoException e) {
-            log.error("handleAsyncRcloneJob failed.", e);
+    @Async("generalTaskScheduler")
+    protected void createAndStartRcloneJob(
+            SyncFlowEntity syncFlowEntity,
+            Supplier<RcloneResponse<RcloneAsyncResponse>> supplier) throws SyncDuoException {
+        // 创建 copy job
+        CopyJobEntity copyJobEntity = this.copyJobService.addCopyJob(syncFlowEntity.getSyncFlowId());
+        // 发起请求
+        RcloneResponse<RcloneAsyncResponse> rcloneResponse = supplier.get();
+        // 失败则记录数据, 并终止逻辑
+        Long copyJobId = copyJobEntity.getCopyJobId();
+        if (!rcloneResponse.isSuccess()) {
+            SyncDuoException syncDuoException = rcloneResponse.getSyncDuoException();
+            this.copyJobService.markCopyJobAsFailed(copyJobId, syncDuoException.toString());
+            throw new SyncDuoException("createAndStartRcloneJob failed.", syncDuoException);
         }
+        // 成功则启动 rclone job status 跟踪
+        int rcloneJobId = rcloneResponse.getData().getJobId();
+        String trackJobStatusKey = copyJobId.toString();
+        this.moduleDebounceService.cancelAfter(
+                trackJobStatusKey,
+                () -> trackJobStatus(copyJobId, rcloneJobId, trackJobStatusKey, syncFlowEntity),
+                INTERVAL,
+                TIMEOUT
+        );
     }
 
-    // Inner class for polling a single job
-    static class RcloneJobTracker {
-
-        private final DebounceService.ModuleDebounceService moduleDebounceService;
-
-        private final CopyJobEntity copyJobEntity;
-
-        private JobStatusResponse jobStatusResponse;
-
-        private final RcloneService rcloneService;
-
-        private final CopyJobService copyJobService;
-
-        private final SyncFlowService syncFlowService;
-
-        private final int interval;
-
-        private final Duration timeout;
-
-        private final Instant startTime;
-
-        public RcloneJobTracker(
-                DebounceService.ModuleDebounceService moduleDebounceService,
-                CopyJobEntity copyJobEntity,
-                RcloneService rcloneService,
-                CopyJobService copyJobService,
-                SyncFlowService syncFlowService,
-                int interval,
-                Duration timeout) {
-            this.moduleDebounceService = moduleDebounceService;
-            this.copyJobEntity = copyJobEntity;
-            this.rcloneService = rcloneService;
-            this.copyJobService = copyJobService;
-            this.syncFlowService = syncFlowService;
-            this.interval = interval;
-            this.timeout = timeout;
-            this.startTime = Instant.now();
+    private void trackJobStatus(long copyJobId, int rcloneJobId, String jobKey, SyncFlowEntity syncFlowEntity) {
+        // 发起请求
+        RcloneResponse<JobStatusResponse> jobStatusResponse =
+                rcloneService.getJobStatus(new JobStatusRequest(rcloneJobId));
+        // rclone 访问失败或者 job status 不是 finish, 则重试
+        if (!jobStatusResponse.isSuccess() || !jobStatusResponse.getData().isFinished()) {
+            return;
         }
-
-        public void start() {
-            scheduleTask(this::pollJobStatus);
+        // 更新数据库
+        JobStatusResponse jobStatus = jobStatusResponse.getData();
+        if (!jobStatus.isSuccess()) {
+            // rclone job 完成但失败, 刷新数据库, 更新状态和错误信息
+            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.FAIL);
+            this.copyJobService.markCopyJobAsFailed(copyJobId, jobStatus.getError());
+            return;
         }
-
-        private void scheduleTask(Runnable task) {
-            this.moduleDebounceService.schedule(task, interval);
-        }
-
-        private void pollJobStatus() {
-            Long copyJobId = copyJobEntity.getCopyJobId();
-            Long rcloneJobId = copyJobEntity.getRcloneJobId();
-            try {
-                // Check timeout
-                if (Duration.between(startTime, Instant.now()).compareTo(timeout) > 0) {
-                    this.copyJobService.markCopyJobAsFailed(
-                            copyJobId,
-                            "pollJobStatus failed. " +
-                                    "Job %s polling timed out after %s minutes".formatted(rcloneJobId, timeout));
-                    return;
-                }
-                RcloneResponse<JobStatusResponse> rcloneResponse =
-                        rcloneService.getJobStatus(new JobStatusRequest(Math.toIntExact(rcloneJobId)));
-                if (ObjectUtils.isEmpty(rcloneResponse)) {
-                    // 获取请求失败
-                    this.copyJobService.markCopyJobAsFailed(
-                            copyJobId,
-                            "pollJobStatus failed. rcloneResponse is empty."
-                    );
-                    return;
-                }
-                if (!rcloneResponse.isSuccess()) {
-                    this.copyJobService.markCopyJobAsFailed(
-                            copyJobId,
-                            "pollJobStatus failed. rcloneResponse is not success. " +
-                                    "Error is %s".formatted(rcloneResponse.getSyncDuoException())
-                    );
-                    return;
-                }
-                JobStatusResponse jobStatusResponse = rcloneResponse.getData();
-                // rclone job 没有完成, 则继续 polling
-                if (!jobStatusResponse.isFinished()) {
-                    this.scheduleTask(this::pollJobStatus);
-                    return;
-                }
-                if (jobStatusResponse.isSuccess()) {
-                    // rclone job 完成且成功, 请求 core stats, 更新数据库
-                    log.debug("get job status success {}", jobStatusResponse);
-                    this.jobStatusResponse = jobStatusResponse;
-                    this.scheduleTask(this::getCoreStatsAndUpdate);
-                } else {
-                    // rclone job 完成但失败, 刷新数据库, 更新状态和错误信息
-                    this.copyJobService.markCopyJobAsFailed(
-                            copyJobId,
-                            "pollJobStatus failed. rcloneResponse is not success." +
-                                    "Error is %s.".formatted(jobStatusResponse.getError())
-                    );
-                }
-            } catch (SyncDuoException e) {
-                log.error("pollJobStatus failed.", e);
-            }
-        }
-
-        private void getCoreStatsAndUpdate() {
-            Long copyJobId = copyJobEntity.getCopyJobId();
-            Long rcloneJobId = copyJobEntity.getRcloneJobId();
-            try {
-                CoreStatsRequest coreStatsRequest = new CoreStatsRequest(rcloneJobId);
-                log.debug("coreStatsRequest {}", coreStatsRequest);
-                RcloneResponse<CoreStatsResponse> rcloneResponse = rcloneService.getCoreStats(coreStatsRequest);
-                if (ObjectUtils.isEmpty(rcloneResponse)) {
-                    this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatusResponse, null);
-                } else if (!rcloneResponse.isSuccess()) {
-                    this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatusResponse, null);
-                } else {
-                    this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatusResponse, rcloneResponse.getData());
-                }
-                this.moduleDebounceService.debounce(
-                        copyJobId.toString(),
-                        () -> this.syncFlowService.updateSyncFlowStatus(
-                                copyJobEntity.getSyncFlowId(),
-                                SyncFlowStatusEnum.SYNC
-                        ),
-                        interval
-                );
-            } catch (SyncDuoException e) {
-                log.error("getCoreStatsAndUpdate failed.", e);
-            }
-        }
+        // 记录成功
+        this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatus, null);
+        this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
+        // 创建定时任务获取 core stats. core stats 更新较慢, 重复获取直到超时
+        String trackCoreStatsKey = String.valueOf(rcloneJobId);
+        this.moduleDebounceService.cancelAfter(
+                trackCoreStatsKey,
+                () -> {
+                    CoreStatsRequest coreStatsRequest = new CoreStatsRequest(rcloneJobId);
+                    RcloneResponse<CoreStatsResponse> rcloneResponse =
+                            this.rcloneService.getCoreStats(coreStatsRequest);
+                    if (!rcloneResponse.isSuccess()) {
+                        return;
+                    }
+                    // core stats 获取成功, 更新 copy job
+                    CoreStatsResponse coreStats = rcloneResponse.getData();
+                    this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatus, coreStats);
+                    // core stats 获取成功, 取消定时任务
+                    this.moduleDebounceService.cancel(trackCoreStatsKey);
+                },
+                INTERVAL,
+                TIMEOUT
+        );
+        // job status 获取成功, 取消定时任务
+        this.moduleDebounceService.cancel(jobKey);
     }
 }
