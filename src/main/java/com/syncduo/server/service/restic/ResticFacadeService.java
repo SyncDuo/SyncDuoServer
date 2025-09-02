@@ -3,6 +3,7 @@ package com.syncduo.server.service.restic;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
+import com.syncduo.server.model.entity.RestoreJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.restic.backup.BackupError;
 import com.syncduo.server.model.restic.backup.BackupSummary;
@@ -15,6 +16,7 @@ import com.syncduo.server.model.restic.restore.RestoreSummary;
 import com.syncduo.server.model.restic.stats.Stats;
 import com.syncduo.server.service.bussiness.DebounceService;
 import com.syncduo.server.service.db.impl.BackupJobService;
+import com.syncduo.server.service.db.impl.RestoreJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.util.EntityValidationUtil;
@@ -51,6 +53,8 @@ public class ResticFacadeService {
 
     private final RcloneFacadeService rcloneFacadeService;
 
+    private final RestoreJobService restoreJobService;
+
     @Value("${syncduo.server.restic.backupIntervalSec}")
     private long RESTIC_BACKUP_INTERVAL;
 
@@ -64,7 +68,7 @@ public class ResticFacadeService {
     private String RESTIC_RESTORE_PATH;
 
     @Value("${syncduo.server.restic.restoreAgeSec}")
-    private long RESTIC_RESTORE_AGE;
+    private long RESTIC_RESTORE_AGE_SEC;
 
     public ResticFacadeService(
             DebounceService debounceService,
@@ -72,13 +76,15 @@ public class ResticFacadeService {
             BackupJobService backupJobService,
             ThreadPoolTaskScheduler systemManagementTaskScheduler,
             SyncFlowService syncFlowService,
-            RcloneFacadeService rcloneFacadeService) {
+            RcloneFacadeService rcloneFacadeService,
+            RestoreJobService restoreJobService) {
         this.moduleDebounceService = debounceService.forModule(ResticFacadeService.class.getSimpleName());
         this.resticService = resticService;
         this.backupJobService = backupJobService;
         this.systemManagementTaskScheduler = systemManagementTaskScheduler;
         this.syncFlowService = syncFlowService;
         this.rcloneFacadeService = rcloneFacadeService;
+        this.restoreJobService = restoreJobService;
     }
 
     public void init() throws SyncDuoException {
@@ -86,11 +92,11 @@ public class ResticFacadeService {
             throw new SyncDuoException("restic init failed. " +
                     "RESTIC_PASSWORD, RESTIC_RESTORE_PATH or RESTIC_BACKUP_PATH is null.");
         }
-        if (ObjectUtils.anyNull(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE) ||
-                RESTIC_BACKUP_INTERVAL < 1 || RESTIC_RESTORE_AGE < 1) {
+        if (ObjectUtils.anyNull(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE_SEC) ||
+                RESTIC_BACKUP_INTERVAL < 1 || RESTIC_RESTORE_AGE_SEC < 1) {
             throw new SyncDuoException("restic init failed. " +
                     ("RESTIC_BACKUP_INTERVAL:%s or " +
-                            "RESTIC_RESTORE_AGE:%s is null.").formatted(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE));
+                            "RESTIC_RESTORE_AGE:%s is null.").formatted(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE_SEC));
         }
         // 检查备份目录是否已经初始化
         ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig(
@@ -207,8 +213,18 @@ public class ResticFacadeService {
         EntityValidationUtil.isSnapshotFileInfoListValid(snapshotFileInfoList);
         String snapshotId = snapshotFileInfoList.get(0).getSnapshotId();
         String[] pathStrings = snapshotFileInfoList.stream().map(SnapshotFileInfo::getPath).toArray(String[]::new);
-        // todo: 加 restore 表
+        // 创建临时目录
         String restoreTargetPathString = FilesystemUtil.createRandomEnglishFolder(this.RESTIC_RESTORE_PATH);
+        // 添加 restore job
+        RestoreJobEntity restoreJobEntity = this.restoreJobService.addRunningRestoreJob(
+                snapshotId,
+                restoreTargetPathString
+        );
+        // 创建删除 tmp folder 任务
+        this.moduleDebounceService.schedule(
+                () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
+                RESTIC_RESTORE_AGE_SEC
+        );
         ResticExecResult<RestoreSummary, RestoreError> restoreResult = this.resticService.restore(
                 this.RESTIC_BACKUP_PATH,
                 this.RESTIC_PASSWORD,
@@ -217,12 +233,17 @@ public class ResticFacadeService {
                 restoreTargetPathString
         );
         if (!restoreResult.isSuccess()) {
-            throw new SyncDuoException("restoreFromPaths failed.", restoreResult.getSyncDuoException());
+            SyncDuoException restoreException = restoreResult.getSyncDuoException();
+            this.restoreJobService.updateRestoreJobAsFailed(
+                    restoreJobEntity.getRestoreJobId(),
+                    restoreException.toString()
+            );
+            throw new SyncDuoException("restoreFiles failed.", restoreResult.getSyncDuoException());
         }
-        // 创建删除 tmp folder 任务
-        this.moduleDebounceService.schedule(
-                () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
-                RESTIC_RESTORE_AGE
+        // 记录成功日志
+        this.restoreJobService.updateRestoreJobAsSuccess(
+                restoreJobEntity.getRestoreJobId(),
+                restoreResult.getData()
         );
         // snapshot id 前八字符是 shortId
         return FilesystemUtil.zipAllFile(restoreTargetPathString, "restore-" + snapshotId.substring(0, 9));
@@ -231,8 +252,17 @@ public class ResticFacadeService {
 
     public Path restoreFile(SnapshotFileInfo snapshotFileInfo) throws SyncDuoException {
         EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
-        // todo: 加 restore 表
         String restoreTargetPathString = FilesystemUtil.createRandomEnglishFolder(this.RESTIC_RESTORE_PATH);
+        // 添加 restore job
+        RestoreJobEntity restoreJobEntity = this.restoreJobService.addRunningRestoreJob(
+                snapshotFileInfo.getSnapshotId(),
+                restoreTargetPathString
+        );
+        // 创建删除 tmp folder 任务
+        this.moduleDebounceService.schedule(
+                () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
+                RESTIC_RESTORE_AGE_SEC
+        );
         ResticExecResult<RestoreSummary, RestoreError> restoreResult = this.resticService.restore(
                 this.RESTIC_BACKUP_PATH,
                 this.RESTIC_PASSWORD,
@@ -240,13 +270,19 @@ public class ResticFacadeService {
                 new String[]{snapshotFileInfo.getPath()},
                 restoreTargetPathString
         );
+        // 记录失败日志
         if (!restoreResult.isSuccess() || restoreResult.getData().getFilesRestored().intValue() < 1) {
-            throw new SyncDuoException("restoreFile failed.", restoreResult.getSyncDuoException());
+            SyncDuoException restoreException = restoreResult.getSyncDuoException();
+            this.restoreJobService.updateRestoreJobAsFailed(
+                    restoreJobEntity.getRestoreJobId(),
+                    restoreException.toString()
+            );
+            throw new SyncDuoException("restoreFile failed.", restoreException);
         }
-        // 创建删除 tmp folder 任务
-        this.moduleDebounceService.schedule(
-                () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
-                RESTIC_RESTORE_AGE
+        // 记录成功日志
+        this.restoreJobService.updateRestoreJobAsSuccess(
+                restoreJobEntity.getRestoreJobId(),
+                restoreResult.getData()
         );
         return FilesystemUtil.getAllFile(Paths.get(restoreTargetPathString)).get(0);
     }

@@ -5,6 +5,7 @@ import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.controller.SystemInfoController;
 import com.syncduo.server.enums.BackupJobStatusEnum;
 import com.syncduo.server.enums.ResticNodeTypeEnum;
+import com.syncduo.server.enums.RestoreJobStatusEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
@@ -64,6 +65,8 @@ class SyncDuoServerApplicationTests {
 
     private final BackupJobService backupJobService;
 
+    private final RestoreJobService restoreJobService;
+
     private final SnapshotsController snapshotsController;
 
     private final SystemInfoController systemInfoController;
@@ -100,6 +103,7 @@ class SyncDuoServerApplicationTests {
             ResticFacadeService resticFacadeService,
             CopyJobService copyJobService,
             BackupJobService backupJobService,
+            RestoreJobService restoreJobService,
             SnapshotsController snapshotsController,
             SystemInfoController systemInfoController) {
         this.syncFlowController = syncFlowController;
@@ -109,6 +113,7 @@ class SyncDuoServerApplicationTests {
         this.resticFacadeService = resticFacadeService;
         this.copyJobService = copyJobService;
         this.backupJobService = backupJobService;
+        this.restoreJobService = restoreJobService;
         this.snapshotsController = snapshotsController;
         this.systemInfoController = systemInfoController;
     }
@@ -175,6 +180,12 @@ class SyncDuoServerApplicationTests {
                 assert headersString.contains(MediaType.APPLICATION_OCTET_STREAM.toString());
             }
         }
+        // 验证 restore 数据库记录是否生成
+        List<RestoreJobEntity> restoreJobEntities = this.restoreJobService.list();
+        assert CollectionUtils.isNotEmpty(restoreJobEntities);
+        for (RestoreJobEntity restoreJobEntity : restoreJobEntities) {
+            assert restoreJobEntity.getRestoreJobStatus().equals(RestoreJobStatusEnum.SUCCESS.name());
+        }
         // 验证临时文件是否删除
         waitSec(restoreAgeSec * 2);
         assert CollectionUtils.isEmpty(FilesystemUtil.getSubFolders(restorePath));
@@ -207,6 +218,12 @@ class SyncDuoServerApplicationTests {
         String headersString = response.getHeaders().toString();
         assert headersString.contains(HttpHeaders.CONTENT_DISPOSITION) && headersString.contains("zip");
         assert headersString.contains(MediaType.APPLICATION_OCTET_STREAM.toString());
+        // 验证 restore 数据库记录是否生成
+        List<RestoreJobEntity> restoreJobEntities = this.restoreJobService.list();
+        assert CollectionUtils.isNotEmpty(restoreJobEntities);
+        for (RestoreJobEntity restoreJobEntity : restoreJobEntities) {
+            assert restoreJobEntity.getRestoreJobStatus().equals(RestoreJobStatusEnum.SUCCESS.name());
+        }
         // 验证临时文件是否删除
         waitSec(restoreAgeSec * 2);
         assert CollectionUtils.isEmpty(FilesystemUtil.getSubFolders(restorePath));
@@ -488,6 +505,13 @@ class SyncDuoServerApplicationTests {
         if (CollectionUtils.isNotEmpty(backupJobEntities)) {
             this.backupJobService.removeBatchByIds(
                     backupJobEntities.stream().map(BackupJobEntity::getBackupJobId).collect(Collectors.toList())
+            );
+        }
+        // restore job truncate
+        List<RestoreJobEntity> restoreJobEntities = this.restoreJobService.list();
+        if (CollectionUtils.isNotEmpty(restoreJobEntities)) {
+            this.restoreJobService.removeBatchByIds(
+                    restoreJobEntities.stream().map(RestoreJobEntity::getRestoreJobId).collect(Collectors.toList())
             );
         }
         log.info("truncate all table");
