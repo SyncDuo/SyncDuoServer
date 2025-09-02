@@ -38,7 +38,7 @@ public class SyncFlowController {
 
     private final RcloneFacadeService rcloneFacadeService;
 
-    @Value("${syncduo.server.system.syncflow.delay.delete.sec}")
+    @Value("${syncduo.server.system.syncflowDelayDeleteSec}")
     private long delayDeleteSec;
 
     @Autowired

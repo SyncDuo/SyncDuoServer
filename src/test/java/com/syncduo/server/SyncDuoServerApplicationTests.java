@@ -2,15 +2,19 @@ package com.syncduo.server;
 
 import com.syncduo.server.controller.SnapshotsController;
 import com.syncduo.server.controller.SyncFlowController;
+import com.syncduo.server.controller.SystemInfoController;
 import com.syncduo.server.enums.BackupJobStatusEnum;
 import com.syncduo.server.enums.ResticNodeTypeEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotsResponse;
 import com.syncduo.server.model.api.snapshots.SyncFlowWithSnapshots;
 import com.syncduo.server.model.api.syncflow.*;
+import com.syncduo.server.model.api.systeminfo.SystemInfo;
+import com.syncduo.server.model.api.systeminfo.SystemSetting;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.service.db.impl.*;
@@ -62,21 +66,23 @@ class SyncDuoServerApplicationTests {
 
     private final SnapshotsController snapshotsController;
 
+    private final SystemInfoController systemInfoController;
+
     private SyncFlowEntity syncFlowEntity;
 
-    @Value("${syncduo.server.system.syncflow.delay.delete.sec}")
+    @Value("${syncduo.server.system.syncflowDelayDeleteSec}")
     private long delayDeleteSec;
 
-    @Value("${syncduo.server.test.source.folder}")
+    @Value("${syncduo.server.test.sourceFolder}")
     private String sourceFolderPath;
 
-    @Value("${syncduo.server.test.content.parent.folder}")
+    @Value("${syncduo.server.test.contentParentFolder}")
     private String contentFolderParentPath;
 
-    @Value("${syncduo.server.restic.backup.path}")
+    @Value("${syncduo.server.restic.backupPath}")
     private String backupPath;
 
-    @Value("${syncduo.server.restic.restore.path}")
+    @Value("${syncduo.server.restic.restorePath}")
     private String restorePath;
 
     // delay 函数延迟的时间, 单位"秒"
@@ -91,7 +97,8 @@ class SyncDuoServerApplicationTests {
             ResticFacadeService resticFacadeService,
             CopyJobService copyJobService,
             BackupJobService backupJobService,
-            SnapshotsController snapshotsController) {
+            SnapshotsController snapshotsController,
+            SystemInfoController systemInfoController) {
         this.syncFlowController = syncFlowController;
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
@@ -100,6 +107,39 @@ class SyncDuoServerApplicationTests {
         this.copyJobService = copyJobService;
         this.backupJobService = backupJobService;
         this.snapshotsController = snapshotsController;
+        this.systemInfoController = systemInfoController;
+    }
+
+    @Test
+    void ShouldReturnTrueWhenGettingSystemSettings() {
+        SyncDuoHttpResponse<SystemSetting> result = this.systemInfoController.getSystemSettings();
+        assert result.getStatusCode() == 200;
+        SystemSetting systemSetting = result.getData();
+        assert ObjectUtils.isNotEmpty(systemSetting);
+        assert ObjectUtils.allNotNull(
+                systemSetting.getSystem(),
+                systemSetting.getRclone(),
+                systemSetting.getRestic());
+    }
+
+    @Test
+    void ShouldReturnTrueWhenGettingSystemInfo() {
+        // 创建 syncflow
+        createSyncFlow(null);
+        SyncDuoHttpResponse<SystemInfo> result = this.systemInfoController.getSystemInfo();
+        assert result.getStatusCode() == 200;
+        SystemInfo systemInfo = result.getData();
+        assert ObjectUtils.isNotEmpty(systemInfo);
+        assert ObjectUtils.allNotNull(
+                systemInfo.getFolderStats(),
+                systemInfo.getWatchers(),
+                systemInfo.getSyncFlowNumber()
+        );
+        assert !StringUtils.isAnyBlank(
+                systemInfo.getFileCopyRate(),
+                systemInfo.getUptime(),
+                systemInfo.getHostName()
+        );
     }
 
     @Test

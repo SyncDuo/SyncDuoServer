@@ -5,6 +5,7 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.global.FolderStats;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.systeminfo.SystemInfo;
+import com.syncduo.server.model.api.systeminfo.SystemSetting;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsResponse;
 import com.syncduo.server.service.db.impl.SyncFlowService;
@@ -34,14 +35,23 @@ public class SystemInfoController {
 
     private final RcloneFacadeService rcloneFacadeService;
 
+    private final SystemSetting systemSetting;
+
     @Autowired
     public SystemInfoController(
             SyncFlowService syncFlowService,
             FolderWatcher folderWatcher,
-            RcloneFacadeService rcloneFacadeService) {
+            RcloneFacadeService rcloneFacadeService,
+            SystemSetting systemSetting) {
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
+        this.systemSetting = systemSetting;
+    }
+
+    @GetMapping("/get-system-settings")
+    public SyncDuoHttpResponse<SystemSetting> getSystemSettings() {
+        return SyncDuoHttpResponse.success(systemSetting);
     }
 
     @GetMapping("/get-system-info")

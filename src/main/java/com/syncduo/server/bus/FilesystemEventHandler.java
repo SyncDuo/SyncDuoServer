@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Path;
-import java.time.Instant;
 import java.util.concurrent.*;
 
 
@@ -20,7 +18,7 @@ import java.util.concurrent.*;
 @Slf4j
 public class FilesystemEventHandler {
 
-    @Value("${syncduo.server.system.event.debounce.window.sec:5}")
+    @Value("${syncduo.server.system.eventDebounceWindowSec:5}")
     private int DEBOUNCE_WINDOW;
 
     private final DebounceService.ModuleDebounceService moduleDebounceService;

@@ -68,7 +68,7 @@ public class SystemManagementService {
     // initial delay 5 minutes, fixDelay 30 minutes. unit is millisecond
     @Scheduled(
             initialDelay = 1000 * 60 * 5,
-            fixedDelayString = "${syncduo.server.system.check.syncflow.insync.interval.millis:1800000}",
+            fixedDelayString = "${syncduo.server.system.checkSyncflowStatusIntervalMillis:1800000}",
             scheduler = "systemManagementTaskScheduler"
     )
     private void periodicalCheckSyncFlowStatus() {

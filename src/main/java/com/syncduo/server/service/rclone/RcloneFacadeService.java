@@ -31,8 +31,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -40,10 +38,10 @@ import java.util.function.Supplier;
 @Slf4j
 public class RcloneFacadeService {
 
-    @Value("${syncduo.server.rclone.job.status.track.timeout.sec:5}")
+    @Value("${syncduo.server.rclone.jobStatusTrackTimeoutSec:5}")
     private int TIMEOUT;
 
-    @Value("${syncduo.server.rclone.job.status.track.interval.sec:5}")
+    @Value("${syncduo.server.rclone.jobStatusTrackIntervalSec:5}")
     private int INTERVAL;
 
     private final DebounceService.ModuleDebounceService moduleDebounceService;

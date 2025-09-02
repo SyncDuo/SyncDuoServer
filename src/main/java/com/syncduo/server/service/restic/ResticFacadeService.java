@@ -45,19 +45,19 @@ public class ResticFacadeService {
 
     private final SyncFlowService syncFlowService;
 
-    @Value("${syncduo.server.restic.backup.interval.sec}")
+    @Value("${syncduo.server.restic.backupIntervalSec}")
     private long RESTIC_BACKUP_INTERVAL;
 
-    @Value("${syncduo.server.restic.backup.password}")
+    @Value("${syncduo.server.restic.backupPassword}")
     private String RESTIC_PASSWORD;
 
-    @Value("${syncduo.server.restic.backup.path}")
+    @Value("${syncduo.server.restic.backupPath}")
     private String RESTIC_BACKUP_PATH;
 
-    @Value("${syncduo.server.restic.restore.path}")
+    @Value("${syncduo.server.restic.restorePath}")
     private String RESTIC_RESTORE_PATH;
 
-    @Value("${syncduo.server.restic.restore.age.sec}")
+    @Value("${syncduo.server.restic.restoreAgeSec}")
     private long RESTIC_RESTORE_AGE;
 
     public ResticFacadeService(

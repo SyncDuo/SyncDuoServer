@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class FolderWatcher implements DisposableBean {
 
-    @Value("${syncduo.server.system.folder.watcher.interval.millis:5000}")
+    @Value("${syncduo.server.system.folderWatcherIntervalMillis:5000}")
     private int interval;
 
     private final FilesystemEventHandler filesystemEventHandler;

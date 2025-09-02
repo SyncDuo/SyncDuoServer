@@ -9,13 +9,13 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class RcloneRestClientConfig {
 
-    @Value("${syncduo.server.rclone.http.base.url}")
+    @Value("${syncduo.server.rclone.httpBaseUrl}")
     private String BASE_URL;
 
-    @Value("${syncduo.server.rclone.http.user}")
+    @Value("${syncduo.server.rclone.httpUser}")
     private String USER;
 
-    @Value("${syncduo.server.rclone.http.password}")
+    @Value("${syncduo.server.rclone.httpPassword}")
     private String PASSWORD;
 
     @Bean
