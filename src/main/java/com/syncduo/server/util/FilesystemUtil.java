@@ -83,7 +83,7 @@ public class FilesystemUtil {
                 }
             });
         } catch (IOException e) {
-            throw new SyncDuoException("getFolderInfo failed. exception is " + e.getMessage());
+            throw new SyncDuoException("getFolderInfo failed.", e);
         }
 
         return Arrays.asList(fileCount.get(), subFolderCount.get(), totalSize.get());
@@ -111,7 +111,8 @@ public class FilesystemUtil {
         if (Files.exists(folder) && Files.isDirectory(folder)) {
             return folder;
         } else {
-            throw new SyncDuoException(("isFolderPathValid failed. folderPathString doesn't exist or is not folder." +
+            throw new SyncDuoException(("isFolderPathValid failed. " +
+                    "folderPathString doesn't exist or is not folder." +
                     "folderPathString is %s").formatted(folderPathString));
         }
     }
@@ -133,7 +134,9 @@ public class FilesystemUtil {
                 }
             }
         } catch (IOException e) {
-            throw new SyncDuoException("getSubfolders failed. folderPathString is %s".formatted(folderPathString), e);
+            throw new SyncDuoException(("getSubfolders failed. " +
+                    "folderPathString is %s").formatted(folderPathString),
+                    e);
         }
         return result;
     }
@@ -219,5 +222,34 @@ public class FilesystemUtil {
             throw new SyncDuoException("zipAllFile failed.", e);
         }
         return zipFile;
+    }
+
+    /**
+     * 删除指定路径的文件夹及其所有内容
+     * @param folderPathString 要删除的文件夹路径
+     * @throws SyncDuoException 如果删除过程中发生错误
+     */
+    public static void deleteFolder(String folderPathString) throws SyncDuoException {
+        Path folderPath = isFolderPathValid(folderPathString);
+        // 使用Files.walkFileTree遍历并删除文件夹内容
+        try {
+            Files.walkFileTree(folderPath, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    // 删除文件
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    // 删除目录（在访问完目录内容后执行）
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (Exception e) {
+            throw new SyncDuoException("deleteFolder failed.", e);
+        }
     }
 }

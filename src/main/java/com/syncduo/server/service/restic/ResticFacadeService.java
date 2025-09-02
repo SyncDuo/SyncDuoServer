@@ -13,8 +13,10 @@ import com.syncduo.server.model.restic.ls.Node;
 import com.syncduo.server.model.restic.restore.RestoreError;
 import com.syncduo.server.model.restic.restore.RestoreSummary;
 import com.syncduo.server.model.restic.stats.Stats;
+import com.syncduo.server.service.bussiness.DebounceService;
 import com.syncduo.server.service.db.impl.BackupJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
+import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,8 @@ import java.util.List;
 @Service
 public class ResticFacadeService {
 
+    private final DebounceService.ModuleDebounceService moduleDebounceService;
+
     private final ResticService resticService;
 
     private final BackupJobService backupJobService;
@@ -44,6 +48,8 @@ public class ResticFacadeService {
     private final ThreadPoolTaskScheduler systemManagementTaskScheduler;
 
     private final SyncFlowService syncFlowService;
+
+    private final RcloneFacadeService rcloneFacadeService;
 
     @Value("${syncduo.server.restic.backupIntervalSec}")
     private long RESTIC_BACKUP_INTERVAL;
@@ -61,22 +67,22 @@ public class ResticFacadeService {
     private long RESTIC_RESTORE_AGE;
 
     public ResticFacadeService(
+            DebounceService debounceService,
             ResticService resticService,
             BackupJobService backupJobService,
             ThreadPoolTaskScheduler systemManagementTaskScheduler,
-            SyncFlowService syncFlowService) {
+            SyncFlowService syncFlowService,
+            RcloneFacadeService rcloneFacadeService) {
+        this.moduleDebounceService = debounceService.forModule(ResticFacadeService.class.getSimpleName());
         this.resticService = resticService;
         this.backupJobService = backupJobService;
         this.systemManagementTaskScheduler = systemManagementTaskScheduler;
         this.syncFlowService = syncFlowService;
+        this.rcloneFacadeService = rcloneFacadeService;
     }
 
     public void init() throws SyncDuoException {
-        if (StringUtils.isAnyBlank(
-                RESTIC_PASSWORD,
-                RESTIC_RESTORE_PATH,
-                RESTIC_BACKUP_PATH
-        )) {
+        if (StringUtils.isAnyBlank(RESTIC_PASSWORD, RESTIC_RESTORE_PATH, RESTIC_BACKUP_PATH)) {
             throw new SyncDuoException("restic init failed. " +
                     "RESTIC_PASSWORD, RESTIC_RESTORE_PATH or RESTIC_BACKUP_PATH is null.");
         }
@@ -101,7 +107,8 @@ public class ResticFacadeService {
                 throw new SyncDuoException("init failed.", resticExecResult.getSyncDuoException());
             }
         }
-        // 检查 restore path 是否存在 todo:
+        // 检查 restore path 是否存在
+        rcloneFacadeService.isSourceFolderExist(RESTIC_RESTORE_PATH);
         // 启动定时任务
         this.systemManagementTaskScheduler.scheduleWithFixedDelay(
                 this::periodicalBackup,
@@ -212,6 +219,11 @@ public class ResticFacadeService {
         if (!restoreResult.isSuccess()) {
             throw new SyncDuoException("restoreFromPaths failed.", restoreResult.getSyncDuoException());
         }
+        // 创建删除 tmp folder 任务
+        this.moduleDebounceService.schedule(
+                () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
+                RESTIC_RESTORE_AGE
+        );
         // snapshot id 前八字符是 shortId
         return FilesystemUtil.zipAllFile(restoreTargetPathString, "restore-" + snapshotId.substring(0, 9));
     }
@@ -231,6 +243,11 @@ public class ResticFacadeService {
         if (!restoreResult.isSuccess() || restoreResult.getData().getFilesRestored().intValue() < 1) {
             throw new SyncDuoException("restoreFile failed.", restoreResult.getSyncDuoException());
         }
+        // 创建删除 tmp folder 任务
+        this.moduleDebounceService.schedule(
+                () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
+                RESTIC_RESTORE_AGE
+        );
         return FilesystemUtil.getAllFile(Paths.get(restoreTargetPathString)).get(0);
     }
 }

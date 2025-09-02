@@ -85,6 +85,9 @@ class SyncDuoServerApplicationTests {
     @Value("${syncduo.server.restic.restorePath}")
     private String restorePath;
 
+    @Value("${syncduo.server.restic.restoreAgeSec}")
+    private long restoreAgeSec;
+
     // delay 函数延迟的时间, 单位"秒"
     private static final int DELAY_UNIT = 18;
 
@@ -172,6 +175,9 @@ class SyncDuoServerApplicationTests {
                 assert headersString.contains(MediaType.APPLICATION_OCTET_STREAM.toString());
             }
         }
+        // 验证临时文件是否删除
+        waitSec(restoreAgeSec * 2);
+        assert CollectionUtils.isEmpty(FilesystemUtil.getSubFolders(restorePath));
     }
 
     @Test
@@ -201,6 +207,9 @@ class SyncDuoServerApplicationTests {
         String headersString = response.getHeaders().toString();
         assert headersString.contains(HttpHeaders.CONTENT_DISPOSITION) && headersString.contains("zip");
         assert headersString.contains(MediaType.APPLICATION_OCTET_STREAM.toString());
+        // 验证临时文件是否删除
+        waitSec(restoreAgeSec * 2);
+        assert CollectionUtils.isEmpty(FilesystemUtil.getSubFolders(restorePath));
     }
 
     @Test
@@ -292,7 +301,7 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenDeleteSyncFlow() throws IOException, SyncDuoException, InterruptedException {
+    void ShouldReturnTrueWhenDeleteSyncFlow() throws IOException, SyncDuoException {
         // 创建 syncflow
         createSyncFlow("[\"txt\"]");
         waitAllFileHandle();
@@ -300,7 +309,7 @@ class SyncDuoServerApplicationTests {
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
         deleteSyncFlowRequest.setSyncFlowId(syncFlowEntity.getSyncFlowId().toString());
         this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
-        Thread.sleep(delayDeleteSec * 2);
+        waitSec(delayDeleteSec * 2);
         assert ObjectUtils.isEmpty(this.syncFlowService.getBySyncFlowId(syncFlowEntity.getSyncFlowId()));
         // 源文件夹创建文件
         FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
@@ -404,6 +413,14 @@ class SyncDuoServerApplicationTests {
         this.folderWatcher.manualCheckFolder(folderPath);
         try {
             Thread.sleep(1000 * DELAY_UNIT);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    void waitSec(long sec) throws SyncDuoException {
+        try {
+            Thread.sleep(sec * 1000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

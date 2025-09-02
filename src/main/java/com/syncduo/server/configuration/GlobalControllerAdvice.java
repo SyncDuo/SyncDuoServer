@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalControllerAdvice {
     @ExceptionHandler(SyncDuoException.class)
     public ResponseEntity<SyncDuoHttpResponse<Void>> handleSyncDuoException(SyncDuoException e) {
-        log.warn(e.getMessage(), e);
+        log.warn("controller failed", e);
         SyncDuoHttpResponse<Void> syncDuoHttpResponse = SyncDuoHttpResponse.fail(e);
         return ResponseEntity.status(syncDuoHttpResponse.getStatusCode()).body(syncDuoHttpResponse);
     }

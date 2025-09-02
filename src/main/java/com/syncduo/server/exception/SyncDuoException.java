@@ -16,6 +16,11 @@ public class SyncDuoException extends RuntimeException {
         this.status = status;
     }
 
+    public SyncDuoException(HttpStatus status, Throwable cause) {
+        super(cause);
+        this.status = status;
+    }
+
     public SyncDuoException(HttpStatus status, String message, Throwable cause) {
         super(message, cause);
         this.status = status;
@@ -40,7 +45,9 @@ public class SyncDuoException extends RuntimeException {
         // 终止条件
         if (throwable == null || depth > 20) return;
         // <exception name> : <exception message> -> <next>
-        sb.append("%s : %s -> ".formatted(throwable.getClass().getSimpleName(), throwable.getMessage()));
+        sb.append("%s : %s -> ".formatted(
+                throwable.getClass().getSimpleName(),
+                throwable instanceof SyncDuoException ? throwable.getMessage() : throwable.toString()));
         // 递归处理cause
         buildMessageChain(throwable.getCause(), sb, depth + 1);
     }

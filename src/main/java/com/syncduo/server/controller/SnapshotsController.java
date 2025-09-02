@@ -165,7 +165,7 @@ public class SnapshotsController {
         try {
             EntityValidationUtil.isSnapshotFileInfoListValid(snapshotFileInfoList);
         } catch (SyncDuoException e) {
-            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "downloadSnapshotFiles failed. " + e.getMessage());
+            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "downloadSnapshotFiles failed. ", e);
         }
         try {
             Path zipFile = this.resticFacadeService.restoreFiles(snapshotFileInfoList);
@@ -177,8 +177,7 @@ public class SnapshotsController {
                     .body(new UrlResource(zipFile.toUri()));
         } catch (Exception e) {
             throw new SyncDuoException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "downloadSnapshotFiles failed. Ex: " + e.getMessage());
+                    HttpStatus.INTERNAL_SERVER_ERROR, "downloadSnapshotFiles failed.", e);
         }
     }
 
@@ -191,7 +190,7 @@ public class SnapshotsController {
                 throw new SyncDuoException("downloadSnapshotFile failed. snapshotFileInfo is not a file.");
             }
         } catch (SyncDuoException e) {
-            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "downloadSnapshotFile failed. " + e.getMessage());
+            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "downloadSnapshotFile failed. ", e);
         }
         try {
             Path restoreFile = this.resticFacadeService.restoreFile(snapshotFileInfo);
@@ -204,7 +203,8 @@ public class SnapshotsController {
         } catch (Exception e) {
             throw new SyncDuoException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    "downloadSnapshotFile failed. Ex: " + e.getMessage());
+                    "downloadSnapshotFile failed. ",
+                    e);
         }
     }
 

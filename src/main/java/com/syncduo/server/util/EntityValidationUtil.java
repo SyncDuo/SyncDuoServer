@@ -70,7 +70,7 @@ public class EntityValidationUtil {
             JsonUtil.deserializeStringToList(filterCriteria);
         } catch (SyncDuoException e) {
             String errorMessage = "isCreateSyncFlowRequestValid failed. can't deserialize string to list. " +
-                    "filterCriteria is %s".formatted(filterCriteria) + " error is " + e.getMessage();
+                    "filterCriteria is %s".formatted(filterCriteria);
             throw new SyncDuoException(errorMessage, e);
         }
     }
