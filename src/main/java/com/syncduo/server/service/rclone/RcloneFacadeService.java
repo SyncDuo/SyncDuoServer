@@ -65,7 +65,7 @@ public class RcloneFacadeService {
     }
 
     public void init() throws SyncDuoException {
-        // todo:
+        this.getCoreStats();
     }
 
     public CoreStatsResponse getCoreStats() throws SyncDuoException {

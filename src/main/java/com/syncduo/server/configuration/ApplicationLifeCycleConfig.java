@@ -4,6 +4,7 @@ package com.syncduo.server.configuration;
 import com.syncduo.server.bus.FilesystemEventHandler;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.service.bussiness.SystemManagementService;
+import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -24,18 +25,23 @@ public class ApplicationLifeCycleConfig {
 
     private final ResticFacadeService resticFacadeService;
 
+    private final RcloneFacadeService rcloneFacadeService;
+
     @Autowired
     public ApplicationLifeCycleConfig(
             SystemManagementService systemManagementService,
             FilesystemEventHandler filesystemEventHandler,
-            ResticFacadeService resticFacadeService) {
+            ResticFacadeService resticFacadeService,
+            RcloneFacadeService rcloneFacadeService) {
         this.systemManagementService = systemManagementService;
         this.filesystemEventHandler = filesystemEventHandler;
         this.resticFacadeService = resticFacadeService;
+        this.rcloneFacadeService = rcloneFacadeService;
     }
 
     @PostConstruct
     public void startUp() throws SyncDuoException {
+        this.rcloneFacadeService.init();
         this.resticFacadeService.init();
         // 系统启动扫描
         if ("prod".equals(activeProfile)) {
