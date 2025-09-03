@@ -3,9 +3,8 @@ package com.syncduo.server;
 import com.syncduo.server.controller.SnapshotsController;
 import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.controller.SystemInfoController;
-import com.syncduo.server.enums.BackupJobStatusEnum;
+import com.syncduo.server.enums.CommonStatus;
 import com.syncduo.server.enums.ResticNodeTypeEnum;
-import com.syncduo.server.enums.RestoreJobStatusEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
@@ -184,7 +183,7 @@ class SyncDuoServerApplicationTests {
         List<RestoreJobEntity> restoreJobEntities = this.restoreJobService.list();
         assert CollectionUtils.isNotEmpty(restoreJobEntities);
         for (RestoreJobEntity restoreJobEntity : restoreJobEntities) {
-            assert restoreJobEntity.getRestoreJobStatus().equals(RestoreJobStatusEnum.SUCCESS.name());
+            assert restoreJobEntity.getRestoreJobStatus().equals(CommonStatus.SUCCESS.name());
         }
         // 验证临时文件是否删除
         waitSec(restoreAgeSec * 2);
@@ -222,7 +221,7 @@ class SyncDuoServerApplicationTests {
         List<RestoreJobEntity> restoreJobEntities = this.restoreJobService.list();
         assert CollectionUtils.isNotEmpty(restoreJobEntities);
         for (RestoreJobEntity restoreJobEntity : restoreJobEntities) {
-            assert restoreJobEntity.getRestoreJobStatus().equals(RestoreJobStatusEnum.SUCCESS.name());
+            assert restoreJobEntity.getRestoreJobStatus().equals(CommonStatus.SUCCESS.name());
         }
         // 验证临时文件是否删除
         waitSec(restoreAgeSec * 2);
@@ -282,7 +281,7 @@ class SyncDuoServerApplicationTests {
         assert CollectionUtils.isNotEmpty(result);
         for (BackupJobEntity backupJobEntity : result) {
             log.debug("backJobEntity is {}", backupJobEntity.toString());
-            assert backupJobEntity.getBackupJobStatus().equals(BackupJobStatusEnum.SUCCESS.name());
+            assert backupJobEntity.getBackupJobStatus().equals(CommonStatus.SUCCESS.name());
         }
         // 手动触发, snapshot 不应该被创建
         this.resticFacadeService.manualBackup(this.syncFlowEntity);

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
@@ -25,15 +26,22 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class ResticService {
 
-    public ResticExecResult<Init, Void> init(
-            String backupStoragePath,
-            String backupPassword) throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(backupStoragePath);
+    @Value("${syncduo.server.restic.backupPassword}")
+    private String RESTIC_PASSWORD;
+
+    @Value("${syncduo.server.restic.backupPath}")
+    private String RESTIC_BACKUP_PATH;
+
+    // create restic repository
+    public ResticExecResult<Init, Void> init() throws SyncDuoException {
+        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
+
+
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("init");
         ResticParser<Init, Void> resticParser = new ResticParser<>(
-                backupPassword,
-                backupStoragePath,
+                RESTIC_PASSWORD,
+                RESTIC_BACKUP_PATH,
                 commandLine
         );
         CompletableFuture<ResticExecResult<Init, Void>> future = resticParser.execute(
@@ -50,19 +58,16 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<BackupSummary, BackupError> backup(
-            String backupStoragePath,
-            String backupPassword,
-            String folderPathString) throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(backupStoragePath);
+    public ResticExecResult<BackupSummary, BackupError> backup(String folderPathString) throws SyncDuoException {
+        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
         FilesystemUtil.isFolderPathValid(folderPathString);
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("backup");
         commandLine.addArgument(".");
         commandLine.addArgument("--skip-if-unchanged");
         ResticParser<BackupSummary, BackupError> resticParser = new ResticParser<>(
-                backupPassword,
-                backupStoragePath,
+                RESTIC_PASSWORD,
+                RESTIC_BACKUP_PATH,
                 commandLine
         );
         CompletableFuture<ResticExecResult<BackupSummary, BackupError>> future = resticParser.execute(
@@ -79,17 +84,15 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<Stats, Void> stats(
-            String backupStoragePath,
-            String backupPassword) throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(backupStoragePath);
+    public ResticExecResult<Stats, Void> stats() throws SyncDuoException {
+        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("stats");
         commandLine.addArgument("--mode");
         commandLine.addArgument("blobs-per-file");
         ResticParser<Stats, Void> resticParser = new ResticParser<>(
-                backupPassword,
-                backupStoragePath,
+                RESTIC_PASSWORD,
+                RESTIC_BACKUP_PATH,
                 commandLine
         );
         CompletableFuture<ResticExecResult<Stats, Void>> future = resticParser.execute(
@@ -106,16 +109,14 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<CatConfig, Void> catConfig(
-            String backupStoragePath,
-            String backupPassword) throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(backupStoragePath);
+    public ResticExecResult<CatConfig, Void> catConfig() throws SyncDuoException {
+        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("cat");
         commandLine.addArgument("config");
         ResticParser<CatConfig, Void> resticParser = new ResticParser<>(
-                backupPassword,
-                backupStoragePath,
+                RESTIC_PASSWORD,
+                RESTIC_BACKUP_PATH,
                 commandLine
         );
         CompletableFuture<ResticExecResult<CatConfig, Void>> future = resticParser.execute(
@@ -132,12 +133,8 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<Node, Void> ls(
-            String backupStoragePath,
-            String backupPassword,
-            String snapshotId,
-            String pathString) throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(backupStoragePath);
+    public ResticExecResult<Node, Void> ls(String snapshotId, String pathString) throws SyncDuoException {
+        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
         if (StringUtils.isBlank(snapshotId)) {
             throw new SyncDuoException("ls failed. snapshotsId is null");
         }
@@ -148,8 +145,8 @@ public class ResticService {
             commandLine.addArgument(pathString);
         }
         ResticParser<Node, Void> resticParser = new ResticParser<>(
-                backupPassword,
-                backupStoragePath,
+                RESTIC_PASSWORD,
+                RESTIC_BACKUP_PATH,
                 commandLine
         );
         CompletableFuture<ResticExecResult<Node, Void>> future = resticParser.execute(
@@ -167,8 +164,6 @@ public class ResticService {
     }
 
     public ResticExecResult<RestoreSummary, RestoreError> restore(
-            String backupStoragePath,
-            String backupPassword,
             String snapshotId,
             String[] pathStrings,
             String targetString) throws SyncDuoException {
@@ -191,8 +186,8 @@ public class ResticService {
             restoreCommandLine.addArgument(filePathString);
         }
         ResticParser<RestoreSummary, RestoreError> resticParser = new ResticParser<>(
-                backupPassword,
-                backupStoragePath,
+                RESTIC_PASSWORD,
+                RESTIC_BACKUP_PATH,
                 restoreCommandLine
         );
         CompletableFuture<ResticExecResult<RestoreSummary, RestoreError>> future = resticParser.execute(

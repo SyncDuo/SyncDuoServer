@@ -1,6 +1,7 @@
 package com.syncduo.server.enums;
 
-import com.syncduo.server.exception.SyncDuoException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -9,19 +10,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public enum SyncFlowStatusEnum {
+@AllArgsConstructor
+@Getter
+public enum SyncFlowStatusEnum implements Status {
 
-    FAIL,
+    FAILED(CommonStatus.FAILED.getName()),
 
-    RUNNING,
+    RUNNING(CommonStatus.RUNNING.getName()),
 
-    SYNC,
+    SYNC("SYNC"),
 
-    PAUSE,
+    PAUSE("PAUSE"),
 
-    RESUME, // RESUME DOES NOT STORE IN DB, BUT CONVERT TO RESUME OPERATION
+    RESUME("RESUME"), // RESUME DOES NOT STORE IN DB, BUT CONVERT TO RESUME OPERATION
 
-    RESCAN; // RESCAN DOES NOT STORE IN DB, BUT CONVERT TO RESCAN OPERATION
+    RESCAN("RESCAN"); // RESCAN DOES NOT STORE IN DB, BUT CONVERT TO RESCAN OPERATION
+
+    private final String name;
 
     private static final Map<SyncFlowStatusEnum, Set<SyncFlowStatusEnum>> VALID_TRANSITIONS = Map.of(
             RUNNING, Set.of(RUNNING, SYNC, PAUSE),

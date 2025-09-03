@@ -2,8 +2,7 @@ package com.syncduo.server.service.db.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.syncduo.server.enums.BackupJobStatusEnum;
-import com.syncduo.server.enums.CopyJobStatusEnum;
+import com.syncduo.server.enums.CommonStatus;
 import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.BackupJobMapper;
@@ -28,7 +27,7 @@ public class BackupJobService
             long syncFlowId,
             BackupSummary backupSummary) throws SyncDuoException {
         BackupJobEntity backupJobEntity = new BackupJobEntity();
-        backupJobEntity.setBackupJobStatus(BackupJobStatusEnum.SUCCESS.name());
+        backupJobEntity.setBackupJobStatus(CommonStatus.SUCCESS.name());
         backupJobEntity.setSyncFlowId(syncFlowId);
         backupJobEntity.setSuccessMessage(backupSummary.toString());
         // snapshot 没有 create, 则直接记录为 success
@@ -64,7 +63,7 @@ public class BackupJobService
         BackupJobEntity backupJobEntity = new BackupJobEntity();
         // 设置失败状态和失败日志
         backupJobEntity.setSyncFlowId(syncFlowId);
-        backupJobEntity.setBackupJobStatus(CopyJobStatusEnum.FAILED.name());
+        backupJobEntity.setBackupJobStatus(CommonStatus.FAILED.name());
         backupJobEntity.setErrorMessage(errorMessage);
         // 保存
         boolean saved = this.save(backupJobEntity);
@@ -86,7 +85,7 @@ public class BackupJobService
         LambdaQueryWrapper<BackupJobEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.isNotNull(BackupJobEntity::getSnapshotId);
         queryWrapper.le(BackupJobEntity::getLastUpdatedTime, current.getLastUpdatedTime());
-        queryWrapper.eq(BackupJobEntity::getBackupJobStatus, BackupJobStatusEnum.SUCCESS.name());
+        queryWrapper.eq(BackupJobEntity::getBackupJobStatus, CommonStatus.SUCCESS.name());
         queryWrapper.eq(BackupJobEntity::getSyncFlowId, current.getSyncFlowId());
         queryWrapper.eq(BackupJobEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
 

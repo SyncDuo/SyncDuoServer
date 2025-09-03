@@ -2,14 +2,11 @@ package com.syncduo.server.service.db.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.syncduo.server.enums.RestoreJobStatusEnum;
-import com.syncduo.server.enums.CopyJobStatusEnum;
+import com.syncduo.server.enums.CommonStatus;
 import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.RestoreJobMapper;
-import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.entity.RestoreJobEntity;
-import com.syncduo.server.model.restic.backup.BackupSummary;
 import com.syncduo.server.model.restic.restore.RestoreSummary;
 import com.syncduo.server.service.db.IRestoreJobService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +15,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 @Service
@@ -31,7 +27,7 @@ public class RestoreJobService
             String snapshotId,
             String restoreRootPath) throws SyncDuoException {
         RestoreJobEntity restoreJobEntity = new RestoreJobEntity();
-        restoreJobEntity.setRestoreJobStatus(RestoreJobStatusEnum.RUNNING.name());
+        restoreJobEntity.setRestoreJobStatus(CommonStatus.RUNNING.name());
         restoreJobEntity.setSnapshotId(snapshotId);
         restoreJobEntity.setRestoreRootPath(restoreRootPath);
         // 保存
@@ -51,7 +47,7 @@ public class RestoreJobService
             return;
         }
         // 设置失败状态和失败日志
-        dbResult.setRestoreJobStatus(CopyJobStatusEnum.SUCCESS.name());
+        dbResult.setRestoreJobStatus(CommonStatus.SUCCESS.name());
         dbResult.setSecondsElapsed(restoreSummary.getSecondsElapsed());
         dbResult.setRestoreFiles(restoreSummary.getFilesRestored());
         dbResult.setRestoreBytes(restoreSummary.getBytesRestored());
@@ -72,7 +68,7 @@ public class RestoreJobService
         }
         errorMessage = StringUtils.isBlank(errorMessage) ? "" : errorMessage;
         // 设置失败状态和失败日志
-        dbResult.setRestoreJobStatus(CopyJobStatusEnum.FAILED.name());
+        dbResult.setRestoreJobStatus(CommonStatus.FAILED.name());
         dbResult.setErrorMessage(errorMessage);
         // 保存
         boolean saved = this.updateById(dbResult);

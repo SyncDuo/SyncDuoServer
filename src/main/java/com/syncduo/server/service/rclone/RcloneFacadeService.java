@@ -66,6 +66,7 @@ public class RcloneFacadeService {
 
     public void init() throws SyncDuoException {
         this.getCoreStats();
+        log.info("rclone init success");
     }
 
     public CoreStatsResponse getCoreStats() throws SyncDuoException {
@@ -140,8 +141,6 @@ public class RcloneFacadeService {
                     syncFlowEntity,
                     SyncFlowStatusEnum.RUNNING
             );
-            // 数据库插入 copy job
-            CopyJobEntity copyJobEntity = this.copyJobService.addCopyJob(syncFlowEntity.getSyncFlowId());
             // 获取 filter criteria as list
             List<String> filterCriteriaAsList = this.syncFlowService.getFilterCriteriaAsList(syncFlowEntity);
             // 创建 copyFileRequest
@@ -163,8 +162,6 @@ public class RcloneFacadeService {
         } catch (SyncDuoException e) {
             throw new SyncDuoException("syncCopy failed. ", e);
         }
-        // 数据库插入 copy job
-        CopyJobEntity copyJobEntity = this.copyJobService.addCopyJob(syncFlowEntity.getSyncFlowId());
         // 创建 sync copy request
         SyncCopyRequest syncCopyRequest = new SyncCopyRequest(
                 syncFlowEntity.getSourceFolderPath(),
@@ -217,7 +214,7 @@ public class RcloneFacadeService {
         JobStatusResponse jobStatus = jobStatusResponse.getData();
         if (!jobStatus.isSuccess()) {
             // rclone job 完成但失败, 刷新数据库, 更新状态和错误信息
-            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.FAIL);
+            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.FAILED);
             this.copyJobService.markCopyJobAsFailed(copyJobId, jobStatus.getError());
             return;
         }

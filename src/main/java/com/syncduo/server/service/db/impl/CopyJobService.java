@@ -2,7 +2,7 @@ package com.syncduo.server.service.db.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.syncduo.server.enums.CopyJobStatusEnum;
+import com.syncduo.server.enums.CommonStatus;
 import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.mapper.CopyJobMapper;
@@ -29,29 +29,13 @@ public class CopyJobService
         CopyJobEntity copyJobEntity = new CopyJobEntity();
         copyJobEntity.setSyncFlowId(syncFlowId);
         // 设置默认值
-        copyJobEntity.setCopyJobStatus(CopyJobStatusEnum.WAITING.name());
+        copyJobEntity.setCopyJobStatus(CommonStatus.RUNNING.name());
         // 保存数据库
         boolean saved = this.save(copyJobEntity);
         if (!saved) {
             throw new SyncDuoException("addCopyJob failed. save to database failed.");
         }
         return copyJobEntity;
-    }
-
-    public CopyJobEntity updateCopyJobRcloneJobId(
-            long copyJobId,
-            long rcloneJobId) throws SyncDuoException {
-        CopyJobEntity dbResult = this.getByCopyJobId(copyJobId);
-        if (ObjectUtils.isEmpty(dbResult)) {
-            return null;
-        }
-        dbResult.setCopyJobStatus(CopyJobStatusEnum.RUNNING.name());
-        dbResult.setRcloneJobId(rcloneJobId);
-        boolean updated = this.updateById(dbResult);
-        if (!updated) {
-            throw new SyncDuoException("updateCopyJobRcloneJobId failed. can't update database.");
-        }
-        return dbResult;
     }
 
     public void markCopyJobAsSuccess(
@@ -62,7 +46,7 @@ public class CopyJobService
         if (ObjectUtils.isEmpty(dbResult)) {
             return;
         }
-        dbResult.setCopyJobStatus(CopyJobStatusEnum.SUCCESS.name());
+        dbResult.setCopyJobStatus(CommonStatus.SUCCESS.name());
         // 时间转换
         OffsetDateTime offsetDateTime = OffsetDateTime.parse(jobStatusResponse.getStartTime());
         Instant instant = offsetDateTime.toInstant();
@@ -95,7 +79,7 @@ public class CopyJobService
         if (ObjectUtils.isEmpty(dbResult)) {
             return;
         }
-        dbResult.setCopyJobStatus(CopyJobStatusEnum.FAILED.name());
+        dbResult.setCopyJobStatus(CommonStatus.FAILED.name());
         dbResult.setErrorMessage(errorMessage);
         boolean updated = this.updateById(dbResult);
         if (!updated) {

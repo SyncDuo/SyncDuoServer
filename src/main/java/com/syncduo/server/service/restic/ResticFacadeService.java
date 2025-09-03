@@ -58,17 +58,11 @@ public class ResticFacadeService {
     @Value("${syncduo.server.restic.backupIntervalSec}")
     private long RESTIC_BACKUP_INTERVAL;
 
-    @Value("${syncduo.server.restic.backupPassword}")
-    private String RESTIC_PASSWORD;
-
-    @Value("${syncduo.server.restic.backupPath}")
-    private String RESTIC_BACKUP_PATH;
+    @Value("${syncduo.server.restic.restoreAgeSec}")
+    private long RESTIC_RESTORE_AGE_SEC;
 
     @Value("${syncduo.server.restic.restorePath}")
     private String RESTIC_RESTORE_PATH;
-
-    @Value("${syncduo.server.restic.restoreAgeSec}")
-    private long RESTIC_RESTORE_AGE_SEC;
 
     public ResticFacadeService(
             DebounceService debounceService,
@@ -88,39 +82,31 @@ public class ResticFacadeService {
     }
 
     public void init() throws SyncDuoException {
-        if (StringUtils.isAnyBlank(RESTIC_PASSWORD, RESTIC_RESTORE_PATH, RESTIC_BACKUP_PATH)) {
-            throw new SyncDuoException("restic init failed. " +
-                    "RESTIC_PASSWORD, RESTIC_RESTORE_PATH or RESTIC_BACKUP_PATH is null.");
-        }
         if (ObjectUtils.anyNull(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE_SEC) ||
                 RESTIC_BACKUP_INTERVAL < 1 || RESTIC_RESTORE_AGE_SEC < 1) {
-            throw new SyncDuoException("restic init failed. " +
-                    ("RESTIC_BACKUP_INTERVAL:%s or " +
-                            "RESTIC_RESTORE_AGE:%s is null.").formatted(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE_SEC));
-        }
-        // 检查备份目录是否已经初始化
-        ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig(
-                this.RESTIC_BACKUP_PATH,
-                this.RESTIC_PASSWORD
-        );
-        // 没有初始化则初始化
-        if (!catConfigResult.isSuccess()) {
-            ResticExecResult<Init, Void> resticExecResult = this.resticService.init(
-                    this.RESTIC_BACKUP_PATH,
-                    this.RESTIC_PASSWORD
-            );
-            if (!resticExecResult.isSuccess()) {
-                throw new SyncDuoException("init failed.", resticExecResult.getSyncDuoException());
-            }
+            throw new SyncDuoException(
+                    "restic init failed. " +
+                    "RESTIC_BACKUP_INTERVAL:%s or ".formatted(RESTIC_BACKUP_INTERVAL) +
+                    "RESTIC_RESTORE_AGE:%s is null.".formatted(RESTIC_RESTORE_AGE_SEC));
         }
         // 检查 restore path 是否存在
-        rcloneFacadeService.isSourceFolderExist(RESTIC_RESTORE_PATH);
+        this.rcloneFacadeService.isSourceFolderExist(RESTIC_RESTORE_PATH);
+        // 检查备份目录是否已经初始化
+        ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig();
+        // 没有初始化则初始化
+        if (!catConfigResult.isSuccess()) {
+            ResticExecResult<Init, Void> resticExecResult = this.resticService.init();
+            if (!resticExecResult.isSuccess()) {
+                throw new SyncDuoException("Restic Init failed.", resticExecResult.getSyncDuoException());
+            }
+        }
         // 启动定时任务
         this.systemManagementTaskScheduler.scheduleWithFixedDelay(
                 this::periodicalBackup,
                 Instant.now().plus(Duration.ofHours(1)),
                 Duration.ofSeconds(RESTIC_BACKUP_INTERVAL)
         );
+        log.info("restic init success.");
     }
 
     public void manualBackup(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
@@ -146,20 +132,8 @@ public class ResticFacadeService {
         }
     }
 
-    public Stats getStats(String backupStoragePath) throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(backupStoragePath);
-        ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig(
-                this.RESTIC_BACKUP_PATH,
-                this.RESTIC_PASSWORD
-        );
-        if (!catConfigResult.isSuccess()) {
-            throw new SyncDuoException("getStats failed. repository isn't initialized",
-                    catConfigResult.getSyncDuoException());
-        }
-        ResticExecResult<Stats, Void> statsResult = this.resticService.stats(
-                this.RESTIC_BACKUP_PATH,
-                this.RESTIC_PASSWORD
-        );
+    public Stats getStats() throws SyncDuoException {
+        ResticExecResult<Stats, Void> statsResult = this.resticService.stats();
         if (!statsResult.isSuccess()) {
             throw new SyncDuoException("getStats failed. ", statsResult.getSyncDuoException());
         }
@@ -171,12 +145,7 @@ public class ResticFacadeService {
             throw new SyncDuoException("getSnapshotFileInfo failed. " +
                     "snapshotsId or pathString is null");
         }
-        ResticExecResult<Node, Void> lsResult = this.resticService.ls(
-                RESTIC_BACKUP_PATH,
-                RESTIC_PASSWORD,
-                snapshotId,
-                pathString
-        );
+        ResticExecResult<Node, Void> lsResult = this.resticService.ls(snapshotId, pathString);
         if (!lsResult.isSuccess()) {
             throw new SyncDuoException("getSnapshotFileInfo failed.", lsResult.getSyncDuoException());
         }
@@ -191,8 +160,6 @@ public class ResticFacadeService {
         }
         // backup
         ResticExecResult<BackupSummary, BackupError> backupResult = this.resticService.backup(
-                this.RESTIC_BACKUP_PATH,
-                this.RESTIC_PASSWORD,
                 syncFlowEntity.getDestFolderPath()
         );
         // 记录 backup job
@@ -226,8 +193,6 @@ public class ResticFacadeService {
                 RESTIC_RESTORE_AGE_SEC
         );
         ResticExecResult<RestoreSummary, RestoreError> restoreResult = this.resticService.restore(
-                this.RESTIC_BACKUP_PATH,
-                this.RESTIC_PASSWORD,
                 snapshotId,
                 pathStrings,
                 restoreTargetPathString
@@ -264,8 +229,6 @@ public class ResticFacadeService {
                 RESTIC_RESTORE_AGE_SEC
         );
         ResticExecResult<RestoreSummary, RestoreError> restoreResult = this.resticService.restore(
-                this.RESTIC_BACKUP_PATH,
-                this.RESTIC_PASSWORD,
                 snapshotFileInfo.getSnapshotId(),
                 new String[]{snapshotFileInfo.getPath()},
                 restoreTargetPathString
