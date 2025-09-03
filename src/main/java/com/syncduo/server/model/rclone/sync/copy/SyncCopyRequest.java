@@ -24,16 +24,6 @@ public class SyncCopyRequest {
         this.dstFs = dstFs;
     }
 
-    public SyncCopyRequest(String srcFs, String dstFs, List<String> excludeList) {
-        this.srcFs = srcFs;
-        this.dstFs = dstFs;
-        this.exclude(excludeList);
-    }
-
-    public void exclude(String excludePatten) {
-        this.filter.getExcludeRule().add(excludePatten);
-    }
-
     public void exclude(List<String> excludeList) {
         this.filter.setExcludeRule(excludeList);
     }

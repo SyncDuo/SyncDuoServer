@@ -113,6 +113,11 @@ public class RcloneFacadeService {
                 syncFlowEntity.getSourceFolderPath(),
                 syncFlowEntity.getDestFolderPath()
         );
+        // 如果 syncflow 有过滤, 则 oneway check 要加上过滤
+        if (StringUtils.isNotBlank(syncFlowEntity.getFilterCriteria())) {
+            List<String> filterCriteria = this.syncFlowService.getFilterCriteriaAsList(syncFlowEntity);
+            checkRequest.exclude(filterCriteria);
+        }
         RcloneResponse<CheckResponse> rcloneResponse = this.rcloneService.oneWayCheck(checkRequest);
         if (ObjectUtils.isEmpty(rcloneResponse)) {
             throw new SyncDuoException("oneWayCheck failed. http response is null");
@@ -189,11 +194,12 @@ public class RcloneFacadeService {
         if (!rcloneResponse.isSuccess()) {
             SyncDuoException syncDuoException = rcloneResponse.getSyncDuoException();
             this.copyJobService.markCopyJobAsFailed(copyJobId, syncDuoException.toString());
+            this.updateSyncFlowStatusDebounce(syncFlowEntity);
             throw new SyncDuoException("createAndStartRcloneJob failed.", syncDuoException);
         }
         // 成功则启动 rclone job status 跟踪
         int rcloneJobId = rcloneResponse.getData().getJobId();
-        String trackJobStatusKey = copyJobId.toString();
+        String trackJobStatusKey = "CopyJobId::%s".formatted(copyJobId.toString());
         this.moduleDebounceService.cancelAfter(
                 trackJobStatusKey,
                 () -> trackJobStatus(copyJobId, rcloneJobId, trackJobStatusKey, syncFlowEntity),
@@ -214,15 +220,17 @@ public class RcloneFacadeService {
         JobStatusResponse jobStatus = jobStatusResponse.getData();
         if (!jobStatus.isSuccess()) {
             // rclone job 完成但失败, 刷新数据库, 更新状态和错误信息
-            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.FAILED);
             this.copyJobService.markCopyJobAsFailed(copyJobId, jobStatus.getError());
+            this.updateSyncFlowStatusDebounce(syncFlowEntity);
+            // rclone job 失败, 取消任务
+            this.moduleDebounceService.cancel(jobKey);
             return;
         }
         // 记录成功
         this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatus, null);
-        this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
+        this.updateSyncFlowStatusDebounce(syncFlowEntity);
         // 创建定时任务获取 core stats. core stats 更新较慢, 重复获取直到超时
-        String trackCoreStatsKey = String.valueOf(rcloneJobId);
+        String trackCoreStatsKey = "RcloneJobId::%s".formatted(String.valueOf(rcloneJobId));
         this.moduleDebounceService.cancelAfter(
                 trackCoreStatsKey,
                 () -> {
@@ -243,5 +251,19 @@ public class RcloneFacadeService {
         );
         // job status 获取成功, 取消定时任务
         this.moduleDebounceService.cancel(jobKey);
+    }
+
+    private void updateSyncFlowStatusDebounce(SyncFlowEntity syncFlowEntity) {
+        this.moduleDebounceService.debounce(
+                "SyncFlowId::%s".formatted(syncFlowEntity.getSyncFlowId()),
+                () -> {
+                    boolean isSync = this.oneWayCheck(syncFlowEntity);
+                    this.syncFlowService.updateSyncFlowStatus(
+                            syncFlowEntity,
+                            isSync ? SyncFlowStatusEnum.SYNC : SyncFlowStatusEnum.FAILED
+                    );
+                },
+                INTERVAL
+        );
     }
 }

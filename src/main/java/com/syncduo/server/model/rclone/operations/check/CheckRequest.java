@@ -1,7 +1,10 @@
 package com.syncduo.server.model.rclone.operations.check;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.syncduo.server.model.rclone.global.Filter;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class CheckRequest {
@@ -21,8 +24,15 @@ public class CheckRequest {
 
     private boolean differ = false;
 
+    @JsonProperty("_filter")
+    private final Filter filter = new Filter();
+
     public CheckRequest(String srcFs, String dstFs) {
         this.srcFs = srcFs;
         this.dstFs = dstFs;
+    }
+
+    public void exclude(List<String> excludeList) {
+        this.filter.setExcludeRule(excludeList);
     }
 }

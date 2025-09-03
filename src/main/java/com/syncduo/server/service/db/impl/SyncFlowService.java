@@ -41,8 +41,7 @@ public class SyncFlowService
         if (ObjectUtils.isNotEmpty(dbResult)) {
             throw new SyncDuoException("createSyncFlow failed. " +
                     "sourceFolderPath:%s and destFolderPath:%s already created.".formatted(
-                            sourceFolderPath, destFolderPath
-                    ));
+                            sourceFolderPath, destFolderPath));
         }
         // 创建
         SyncFlowEntity syncFlowEntity = new SyncFlowEntity();

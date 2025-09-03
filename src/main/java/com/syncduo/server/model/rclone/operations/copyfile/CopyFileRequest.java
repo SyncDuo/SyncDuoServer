@@ -38,10 +38,6 @@ public class CopyFileRequest {
         this.exclude(filterCriteria);
     }
 
-    public void exclude(String excludePatten) {
-        this.filter.getExcludeRule().add(excludePatten);
-    }
-
     public void exclude(List<String> excludeList) {
         this.filter.setExcludeRule(excludeList);
     }
