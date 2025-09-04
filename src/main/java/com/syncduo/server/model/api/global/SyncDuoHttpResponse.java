@@ -22,12 +22,16 @@ public class SyncDuoHttpResponse<T> {
 
     private SyncDuoHttpResponse() {}
 
-    public static <T> SyncDuoHttpResponse<T> success(T data) {
+    public static <T> SyncDuoHttpResponse<T> success(T data, String message) {
         SyncDuoHttpResponse<T> result = new SyncDuoHttpResponse<>();
         result.statusCode = HttpStatus.OK.value();
-        result.message = "success";
+        result.message = message;
         result.data = data;
         return result;
+    }
+
+    public static <T> SyncDuoHttpResponse<T> success(T data) {
+        return success(data, "success");
     }
 
     public static SyncDuoHttpResponse<Void> success() {

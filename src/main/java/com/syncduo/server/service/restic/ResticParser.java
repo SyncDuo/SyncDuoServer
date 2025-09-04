@@ -106,13 +106,20 @@ public class ResticParser<T1, T2> {
                     ResticExitCodeEnum resticExitCodeEnum = ResticExitCodeEnum.fromCode(exitValue);
                     if (stdErrHandlerFlag == 0) {
                         future.complete(parseExitError(getStdAsString(stderr)));
+                        return;
                     }
                     try {
                         if (stdErrHandlerFlag == 1) {
                             List<T2> result = onFailedAggHandler.apply(getStdAsString(stderr));
+                            if (CollectionUtils.isEmpty(result)) {
+                                throw new SyncDuoException("retry with parseExitError");
+                            }
                             future.complete(ResticExecResult.failed(resticExitCodeEnum, result));
                         } else {
                             T2 result = onFailedHandler.apply(getStdAsString(stderr));
+                            if (ObjectUtils.isEmpty(result)) {
+                                throw new SyncDuoException("retry with parseExitError");
+                            }
                             future.complete(ResticExecResult.failed(resticExitCodeEnum, result));
                         }
                     } catch (Exception ex) {

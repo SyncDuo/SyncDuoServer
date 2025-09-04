@@ -1,5 +1,7 @@
 package com.syncduo.server;
 
+import com.syncduo.server.configuration.ApplicationLifeCycleConfig;
+import com.syncduo.server.controller.FileSystemAccessController;
 import com.syncduo.server.controller.SnapshotsController;
 import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.controller.SystemInfoController;
@@ -7,14 +9,14 @@ import com.syncduo.server.enums.CommonStatus;
 import com.syncduo.server.enums.ResticNodeTypeEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.api.filesystem.Folder;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotInfo;
-import com.syncduo.server.model.api.snapshots.SnapshotsResponse;
 import com.syncduo.server.model.api.snapshots.SyncFlowWithSnapshots;
 import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.api.systeminfo.SystemInfo;
-import com.syncduo.server.model.api.systeminfo.SystemSetting;
+import com.syncduo.server.model.api.systeminfo.SystemSettings;
 import com.syncduo.server.model.entity.*;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.service.db.impl.*;
@@ -70,6 +72,10 @@ class SyncDuoServerApplicationTests {
 
     private final SystemInfoController systemInfoController;
 
+    private final FileSystemAccessController fileSystemAccessController;
+
+    private final ApplicationLifeCycleConfig applicationLifeCycleConfig;
+
     private SyncFlowEntity syncFlowEntity;
 
     @Value("${syncduo.server.system.syncflowDelayDeleteSec}")
@@ -104,7 +110,9 @@ class SyncDuoServerApplicationTests {
             BackupJobService backupJobService,
             RestoreJobService restoreJobService,
             SnapshotsController snapshotsController,
-            SystemInfoController systemInfoController) {
+            SystemInfoController systemInfoController,
+            FileSystemAccessController fileSystemAccessController,
+            ApplicationLifeCycleConfig applicationLifeCycleConfig) {
         this.syncFlowController = syncFlowController;
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
@@ -115,18 +123,37 @@ class SyncDuoServerApplicationTests {
         this.restoreJobService = restoreJobService;
         this.snapshotsController = snapshotsController;
         this.systemInfoController = systemInfoController;
+        this.fileSystemAccessController = fileSystemAccessController;
+        this.applicationLifeCycleConfig = applicationLifeCycleConfig;
+    }
+
+    @Test
+    void ShouldReturnTrueWhenGettingHostName() {
+        SyncDuoHttpResponse<String> hostName = this.fileSystemAccessController.getHostName();
+        assert StringUtils.isNotBlank(hostName.getData());
+    }
+
+    @Test
+    void ShouldReturnTrueWhenGettingSubfolders() {
+        SyncDuoHttpResponse<List<Folder>> subfolders =
+                this.fileSystemAccessController.getSubfolders(sourceFolderPath);
+        List<Folder> data = subfolders.getData();
+        assert CollectionUtils.isNotEmpty(data);
+        for (Folder folder : data) {
+            assert ObjectUtils.isNotEmpty(folder);
+        }
     }
 
     @Test
     void ShouldReturnTrueWhenGettingSystemSettings() {
-        SyncDuoHttpResponse<SystemSetting> result = this.systemInfoController.getSystemSettings();
+        SyncDuoHttpResponse<SystemSettings> result = this.systemInfoController.getSystemSettings();
         assert result.getStatusCode() == 200;
-        SystemSetting systemSetting = result.getData();
-        assert ObjectUtils.isNotEmpty(systemSetting);
+        SystemSettings systemSettings = result.getData();
+        assert ObjectUtils.isNotEmpty(systemSettings);
         assert ObjectUtils.allNotNull(
-                systemSetting.getSystem(),
-                systemSetting.getRclone(),
-                systemSetting.getRestic());
+                systemSettings.getSystem(),
+                systemSettings.getRclone(),
+                systemSettings.getRestic());
     }
 
     @Test
@@ -153,21 +180,20 @@ class SyncDuoServerApplicationTests {
     void ShouldReturnTrueWhenDownloadFile() throws SyncDuoException, IOException {
         // 创建 syncflow
         createSyncFlow(null);
-        // 手动 init restic
-        this.resticFacadeService.init();
         // 手动触发 backup job
         this.resticFacadeService.manualBackup(this.syncFlowEntity);
         // 获取 snapshot info
-        SnapshotsResponse<SyncFlowWithSnapshots> snapshots =
-                this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
-        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
+        SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
+                this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert ObjectUtils.isNotEmpty(syncFlowWithSnapshots.getData());
+        assert CollectionUtils.isNotEmpty(syncFlowWithSnapshots.getData().getSnapshotInfoList());
         // 获取 snapshot file info
-        SnapshotsResponse<SnapshotFileInfo> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
-                snapshots.getDataList().get(0).getSnapshotInfoList().get(0).getBackupJobId(),
+        SyncDuoHttpResponse<List<SnapshotFileInfo>> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
+                syncFlowWithSnapshots.getData().getSnapshotInfoList().get(0).getBackupJobId(),
                 "/"
         );
         // 下载文件
-        for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoResponse.getDataList()) {
+        for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoResponse.getData()) {
             if (snapshotFileInfo.getType().equals(ResticNodeTypeEnum.FILE.getType())) {
                 ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFile(snapshotFileInfo);
                 assert response.getStatusCode() == HttpStatus.OK;
@@ -194,22 +220,21 @@ class SyncDuoServerApplicationTests {
     void ShouldReturnTrueWhenDownloadFiles() throws SyncDuoException, IOException {
         // 创建 syncflow
         createSyncFlow(null);
-        // 手动 init restic
-        this.resticFacadeService.init();
         // 手动触发 backup job
         this.resticFacadeService.manualBackup(this.syncFlowEntity);
         // 获取 snapshot info
-        SnapshotsResponse<SyncFlowWithSnapshots> snapshots =
-                this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
-        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
+        SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
+                this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert ObjectUtils.isNotEmpty(syncFlowWithSnapshots.getData());
+        assert CollectionUtils.isNotEmpty(syncFlowWithSnapshots.getData().getSnapshotInfoList());
         // 获取 snapshot file info
-        SnapshotsResponse<SnapshotFileInfo> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
-                snapshots.getDataList().get(0).getSnapshotInfoList().get(0).getBackupJobId(),
+        SyncDuoHttpResponse<List<SnapshotFileInfo>> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
+                syncFlowWithSnapshots.getData().getSnapshotInfoList().get(0).getBackupJobId(),
                 "/"
         );
         // 下载多个文件
         ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFiles(
-                snapshotFileInfoResponse.getDataList()
+                snapshotFileInfoResponse.getData()
         );
         assert response.getStatusCode() == HttpStatus.OK;
         assert ObjectUtils.isNotEmpty(response.getBody());
@@ -229,42 +254,37 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenGetSnapshotFileInfo() throws SyncDuoException {
+    void ShouldReturnTrueWhenGetAllSyncFlowWithSnapshots() throws SyncDuoException {
         // 创建 syncflow
         createSyncFlow(null);
-        // 手动 init restic
-        this.resticFacadeService.init();
+        // 获取 全部 syncflow with snapshots
+        SyncDuoHttpResponse<List<SyncFlowWithSnapshots>> allSyncFlowWithSnapshots =
+                this.snapshotsController.getAllSyncFlowWithSnapshots();
+        assert CollectionUtils.isNotEmpty(allSyncFlowWithSnapshots.getData());
+        assert CollectionUtils.isEmpty(allSyncFlowWithSnapshots.getData().get(0).getSnapshotInfoList());
         // 手动触发 backup job
         this.resticFacadeService.manualBackup(this.syncFlowEntity);
-        // 获取 snapshot info
-        SnapshotsResponse<SyncFlowWithSnapshots> snapshots =
-                this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
-        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
-        // 获取 snapshot file info
-        SnapshotsResponse<SnapshotFileInfo> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
-                snapshots.getDataList().get(0).getSnapshotInfoList().get(0).getBackupJobId(),
-                "/"
-        );
-        assert CollectionUtils.isNotEmpty(snapshotFileInfoResponse.getDataList());
+        allSyncFlowWithSnapshots = this.snapshotsController.getAllSyncFlowWithSnapshots();
+        assert CollectionUtils.isNotEmpty(allSyncFlowWithSnapshots.getData());
     }
 
     @Test
-    void ShouldReturnTrueWhenGetSnapshotInfo() throws SyncDuoException {
+    void ShouldReturnTureWhenBackupTwice() throws SyncDuoException {
         // 创建 syncflow
         createSyncFlow(null);
-        // 手动 init restic
-        this.resticFacadeService.init();
         // 手动触发 backup job
         this.resticFacadeService.manualBackup(this.syncFlowEntity);
         // 获取 snapshot info
-        SnapshotsResponse<SyncFlowWithSnapshots> snapshots =
-                this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
-        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
+        SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
+                this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert ObjectUtils.isNotEmpty(syncFlowWithSnapshots.getData());
+        assert CollectionUtils.isNotEmpty(syncFlowWithSnapshots.getData().getSnapshotInfoList());
         // 再手动触发 backup
         this.resticFacadeService.manualBackup(syncFlowEntity);
-        snapshots = this.snapshotsController.getSnapshots(syncFlowEntity.getSyncFlowId().toString());
-        assert CollectionUtils.isNotEmpty(snapshots.getDataList());
-        List<SnapshotInfo> snapshotInfoList = snapshots.getDataList().get(0).getSnapshotInfoList();
+        syncFlowWithSnapshots =
+                this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert ObjectUtils.isNotEmpty(syncFlowWithSnapshots.getData());
+        List<SnapshotInfo> snapshotInfoList = syncFlowWithSnapshots.getData().getSnapshotInfoList();
         assert StringUtils.isBlank(snapshotInfoList.get(0).getSnapshotId());
     }
 
@@ -272,8 +292,6 @@ class SyncDuoServerApplicationTests {
     void ShouldReturnTrueWhenBackup() throws SyncDuoException {
         // 创建 syncflow
         createSyncFlow(null);
-        // 手动 init restic
-        this.resticFacadeService.init();
         // 手动触发 backup job
         this.resticFacadeService.manualBackup(this.syncFlowEntity);
         // 获取 copy job
@@ -389,8 +407,8 @@ class SyncDuoServerApplicationTests {
 
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
         deleteSyncFlowRequest.setSyncFlowId(this.syncFlowEntity.getSyncFlowId().toString());
-        SyncFlowResponse syncFlowResponse1 = this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
-        assert syncFlowResponse1.getCode() == 200;
+        SyncDuoHttpResponse<Void> syncFlowResponse1 = this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
+        assert syncFlowResponse1.getStatusCode() == 200;
     }
 
     void createSyncFlow(String filterCriteria) {
@@ -401,14 +419,13 @@ class SyncDuoServerApplicationTests {
         if (StringUtils.isNotBlank(filterCriteria)) {
             createSyncFlowRequest.setFilterCriteria(filterCriteria);
         }
-        SyncFlowResponse syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
-        assert syncFlowResponse.getCode() == 200;
+        SyncDuoHttpResponse<SyncFlowInfo> syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
+        assert syncFlowResponse.getStatusCode() == 200;
         // 至多重试一次, 直到syncflow status 是 SYNC
         for (int i = 0; i < 2; i++) {
             waitAllFileHandle();
             this.syncFlowEntity = this.syncFlowService.getById(
-                    Long.valueOf(
-                            syncFlowResponse.getSyncFlowInfoList().get(0).getSyncFlowId())
+                    Long.valueOf(syncFlowResponse.getData().getSyncFlowId())
             );
             if (this.syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name())) {
                 break;
@@ -454,6 +471,8 @@ class SyncDuoServerApplicationTests {
                 4,
                 3
         );
+        // 初始化, 因为 @PostConstruct 先执行而 BeforeEach 后执行, 会导致 Restic 的 backupPath 被清掉
+        this.applicationLifeCycleConfig.startUp();
         log.info("initial finish");
     }
 

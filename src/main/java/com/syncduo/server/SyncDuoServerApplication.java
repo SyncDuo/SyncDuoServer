@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableScheduling
 @EnableTransactionManagement
-// todo: 1. controller 改造, 使用 SyncDuoHttpResponse 4. 引入二层异常设计
+// todo: 4. 引入二层异常设计 5. 优化 restic parser
 public class SyncDuoServerApplication {
 
     public static void main(String[] args) {

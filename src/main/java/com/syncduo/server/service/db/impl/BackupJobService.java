@@ -90,7 +90,7 @@ public class BackupJobService
         queryWrapper.eq(BackupJobEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
 
         List<BackupJobEntity> dbResult = this.list(queryWrapper);
-        return CollectionUtils.isEmpty(dbResult) ? null : dbResult.get(0);
+        return CollectionUtils.isEmpty(dbResult) ? current : dbResult.get(0);
     }
 
     public List<BackupJobEntity> getBySyncFlowId(long syncFlowId) {

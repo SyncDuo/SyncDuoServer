@@ -119,7 +119,7 @@ public class FilesystemUtil {
 
     public static List<Path> getSubFolders(String folderPathString) throws SyncDuoException {
         if (StringUtils.isBlank(folderPathString)) {
-            throw new SyncDuoException("getSubfolders failed. folderPathString is null");
+            return Collections.emptyList();
         }
         Path folder = Paths.get(folderPathString);
         // 如果输入的路径不存在, 则寻找它的父路径, 如果父路径也不存在, 则抛出异常

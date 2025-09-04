@@ -33,7 +33,7 @@ public class ResticExecResult<T1, T2> {
     private ExitErrors exitErrors;
 
     // error can't be converted to restic json response
-    private Throwable ex;
+    private SyncDuoException ex;
 
     // 成功响应工厂
     public static <T1, T2> ResticExecResult<T1, T2> success(
@@ -93,7 +93,7 @@ public class ResticExecResult<T1, T2> {
     public static <T1, T2> ResticExecResult<T1, T2> failed(Throwable ex) {
         ResticExecResult<T1, T2> result = new ResticExecResult<>();
         result.setSuccess(false);
-        result.setEx(ex);
+        result.setEx(new SyncDuoException("restic exec failed", ex));
         return result;
     }
 
@@ -117,6 +117,6 @@ public class ResticExecResult<T1, T2> {
                             this.exitCode.getCode(), this.exitCode.getMessage()) +
                     "fatalErrors is %s".formatted(this.exitErrors));
         }
-        return new SyncDuoException("restic exec throw exception.", this.ex);
+        return this.ex;
     }
 }

@@ -1,8 +1,8 @@
 package com.syncduo.server.controller;
 
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.api.filesystem.FileSystemResponse;
 import com.syncduo.server.model.api.filesystem.Folder;
+import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.util.FilesystemUtil;
 import com.syncduo.server.util.SystemInfoUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -23,35 +24,25 @@ import java.util.List;
 public class FileSystemAccessController {
 
     @GetMapping("/get-hostname")
-    public FileSystemResponse getHostName() {
-        try {
-            String hostName = SystemInfoUtil.getHostName();
-            return FileSystemResponse.onSuccess("获取 hostname 成功", hostName);
-        } catch (SyncDuoException e) {
-            return FileSystemResponse.onError(e.getMessage());
-        }
+    public SyncDuoHttpResponse<String> getHostName() throws SyncDuoException {
+        return SyncDuoHttpResponse.success(SystemInfoUtil.getHostName());
     }
 
     @GetMapping("/get-subfolders")
-    public FileSystemResponse getSubfolders(@RequestParam("path") String path) {
+    public SyncDuoHttpResponse<List<Folder>> getSubfolders(@RequestParam("path") String path) {
         if (StringUtils.isBlank(path)) {
-            return FileSystemResponse.onError("path is null");
+            return SyncDuoHttpResponse.success(Collections.emptyList(), "path is empty");
         }
-        try {
-            List<Path> subfolders = FilesystemUtil.getSubFolders(path);
-            if (CollectionUtils.isEmpty(subfolders)) {
-                return FileSystemResponse.onSuccess("no subfolders");
-            }
-            // 最相似的文件夹, 放在最前面
-            Comparator<Path> similarityComparator = Comparator.comparingInt(
-                    (Path subfolder) -> getSimilarityScore(subfolder.toAbsolutePath().toString(), path)).reversed();
-            subfolders.sort(similarityComparator);
-            List<Folder> folderList = subfolders.stream().map(Folder::new).toList();
-            return FileSystemResponse.onSuccess("getSubfolders success.", folderList);
-        } catch (SyncDuoException e) {
-            log.debug("getFolder failed. getSubfolders failed. path is {}", path, e);
-            return FileSystemResponse.onError("getSubfolders failed. path is %s".formatted(path));
+        List<Path> subfolders = FilesystemUtil.getSubFolders(path);
+        if (CollectionUtils.isEmpty(subfolders)) {
+            return SyncDuoHttpResponse.success(Collections.emptyList(), "path does not contain subfolders");
         }
+        // 最相似的文件夹, 放在最前面
+        Comparator<Path> similarityComparator = Comparator.comparingInt(
+                (Path subfolder) -> getSimilarityScore(subfolder.toAbsolutePath().toString(), path)).reversed();
+        subfolders.sort(similarityComparator);
+        List<Folder> folderList = subfolders.stream().map(Folder::new).toList();
+        return SyncDuoHttpResponse.success(folderList);
     }
 
     /**

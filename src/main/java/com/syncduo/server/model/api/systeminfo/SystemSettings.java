@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Data
 @NoArgsConstructor
-public class SystemSetting {
+public class SystemSettings {
 
     private System system;
 

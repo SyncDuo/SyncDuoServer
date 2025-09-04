@@ -2,9 +2,9 @@ package com.syncduo.server.controller;
 
 import com.syncduo.server.enums.ResticNodeTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotInfo;
-import com.syncduo.server.model.api.snapshots.SnapshotsResponse;
 import com.syncduo.server.model.api.snapshots.SyncFlowWithSnapshots;
 import com.syncduo.server.model.api.syncflow.ManualBackupRequest;
 import com.syncduo.server.model.entity.BackupJobEntity;
@@ -51,112 +51,98 @@ public class SnapshotsController {
     }
 
     @PostMapping("/backup")
-    public SnapshotsResponse<Void> backup(@RequestBody ManualBackupRequest manualBackupRequest) {
-        try {
-            EntityValidationUtil.isManualBackupRequestValid(manualBackupRequest);
-            // 查询 syncflow
-            SyncFlowEntity syncFlowEntity =
-                    this.syncFlowService.getBySyncFlowId(manualBackupRequest.getInnerSyncFlowId());
-            if (ObjectUtils.isEmpty(syncFlowEntity)) {
-                return SnapshotsResponse.onError("backup failed. SyncFlow is deleted");
-            }
-            // backup
-            this.resticFacadeService.manualBackup(syncFlowEntity);
-            return SnapshotsResponse.onSuccess("backup success");
-        } catch (SyncDuoException e) {
-            return SnapshotsResponse.onError("backup failed. ex is %s".formatted(e.getMessage()));
+    public SyncDuoHttpResponse<Void> backup(
+            @RequestBody ManualBackupRequest manualBackupRequest) throws SyncDuoException {
+        EntityValidationUtil.isManualBackupRequestValid(manualBackupRequest);
+        // 查询 syncflow
+        SyncFlowEntity syncFlowEntity =
+                this.syncFlowService.getBySyncFlowId(manualBackupRequest.getInnerSyncFlowId());
+        if (ObjectUtils.isEmpty(syncFlowEntity)) {
+            throw new SyncDuoException("backup failed. SyncFlow is deleted");
         }
+        // backup
+        this.resticFacadeService.manualBackup(syncFlowEntity);
+        return SyncDuoHttpResponse.success();
     }
 
     @GetMapping("/get-snapshot-files")
-    public SnapshotsResponse<SnapshotFileInfo> getSnapshotFiles(
+    public SyncDuoHttpResponse<List<SnapshotFileInfo>> getSnapshotFiles(
             @Param("backupJobId") String backupJobId,
             @Param("pathString") String pathString) {
-        try {
-            if (StringUtils.isAnyBlank(backupJobId, pathString)) {
-                return SnapshotsResponse.onError("getSnapshotsFile failed. " +
-                        "backupJobId or path is null.");
-            }
-            // 判断 backup id 是否有 snapshot
-            BackupJobEntity backupJobEntity = this.backupJobService.getByBackupJobId(Long.parseLong(backupJobId));
-            if (ObjectUtils.isEmpty(backupJobEntity)) {
-                return SnapshotsResponse.onError("getSnapshotsFile failed. backupJobId not found.");
-            }
-            // 如果 backup 没有产生 snapshot, 则使用最新的 snapshot
-            if (StringUtils.isBlank(backupJobEntity.getSnapshotId())) {
-                backupJobEntity = this.backupJobService.getFirstValidSnapshotId(backupJobEntity);
-                if (ObjectUtils.isEmpty(backupJobEntity) ||
-                        StringUtils.isBlank(backupJobEntity.getSnapshotId())) {
-                    return SnapshotsResponse.onSuccess("getSnapshotsFile success. there is no snapshot");
-                }
-            }
-            List<Node> nodeList = this.resticFacadeService.getSnapshotFileInfo(
-                    backupJobEntity.getSnapshotId(),
-                    pathString
-            );
-            if (CollectionUtils.isEmpty(nodeList)) {
-                return SnapshotsResponse.onSuccess("getSnapshotsFile success. there is no file.");
-            }
-            List<SnapshotFileInfo> result = new ArrayList<>();
-            for (Node node : nodeList) {
-                result.add(SnapshotFileInfo.getFromResticNode(backupJobEntity.getSnapshotId(), node));
-            }
-            // restic ls 命令, 使用形如 /<folder1>/ 的方式查询, 还是会把 folder1 包含在查询结果中
-            // 所以需要去除 pathString 的结果
-            int deleteIndex = -1;
-            for (int i = 0; i < result.size(); i++) {
-                String path = result.get(i).getPath();
-                if (pathString.equals(path) || pathString.equals(path + "/")) {
-                    deleteIndex = i;
-                    break;
-                }
-            }
-            if (deleteIndex != -1) {
-                result.remove(deleteIndex);
-            }
-            // 文件夹在最前面
-            result.sort(Comparator.comparing(snapshotFileInfo -> {
-                ResticNodeTypeEnum type = ResticNodeTypeEnum.fromString(snapshotFileInfo.getType());
-                return type.equals(ResticNodeTypeEnum.DIRECTORY) ? -1 : 1;
-            }));
-            return SnapshotsResponse.onSuccess("getSnapshotsFile success.", result);
-        } catch (Exception e) {
-            return SnapshotsResponse.onError("getSnapshotsFile failed. ex is " + e.getMessage());
+        if (StringUtils.isAnyBlank(backupJobId, pathString)) {
+            throw new SyncDuoException(HttpStatus.BAD_REQUEST,
+                    "getSnapshotsFile failed. backupJobId or path is null.");
         }
+        // 查询 backup job entity
+        BackupJobEntity backupJobEntity = this.backupJobService.getByBackupJobId(Long.parseLong(backupJobId));
+        if (ObjectUtils.isEmpty(backupJobEntity)) {
+            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "getSnapshotsFile failed. backupJobId not found.");
+        }
+        // 如果 backup 没有产生 snapshot, 则使用最新的 snapshot
+        if (StringUtils.isBlank(backupJobEntity.getSnapshotId())) {
+            backupJobEntity = this.backupJobService.getFirstValidSnapshotId(backupJobEntity);
+            if (StringUtils.isBlank(backupJobEntity.getSnapshotId())) {
+                return SyncDuoHttpResponse.success(null, "there is no snapshot");
+            }
+        }
+        List<Node> nodeList = this.resticFacadeService.getSnapshotFileInfo(
+                backupJobEntity.getSnapshotId(),
+                pathString
+        );
+        if (CollectionUtils.isEmpty(nodeList)) {
+            return SyncDuoHttpResponse.success(null, "getSnapshotsFile success. there is no file.");
+        }
+        List<SnapshotFileInfo> result = new ArrayList<>();
+        for (Node node : nodeList) {
+            result.add(SnapshotFileInfo.getFromResticNode(backupJobEntity.getSnapshotId(), node));
+        }
+        // restic ls 命令, 使用形如 /<folder1>/ 的方式查询, 还是会把 folder1 包含在查询结果中
+        // 所以需要去除 pathString 的结果
+        int deleteIndex = -1;
+        for (int i = 0; i < result.size(); i++) {
+            String path = result.get(i).getPath();
+            if (pathString.equals(path) || pathString.equals(path + "/")) {
+                deleteIndex = i;
+                break;
+            }
+        }
+        if (deleteIndex != -1) {
+            result.remove(deleteIndex);
+        }
+        // 文件夹在最前面
+        result.sort(Comparator.comparing(snapshotFileInfo -> {
+            ResticNodeTypeEnum type = ResticNodeTypeEnum.fromString(snapshotFileInfo.getType());
+            return type.equals(ResticNodeTypeEnum.DIRECTORY) ? -1 : 1;
+        }));
+        return SyncDuoHttpResponse.success(result);
     }
 
-    @GetMapping("/get-snapshots")
-    public SnapshotsResponse<SyncFlowWithSnapshots> getSnapshots(@Param("syncFlowId") String syncFlowId) {
-        try {
-            if (StringUtils.isBlank(syncFlowId)) {
-                // 获取全部 snapshots
-                List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
-                if (CollectionUtils.isEmpty(allSyncFlow)) {
-                    return SnapshotsResponse.onSuccess("没有可用的 syncflow");
-                }
-                List<SyncFlowWithSnapshots> result = new ArrayList<>();
-                for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
-                    SyncFlowWithSnapshots tmp = this.getSyncFlowSnapshotsInfo(syncFlowEntity);
-                    if (ObjectUtils.isEmpty(tmp)) {
-                        continue;
-                    }
-                    result.add(tmp);
-                }
-                return SnapshotsResponse.onSuccess("成功", result);
-            } else {
-                // 参数检查
-                long syncFlowIdLong = Long.parseLong(syncFlowId);
-                // 获取对应的 snapshots
-                SyncFlowEntity syncFlowEntity = this.syncFlowService.getBySyncFlowId(syncFlowIdLong);
-                if (ObjectUtils.isEmpty(syncFlowEntity)) {
-                    return SnapshotsResponse.onSuccess("syncflow not found");
-                }
-                SyncFlowWithSnapshots result = this.getSyncFlowSnapshotsInfo(syncFlowEntity);
-                return SnapshotsResponse.onSuccess("成功", Collections.singletonList(result));
-            }
-        } catch (Exception e) {
-            return SnapshotsResponse.onError("getSnapshots 失败. ex 是" + e.getMessage());
+    @GetMapping("/get-all-syncflow-with-snapshots")
+    public SyncDuoHttpResponse<List<SyncFlowWithSnapshots>> getAllSyncFlowWithSnapshots() throws SyncDuoException {
+        // 获取全部 syncflow
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        if (CollectionUtils.isEmpty(allSyncFlow)) {
+            return SyncDuoHttpResponse.success(null, "no snapshots");
         }
+        // 每个 syncflow 获取所有 snapshots
+        List<SyncFlowWithSnapshots> result = new ArrayList<>();
+        for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
+            result.add(this.combineSyncFlowWithSnapshotInfo(syncFlowEntity));
+        }
+        return SyncDuoHttpResponse.success(result);
+    }
+
+    @GetMapping("/get-syncflow-with-snapshots")
+    public SyncDuoHttpResponse<SyncFlowWithSnapshots> getSyncFlowWithSnapshots(
+            @RequestParam("syncFlowId") String syncFlowId) throws SyncDuoException {
+        if (StringUtils.isBlank(syncFlowId)) {
+            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "getSyncFlowWithSnapshots failed. syncFlowId is null.");
+        }
+        SyncFlowEntity syncFlowEntity = this.syncFlowService.getBySyncFlowId(Long.parseLong(syncFlowId));
+        if (ObjectUtils.isEmpty(syncFlowEntity)) {
+            return SyncDuoHttpResponse.success(null, "syncFlow is deleted");
+        }
+        return SyncDuoHttpResponse.success(combineSyncFlowWithSnapshotInfo(syncFlowEntity));
     }
 
     @PostMapping("/download-snapshot-files")
@@ -208,11 +194,18 @@ public class SnapshotsController {
         }
     }
 
-    private SyncFlowWithSnapshots getSyncFlowSnapshotsInfo(SyncFlowEntity syncFlowEntity) {
+    private SyncFlowWithSnapshots combineSyncFlowWithSnapshotInfo(SyncFlowEntity syncFlowEntity) {
+        // syncflow entity 转换为 SyncFlowWith Snapshots
+        SyncFlowWithSnapshots syncFlowWithSnapshots = new SyncFlowWithSnapshots();
+        syncFlowWithSnapshots.setSyncFlowId(syncFlowEntity.getSyncFlowId().toString());
+        syncFlowWithSnapshots.setSyncFlowName(syncFlowEntity.getSyncFlowName());
+        syncFlowWithSnapshots.setSourceFolderPath(syncFlowEntity.getSourceFolderPath());
+        syncFlowWithSnapshots.setDestFolderPath(syncFlowEntity.getDestFolderPath());
+        // 获取 syncflow 对应的所有 backup job
         List<BackupJobEntity> backupJobEntityList =
                 this.backupJobService.getBySyncFlowId(syncFlowEntity.getSyncFlowId());
         if (CollectionUtils.isEmpty(backupJobEntityList)) {
-            return getSyncFlowSnapshotsInfo(syncFlowEntity, Collections.emptyList());
+            return syncFlowWithSnapshots;
         }
         // 排序, 时间倒排
         backupJobEntityList.sort(Comparator.comparing(
@@ -221,27 +214,14 @@ public class SnapshotsController {
                         backupJobEntity.getFinishedAt() :
                         backupJobEntity.getLastUpdatedTime(),
                 Comparator.nullsLast(Comparator.reverseOrder())));
-        // snapshot 结果集
+        // backup job 转 snapshotInfo
         List<SnapshotInfo> snapshotInfos = new ArrayList<>();
         for (BackupJobEntity backupJobEntity : backupJobEntityList) {
             // 添加到结果集
             snapshotInfos.add(SnapshotInfo.getFromBackupJobEntity(backupJobEntity));
         }
-        // 处理 syncflow entity
-        return getSyncFlowSnapshotsInfo(syncFlowEntity, snapshotInfos);
-    }
-
-    private static SyncFlowWithSnapshots getSyncFlowSnapshotsInfo(
-            SyncFlowEntity syncFlowEntity,
-            List<SnapshotInfo> snapshotInfos) {
-        SyncFlowWithSnapshots syncFlowSnapshotsInfo = new SyncFlowWithSnapshots();
-        syncFlowSnapshotsInfo.setSyncFlowId(syncFlowEntity.getSyncFlowId().toString());
-        syncFlowSnapshotsInfo.setSyncFlowName(syncFlowEntity.getSyncFlowName());
-        syncFlowSnapshotsInfo.setSourceFolderPath(syncFlowEntity.getSourceFolderPath());
-        syncFlowSnapshotsInfo.setDestFolderPath(syncFlowEntity.getDestFolderPath());
-        if (CollectionUtils.isNotEmpty(snapshotInfos)) {
-            syncFlowSnapshotsInfo.setSnapshotInfoList(snapshotInfos);
-        }
-        return syncFlowSnapshotsInfo;
+        // syncflow entity 和 snapshotInfos 整合
+        syncFlowWithSnapshots.setSnapshotInfoList(snapshotInfos);
+        return syncFlowWithSnapshots;
     }
 }

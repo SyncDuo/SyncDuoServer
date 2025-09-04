@@ -95,9 +95,9 @@ public class ResticFacadeService {
         ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig();
         // 没有初始化则初始化
         if (!catConfigResult.isSuccess()) {
-            ResticExecResult<Init, Void> resticExecResult = this.resticService.init();
-            if (!resticExecResult.isSuccess()) {
-                throw new SyncDuoException("Restic Init failed.", resticExecResult.getSyncDuoException());
+            ResticExecResult<Init, Void> initResult = this.resticService.init();
+            if (!initResult.isSuccess()) {
+                throw new SyncDuoException("Restic Init failed.", initResult.getSyncDuoException());
             }
         }
         // 启动定时任务
@@ -171,7 +171,7 @@ public class ResticFacadeService {
         } else {
             this.backupJobService.addFailBackupJob(
                     syncFlowEntity.getSyncFlowId(),
-                    backupResult.getSyncDuoException().getMessage()
+                    backupResult.getSyncDuoException().getSyncDuoMessage()
             );
         }
     }
