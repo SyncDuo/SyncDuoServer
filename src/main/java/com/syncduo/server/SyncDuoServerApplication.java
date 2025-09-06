@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableScheduling
 @EnableTransactionManagement
-// todo: 4. 引入二层异常设计 5. 优化 restic parser
+// todo: 4. 引入二层异常设计
 public class SyncDuoServerApplication {
 
     public static void main(String[] args) {

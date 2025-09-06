@@ -4,6 +4,7 @@ import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.restic.backup.BackupError;
 import com.syncduo.server.model.restic.backup.BackupSummary;
 import com.syncduo.server.model.restic.cat.CatConfig;
+import com.syncduo.server.model.restic.global.ExitErrors;
 import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.model.restic.init.Init;
 import com.syncduo.server.model.restic.ls.Node;
@@ -19,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -33,49 +35,47 @@ public class ResticService {
     private String RESTIC_BACKUP_PATH;
 
     // create restic repository
-    public ResticExecResult<Init, Void> init() throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
-
-
-        CommandLine commandLine = getDefaultCommandLine();
-        commandLine.addArgument("init");
-        ResticParser<Init, Void> resticParser = new ResticParser<>(
-                RESTIC_PASSWORD,
-                RESTIC_BACKUP_PATH,
-                commandLine
-        );
-        CompletableFuture<ResticExecResult<Init, Void>> future = resticParser.execute(
-                null,
-                stdout -> JsonUtil.parseResticJsonLine(stdout, Init.getCondition(), Init.class),
-                null,
-                null,
-                null
-        );
+    protected ResticExecResult<Init, ExitErrors> init() throws SyncDuoException {
+        // 参数检查
         try {
+            FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
+        } catch (SyncDuoException e) {
+            throw new SyncDuoException("init failed. RESTIC_BACKUP_PATH invalid. ", e);
+        }
+        if (StringUtils.isBlank(RESTIC_PASSWORD)) {
+            throw new SyncDuoException("init failed. RESTIC_PASSWORD is empty");
+        }
+        try {
+            CommandLine commandLine = getDefaultCommandLine();
+            commandLine.addArgument("init");
+            CompletableFuture<ResticExecResult<Init, ExitErrors>> future = ResticParser.executeWithExitErrorsHandler(
+                    RESTIC_PASSWORD,
+                    RESTIC_BACKUP_PATH,
+                    commandLine,
+                    stdout -> JsonUtil.parseResticJsonLine(stdout, Init.getCondition(), Init.class)
+            );
             return future.get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (Exception e) {
             throw new SyncDuoException("init failed. future get failed. ", e);
         }
     }
 
-    public ResticExecResult<BackupSummary, BackupError> backup(String folderPathString) throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
+    public ResticExecResult<BackupSummary, List<BackupError>> backup(String folderPathString) throws SyncDuoException {
         FilesystemUtil.isFolderPathValid(folderPathString);
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("backup");
         commandLine.addArgument(".");
         commandLine.addArgument("--skip-if-unchanged");
-        ResticParser<BackupSummary, BackupError> resticParser = new ResticParser<>(
-                RESTIC_PASSWORD,
-                RESTIC_BACKUP_PATH,
-                commandLine
-        );
-        CompletableFuture<ResticExecResult<BackupSummary, BackupError>> future = resticParser.execute(
-                folderPathString,
-                stdout -> JsonUtil.parseResticJsonLine(stdout, BackupSummary.getCondition(), BackupSummary.class),
-                null,
-                stderr -> JsonUtil.parseResticJsonLines(stderr, BackupError.getCondition(), BackupError.class),
-                null
+        CompletableFuture<ResticExecResult<BackupSummary, List<BackupError>>> future =
+                ResticParser.executeWithWorkingDirectory(
+                    RESTIC_PASSWORD,
+                    RESTIC_BACKUP_PATH,
+                    folderPathString,
+                    commandLine,
+                    stdout -> JsonUtil.parseResticJsonLine(
+                            stdout, BackupSummary.getCondition(), BackupSummary.class),
+                    stderr -> JsonUtil.parseResticJsonLines(
+                            stderr, BackupError.getCondition(), BackupError.class)
         );
         try {
             return future.get();
@@ -84,23 +84,16 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<Stats, Void> stats() throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
+    public ResticExecResult<Stats, ExitErrors> stats() throws SyncDuoException {
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("stats");
         commandLine.addArgument("--mode");
         commandLine.addArgument("blobs-per-file");
-        ResticParser<Stats, Void> resticParser = new ResticParser<>(
+        CompletableFuture<ResticExecResult<Stats, ExitErrors>> future = ResticParser.executeWithExitErrorsHandler(
                 RESTIC_PASSWORD,
                 RESTIC_BACKUP_PATH,
-                commandLine
-        );
-        CompletableFuture<ResticExecResult<Stats, Void>> future = resticParser.execute(
-                null,
-                stdout -> JsonUtil.parseResticJsonDocument(stdout, Stats.class),
-                null,
-                null,
-                null
+                commandLine,
+                stdout -> JsonUtil.parseResticJsonDocument(stdout, Stats.class)
         );
         try {
             return future.get();
@@ -109,22 +102,15 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<CatConfig, Void> catConfig() throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
+    public ResticExecResult<CatConfig, ExitErrors> catConfig() throws SyncDuoException {
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("cat");
         commandLine.addArgument("config");
-        ResticParser<CatConfig, Void> resticParser = new ResticParser<>(
+        CompletableFuture<ResticExecResult<CatConfig, ExitErrors>> future = ResticParser.executeWithExitErrorsHandler(
                 RESTIC_PASSWORD,
                 RESTIC_BACKUP_PATH,
-                commandLine
-        );
-        CompletableFuture<ResticExecResult<CatConfig, Void>> future = resticParser.execute(
-                null,
-                stdout -> JsonUtil.parseResticJsonDocument(stdout, CatConfig.class),
-                null,
-                null,
-                null
+                commandLine,
+                stdout -> JsonUtil.parseResticJsonDocument(stdout, CatConfig.class)
         );
         try {
             return future.get();
@@ -133,8 +119,7 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<Node, Void> ls(String snapshotId, String pathString) throws SyncDuoException {
-        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
+    public ResticExecResult<List<Node>, ExitErrors> ls(String snapshotId, String pathString) throws SyncDuoException {
         if (StringUtils.isBlank(snapshotId)) {
             throw new SyncDuoException("ls failed. snapshotsId is null");
         }
@@ -144,17 +129,12 @@ public class ResticService {
         if (StringUtils.isNotBlank(pathString)) {
             commandLine.addArgument(pathString);
         }
-        ResticParser<Node, Void> resticParser = new ResticParser<>(
-                RESTIC_PASSWORD,
-                RESTIC_BACKUP_PATH,
-                commandLine
-        );
-        CompletableFuture<ResticExecResult<Node, Void>> future = resticParser.execute(
-                null,
-                null,
-                stdout -> JsonUtil.parseResticJsonLines(stdout, Node.getCondition(), Node.class),
-                null,
-                null
+        CompletableFuture<ResticExecResult<List<Node>, ExitErrors>> future =
+                ResticParser.executeWithExitErrorsHandler(
+                    RESTIC_PASSWORD,
+                    RESTIC_BACKUP_PATH,
+                    commandLine,
+                    stdout -> JsonUtil.parseResticJsonLines(stdout, Node.getCondition(), Node.class)
         );
         try {
             return future.get();
@@ -163,7 +143,7 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<RestoreSummary, RestoreError> restore(
+    public ResticExecResult<RestoreSummary, List<RestoreError>> restore(
             String snapshotId,
             String[] pathStrings,
             String targetString) throws SyncDuoException {
@@ -185,19 +165,16 @@ public class ResticService {
             restoreCommandLine.addArgument("--include");
             restoreCommandLine.addArgument(filePathString);
         }
-        ResticParser<RestoreSummary, RestoreError> resticParser = new ResticParser<>(
+        CompletableFuture<ResticExecResult<RestoreSummary, List<RestoreError>>> future = ResticParser.execute(
                 RESTIC_PASSWORD,
                 RESTIC_BACKUP_PATH,
-                restoreCommandLine
-        );
-        CompletableFuture<ResticExecResult<RestoreSummary, RestoreError>> future = resticParser.execute(
                 null,
+                null,
+                restoreCommandLine,
                 stdout ->
                         JsonUtil.parseResticJsonLine(stdout, RestoreSummary.getCondition(), RestoreSummary.class),
-                null,
                 stderr ->
-                        JsonUtil.parseResticJsonLines(stderr, RestoreError.getCondition(), RestoreError.class),
-                null
+                        JsonUtil.parseResticJsonLines(stderr, RestoreError.getCondition(), RestoreError.class)
         );
         try {
             return future.get();

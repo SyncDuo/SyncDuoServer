@@ -8,6 +8,7 @@ import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.restic.backup.BackupError;
 import com.syncduo.server.model.restic.backup.BackupSummary;
 import com.syncduo.server.model.restic.cat.CatConfig;
+import com.syncduo.server.model.restic.global.ExitErrors;
 import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.model.restic.init.Init;
 import com.syncduo.server.model.restic.ls.Node;
@@ -92,10 +93,10 @@ public class ResticFacadeService {
         // 检查 restore path 是否存在
         this.rcloneFacadeService.isSourceFolderExist(RESTIC_RESTORE_PATH);
         // 检查备份目录是否已经初始化
-        ResticExecResult<CatConfig, Void> catConfigResult = this.resticService.catConfig();
+        ResticExecResult<CatConfig, ExitErrors> catConfigResult = this.resticService.catConfig();
         // 没有初始化则初始化
         if (!catConfigResult.isSuccess()) {
-            ResticExecResult<Init, Void> initResult = this.resticService.init();
+            ResticExecResult<Init, ExitErrors> initResult = this.resticService.init();
             if (!initResult.isSuccess()) {
                 throw new SyncDuoException("Restic Init failed.", initResult.getSyncDuoException());
             }
@@ -133,7 +134,7 @@ public class ResticFacadeService {
     }
 
     public Stats getStats() throws SyncDuoException {
-        ResticExecResult<Stats, Void> statsResult = this.resticService.stats();
+        ResticExecResult<Stats, ExitErrors> statsResult = this.resticService.stats();
         if (!statsResult.isSuccess()) {
             throw new SyncDuoException("getStats failed. ", statsResult.getSyncDuoException());
         }
@@ -145,11 +146,11 @@ public class ResticFacadeService {
             throw new SyncDuoException("getSnapshotFileInfo failed. " +
                     "snapshotsId or pathString is null");
         }
-        ResticExecResult<Node, Void> lsResult = this.resticService.ls(snapshotId, pathString);
+        ResticExecResult<List<Node>, ExitErrors> lsResult = this.resticService.ls(snapshotId, pathString);
         if (!lsResult.isSuccess()) {
             throw new SyncDuoException("getSnapshotFileInfo failed.", lsResult.getSyncDuoException());
         }
-        return lsResult.getAggData();
+        return lsResult.getData();
     }
 
     private void backup(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
@@ -159,7 +160,7 @@ public class ResticFacadeService {
             return;
         }
         // backup
-        ResticExecResult<BackupSummary, BackupError> backupResult = this.resticService.backup(
+        ResticExecResult<BackupSummary, List<BackupError>> backupResult = this.resticService.backup(
                 syncFlowEntity.getDestFolderPath()
         );
         // 记录 backup job
@@ -192,7 +193,7 @@ public class ResticFacadeService {
                 () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
                 RESTIC_RESTORE_AGE_SEC
         );
-        ResticExecResult<RestoreSummary, RestoreError> restoreResult = this.resticService.restore(
+        ResticExecResult<RestoreSummary, List<RestoreError>> restoreResult = this.resticService.restore(
                 snapshotId,
                 pathStrings,
                 restoreTargetPathString
@@ -228,7 +229,7 @@ public class ResticFacadeService {
                 () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
                 RESTIC_RESTORE_AGE_SEC
         );
-        ResticExecResult<RestoreSummary, RestoreError> restoreResult = this.resticService.restore(
+        ResticExecResult<RestoreSummary, List<RestoreError>> restoreResult = this.resticService.restore(
                 snapshotFileInfo.getSnapshotId(),
                 new String[]{snapshotFileInfo.getPath()},
                 restoreTargetPathString

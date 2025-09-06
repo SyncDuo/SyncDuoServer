@@ -21,53 +21,67 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 @Slf4j
-public class ResticParser<T1, T2> {
+public class ResticParser {
 
-    private final String RESTIC_PASSWORD;
+    private static final ExecuteWatchdog watchdog =
+            ExecuteWatchdog.builder().setTimeout(Duration.ofSeconds(60)).get();
 
-    private final String RESTIC_REPOSITORY;
-
-    private final CommandLine commandLine;
-
-    private Map<String, String> extraEnvironmentVariable = null;
-
-    private ExecuteWatchdog watchdog = ExecuteWatchdog.builder().setTimeout(Duration.ofSeconds(60)).get();
-
-    public ResticParser(String resticPassword, String resticRepository, CommandLine commandLine) {
-        RESTIC_PASSWORD = resticPassword;
-        RESTIC_REPOSITORY = resticRepository;
-        this.commandLine = commandLine;
+    public static <SR>  CompletableFuture<ResticExecResult<SR, ExitErrors>> executeWithExitErrorsHandler(
+            String resticPassword,
+            String resticRepository,
+            CommandLine commandLine,
+            Function<String, SR> successHandler
+    ) {
+        return execute(
+                resticPassword,
+                resticRepository,
+                null,
+                null,
+                commandLine,
+                successHandler,
+                stderr -> JsonUtil.parseResticJsonDocument(stderr, ExitErrors.class)
+        );
     }
 
-    public CompletableFuture<ResticExecResult<T1, T2>> execute(
+    public static <SR, FR>  CompletableFuture<ResticExecResult<SR, FR>> executeWithWorkingDirectory(
+            String resticPassword,
+            String resticRepository,
             String workingDirectory,
-            OnProcessSuccess<T1> onSuccessHandler,
-            OnProcessSuccessAgg<T1> onSuccessAggHandler,
-            OnProcessFailedAgg<T2> onFailedAggHandler,
-            OnProcessFailed<T2> onFailedHandler
-    ) throws SyncDuoException {
+            CommandLine commandLine,
+            Function<String, SR> successHandler,
+            Function<String, FR> failedHandler
+    ) {
+        return execute(
+                resticPassword,
+                resticRepository,
+                null,
+                workingDirectory,
+                commandLine,
+                successHandler,
+                failedHandler
+        );
+    }
+
+    public static <SR, FR>  CompletableFuture<ResticExecResult<SR, FR>> execute(
+            String resticPassword,
+            String resticRepository,
+            Map<String, String> extraEnvMap,
+            String workingDirectory,
+            CommandLine commandLine,
+            Function<String, SR> successHandler,
+            Function<String, FR> failedHandler
+            ) {
         Executor executor = DefaultExecutor.builder().get();
-        CompletableFuture<ResticExecResult<T1, T2>> future = new CompletableFuture<>();
-        if (ObjectUtils.allNotNull(onFailedAggHandler, onFailedHandler)) {
-            throw new SyncDuoException("onFailedAggHandler and onFailedHandler are both not null");
-        }
-        // 判断使用的成功结果handler
-        // 0: onSuccessHandler, 1: onSuccessAggHandler
-        int stdOutHandlerFlag = ObjectUtils.isEmpty(onSuccessHandler) ? 1 : 0;
-        // 判断使用的错误结果handler
-        // 0: exitErrorHandler, 1: stdAggregateHandler, 2: onFailedHandler
-        int stdErrHandlerFlag;
-        if (ObjectUtils.allNull(onFailedAggHandler, onFailedHandler)) {
-            stdErrHandlerFlag = 0;
-        } else {
-            stdErrHandlerFlag = ObjectUtils.isEmpty(onFailedAggHandler) ? 2 : 1;
+        CompletableFuture<ResticExecResult<SR, FR>> future = new CompletableFuture<>();
+        if (ObjectUtils.anyNull(successHandler, failedHandler)) {
+            throw new SyncDuoException("successHandler or failedHandler is null");
         }
         // 1. 工作目录
         if (StringUtils.isNotBlank(workingDirectory)) {
             executor.setWorkingDirectory(new File(workingDirectory));
-            log.debug("workingDirectory: {}", executor.getWorkingDirectory().getAbsolutePath());
         }
         // 2. 创建输出流处理器（捕获 stdout/stderr）
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -77,26 +91,24 @@ public class ResticParser<T1, T2> {
         // 3. 设置超时
         executor.setWatchdog(watchdog);
         // 4. 非阻塞执行
+        Map<String, String> env = getEnv(resticPassword, resticRepository, extraEnvMap);
         try {
-            executor.execute(this.commandLine, getEnv(), new ExecuteResultHandler() {
+            executor.execute(commandLine, env, new ExecuteResultHandler() {
                 @Override
                 public void onProcessComplete(int exitCode) {
+                    ResticExitCodeEnum resticExitCodeEnum = ResticExitCodeEnum.fromCode(exitCode);
+                    String stdoutString = getStdAsString(stdout);
                     try {
-                        if (stdOutHandlerFlag == 0) {
-                            T1 result = onSuccessHandler.apply(getStdAsString(stdout));
-                            if (ObjectUtils.isEmpty(result)) {
-                                throw new SyncDuoException("onProcessComplete failed. result is null.");
-                            }
-                            future.complete(ResticExecResult.success(ResticExitCodeEnum.SUCCESS, result));
-                        } else {
-                            List<T1> result = onSuccessAggHandler.apply(getStdAsString(stdout));
-                            if (CollectionUtils.isEmpty(result)) {
-                                throw new SyncDuoException("onProcessComplete failed. result is null.");
-                            }
-                            future.complete(ResticExecResult.success(ResticExitCodeEnum.SUCCESS, result));
-                        }
+                        SR successResult = successHandler.apply(stdoutString);
+                        future.complete(ResticExecResult.success(
+                                resticExitCodeEnum,
+                                successResult
+                        ));
                     } catch (Exception e) {
-                        future.complete(ResticExecResult.failed(e));
+                        future.complete(ResticExecResult.failed(
+                                resticExitCodeEnum,
+                                new SyncDuoException("restic command success." +
+                                        "stdout is %s. but handler failed.".formatted(stdoutString), e)));
                     }
                 }
 
@@ -104,81 +116,48 @@ public class ResticParser<T1, T2> {
                 public void onProcessFailed(ExecuteException e) {
                     int exitValue = e.getExitValue();
                     ResticExitCodeEnum resticExitCodeEnum = ResticExitCodeEnum.fromCode(exitValue);
-                    if (stdErrHandlerFlag == 0) {
-                        future.complete(parseExitError(getStdAsString(stderr)));
-                        return;
-                    }
+                    String stderrString = getStdAsString(stderr);
                     try {
-                        if (stdErrHandlerFlag == 1) {
-                            List<T2> result = onFailedAggHandler.apply(getStdAsString(stderr));
-                            if (CollectionUtils.isEmpty(result)) {
-                                throw new SyncDuoException("retry with parseExitError");
-                            }
-                            future.complete(ResticExecResult.failed(resticExitCodeEnum, result));
-                        } else {
-                            T2 result = onFailedHandler.apply(getStdAsString(stderr));
-                            if (ObjectUtils.isEmpty(result)) {
-                                throw new SyncDuoException("retry with parseExitError");
-                            }
-                            future.complete(ResticExecResult.failed(resticExitCodeEnum, result));
-                        }
+                        FR failedResult = failedHandler.apply(stderrString);
+                        future.complete(ResticExecResult.failed(
+                                resticExitCodeEnum,
+                                failedResult
+                        ));
                     } catch (Exception ex) {
-                        // 再尝试一次使用 exitError 解析
-                        future.complete(parseExitError(getStdAsString(stderr)));
+                        // 使用 SyncDuoException 包装 stderr 返回
+                        future.complete(ResticExecResult.failed(
+                                resticExitCodeEnum,
+                                new SyncDuoException("restic failed handler failed." +
+                                        "stderr is %s.".formatted(stderrString), e)));
                     }
                 }
             });
-        } catch (IOException e) {
-            future.complete(ResticExecResult.failed(e));
+        } catch (Exception e) {
+            future.complete(ResticExecResult.failed(
+                    new SyncDuoException("restic failed before command exec. ", e)));
         }
         return future;
     }
 
-    private String getStdAsString(ByteArrayOutputStream std) {
+    private static String getStdAsString(ByteArrayOutputStream std) {
+        if (ObjectUtils.isEmpty(std)) {
+            return "";
+        }
         return std.toString(StandardCharsets.UTF_8).trim();
     }
 
-    private Map<String, String> getEnv() {
+    private static Map<String, String> getEnv(
+            String resticPassword,
+            String resticRepository,
+            Map<String, String> extraEnvMap) {
         // 获取当前系统变量
         Map<String, String> result = new HashMap<>(System.getenv());
         // 设置 RESTIC 密码和备份目录
-        result.put("RESTIC_PASSWORD", RESTIC_PASSWORD);
-        result.put("RESTIC_REPOSITORY", RESTIC_REPOSITORY);
-        if (MapUtils.isNotEmpty(extraEnvironmentVariable)) {
-            result.putAll(extraEnvironmentVariable);
+        result.put("RESTIC_PASSWORD", resticPassword);
+        result.put("RESTIC_REPOSITORY", resticRepository);
+        if (MapUtils.isNotEmpty(extraEnvMap)) {
+            result.putAll(extraEnvMap);
         }
         return result;
-    }
-
-    private static <T1, T2> ResticExecResult<T1, T2> parseExitError(String stderr) {
-        try {
-            ExitErrors exitErrors = JsonUtil.parseResticJsonDocument(
-                    stderr,
-                    ExitErrors.class
-            );
-            return ResticExecResult.failed(exitErrors);
-        } catch (SyncDuoException e) {
-            return ResticExecResult.failed(e);
-        }
-    }
-
-    @FunctionalInterface
-    public interface OnProcessSuccess<T> {
-        T apply(String stdout) throws Exception;
-    }
-
-    @FunctionalInterface
-    public interface OnProcessSuccessAgg<T> {
-        List<T> apply(String stdout) throws Exception;
-    }
-
-    @FunctionalInterface
-    public interface OnProcessFailedAgg<T> {
-        List<T> apply(String stderr) throws Exception;
-    }
-
-    @FunctionalInterface
-    public interface OnProcessFailed<T> {
-        T apply(String stderr) throws Exception;
     }
 }
