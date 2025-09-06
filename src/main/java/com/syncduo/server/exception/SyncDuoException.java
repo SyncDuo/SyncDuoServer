@@ -47,6 +47,7 @@ public class SyncDuoException extends RuntimeException {
         // <exception name> : <exception message> -> <next>
         sb.append("%s : %s -> ".formatted(
                 throwable.getClass().getSimpleName(),
+                // 解决其他异常无具体信息问题
                 throwable instanceof SyncDuoException ? throwable.getMessage() : throwable.toString()));
         // 递归处理cause
         buildMessageChain(throwable.getCause(), sb, depth + 1);

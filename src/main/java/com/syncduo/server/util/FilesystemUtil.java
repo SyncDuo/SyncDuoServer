@@ -1,6 +1,9 @@
 package com.syncduo.server.util;
 
+import com.syncduo.server.exception.BusinessException;
+import com.syncduo.server.exception.ResourceNotFoundException;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -35,32 +38,35 @@ public class FilesystemUtil {
      *
      * @param baseFolderString The base folder you want to treat as srcFs.
      * @param fullPathString   The full path to the source file.
-     * @return String array: [0] = srcFs, [1] = srcRemote
+     * @return String fullPathString minus baseFolderString
      */
-    public static String splitPath(String baseFolderString, String fullPathString) throws SyncDuoException {
-
+    public static String splitPath(
+            String baseFolderString, String fullPathString) throws ValidationException {
+        // 参数检查
         Path baseFolder = FilesystemUtil.isFolderPathValid(baseFolderString);
         Path base = baseFolder.normalize();
         Path fullPath = FilesystemUtil.isFilePathValid(fullPathString);
         Path full = fullPath.normalize();
-
+        // 判断 fullPathString 是否包含在 baseFolderString 中
         if (!full.startsWith(base)) {
-            throw new SyncDuoException("splitPath failed. Full path is not under base folder." +
+            throw new ValidationException("splitPath failed. " +
+                    "fullPathString doesn't contain baseFolderString." +
                     "fullPathString is %s.".formatted(fullPathString) +
                     "baseFolderString is %s.".formatted(baseFolderString));
         }
-
+        // 获取 fullPathString - baseFolderString
         try {
             Path relative = base.relativize(full);
             return relative.toString().replace('\\', '/');
         } catch (IllegalArgumentException e) {
-            throw new SyncDuoException("splitPath failed. fullPathString can't be relativize." +
+            throw new ValidationException("splitPath failed. fullPathString can't be relativize." +
                     "fullPathString is %s.".formatted(fullPathString) +
                     "baseFolderString is %s.".formatted(baseFolderString));
         }
     }
 
-    public static List<Long> getFolderInfo(String path) throws SyncDuoException {
+    public static List<Long> getFolderInfo(String path) throws ValidationException, ResourceNotFoundException {
+        // 参数检查
         Path folder = FilesystemUtil.isFolderPathValid(path);
         // 初始化变量
         AtomicLong fileCount = new AtomicLong(0);
@@ -83,41 +89,43 @@ public class FilesystemUtil {
                 }
             });
         } catch (IOException e) {
-            throw new SyncDuoException("getFolderInfo failed.", e);
+            throw new ResourceNotFoundException("getFolderInfo failed.", e);
         }
 
         return Arrays.asList(fileCount.get(), subFolderCount.get(), totalSize.get());
     }
 
     public static Path isFilePathValid(String filePathString)
-            throws SyncDuoException {
+            throws ValidationException, ResourceNotFoundException {
         if (StringUtils.isBlank(filePathString)) {
-            throw new SyncDuoException("isFilePathValid failed. filePathString is null");
+            throw new ValidationException("isFilePathValid failed. filePathString is null");
         }
         Path file = Paths.get(filePathString);
         if (Files.exists(file)) {
             return file;
         } else {
-            throw new SyncDuoException(("isFilePathValid failed. filePathString not exist. " +
-                    "filePathString is %s").formatted(filePathString));
+            throw new ResourceNotFoundException("isFilePathValid failed. " +
+                    "filePathString:%s not exist. ".formatted(filePathString));
         }
     }
 
-    public static Path isFolderPathValid(String folderPathString) throws SyncDuoException {
+    public static Path isFolderPathValid(
+            String folderPathString) throws ValidationException, ResourceNotFoundException {
         if (StringUtils.isBlank(folderPathString)) {
-            throw new SyncDuoException("isFolderPathValid failed. folderPathString is null");
+            throw new ValidationException("isFolderPathValid failed. folderPathString is null");
         }
         Path folder = Paths.get(folderPathString);
         if (Files.exists(folder) && Files.isDirectory(folder)) {
             return folder;
         } else {
-            throw new SyncDuoException(("isFolderPathValid failed. " +
+            throw new ResourceNotFoundException(("isFolderPathValid failed. " +
                     "folderPathString doesn't exist or is not folder." +
                     "folderPathString is %s").formatted(folderPathString));
         }
     }
 
-    public static List<Path> getSubFolders(String folderPathString) throws SyncDuoException {
+    public static List<Path> getSubFolders(
+            String folderPathString) throws ValidationException, ResourceNotFoundException {
         if (StringUtils.isBlank(folderPathString)) {
             return Collections.emptyList();
         }
@@ -134,23 +142,24 @@ public class FilesystemUtil {
                 }
             }
         } catch (IOException e) {
-            throw new SyncDuoException(("getSubfolders failed. " +
+            throw new ResourceNotFoundException(("getSubfolders failed. " +
                     "folderPathString is %s").formatted(folderPathString),
                     e);
         }
         return result;
     }
 
-    public static String createRandomEnglishFolder(String parentFolderPathString) throws SyncDuoException {
+    public static String createRandomEnglishFolder(
+            String parentFolderPathString) throws ValidationException {
         Path parentFolder = isFolderPathValid(parentFolderPathString);
-        // 获取随机文件夹名称
-        StringBuilder sb = new StringBuilder(NAME_LENGTH);
-        for (int i = 0; i < NAME_LENGTH; i++) {
-            int index = RANDOM.nextInt(ALL_LETTER.length());
-            sb.append(ALL_LETTER.charAt(index));
-        }
         // 拼接路径
         for (int i = 0; i < MAX_ATTEMPTS; i++) {
+            // 获取随机文件夹名称
+            StringBuilder sb = new StringBuilder(NAME_LENGTH);
+            for (int j = 0; j < NAME_LENGTH; j++) {
+                int index = RANDOM.nextInt(ALL_LETTER.length());
+                sb.append(ALL_LETTER.charAt(index));
+            }
             Path newFolderTmp = parentFolder.resolve(sb.toString()).normalize();
             if (Files.exists(newFolderTmp)) {
                 continue;
@@ -160,22 +169,22 @@ public class FilesystemUtil {
                 Path newFolder = Files.createDirectory(newFolderTmp);
                 return newFolder.toAbsolutePath().toString();
             } catch (IOException e) {
-                throw new SyncDuoException("createRandomEnglishFolder failed. ", e);
+                throw new ResourceNotFoundException("createRandomEnglishFolder failed. ", e);
             }
         }
-        throw new SyncDuoException("createRandomEnglishFolder failed. " +
-                "After all attempts, createFolder failed.");
+        throw new BusinessException("createRandomEnglishFolder failed after all attempts.");
     }
 
-    public static List<Path> getAllFile(Path folder) throws SyncDuoException {
+    public static List<Path> getAllFile(Path folder) throws ResourceNotFoundException {
         try(Stream<Path> list = Files.list(folder)) {
             return list.filter(Files::isRegularFile).toList();
         } catch (IOException e) {
-            throw new SyncDuoException("getAllFile failed.", e);
+            throw new ResourceNotFoundException("getAllFile failed.", e);
         }
     }
 
-    public static Path zipAllFile(String folderPathString, String prefix) throws SyncDuoException {
+    public static Path zipAllFile(
+            String folderPathString, String prefix) throws ValidationException, ResourceNotFoundException {
         // 检查参数
         Path folder = isFolderPathValid(folderPathString);
         // 获取随机zip文件名称
@@ -184,7 +193,12 @@ public class FilesystemUtil {
             int index = RANDOM.nextInt(ALL_LETTER.length());
             sb.append(ALL_LETTER.charAt(index));
         }
-        Path zipFile = folder.resolve(sb.append(".zip").toString());
+        Path zipFile;
+        try {
+            zipFile = folder.resolve(sb.append(".zip").toString());
+        } catch (Exception e) {
+            throw new ResourceNotFoundException("zipAllFile resolve path failed.", e);
+        }
         // 遍历所有文件和文件夹
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             Files.walkFileTree(folder, new SimpleFileVisitor<>() {
@@ -219,7 +233,7 @@ public class FilesystemUtil {
                 }
             });
         } catch (IOException e) {
-            throw new SyncDuoException("zipAllFile failed.", e);
+            throw new ResourceNotFoundException("zipAllFile failed.", e);
         }
         return zipFile;
     }
@@ -229,7 +243,8 @@ public class FilesystemUtil {
      * @param folderPathString 要删除的文件夹路径
      * @throws SyncDuoException 如果删除过程中发生错误
      */
-    public static void deleteFolder(String folderPathString) throws SyncDuoException {
+    public static void deleteFolder(
+            String folderPathString) throws ValidationException, ResourceNotFoundException {
         Path folderPath = isFolderPathValid(folderPathString);
         // 使用Files.walkFileTree遍历并删除文件夹内容
         try {
@@ -248,8 +263,8 @@ public class FilesystemUtil {
                     return FileVisitResult.CONTINUE;
                 }
             });
-        } catch (Exception e) {
-            throw new SyncDuoException("deleteFolder failed.", e);
+        } catch (IOException e) {
+            throw new ResourceNotFoundException("deleteFolder failed.", e);
         }
     }
 }
