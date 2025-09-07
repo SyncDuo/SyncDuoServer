@@ -2,7 +2,7 @@
 <configuration>
 
     <!-- Define logging level -->
-    <property name="LOG_LEVEL" value="DEBUG"/>
+    <property name="GLOBAL_LOG_LEVEL" value="DEBUG"/>
 
     <!-- Define log directory -->
     <property name="logDir" value="logs"/>
@@ -16,35 +16,28 @@
     </appender>
 
     <!-- Rolling File Appender: Log to file with rolling -->
-    <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${logDir}/app.log</file>
-
-        <!-- Time-Based Rolling Policy -->
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- File name pattern with date, logs will be rotated daily -->
-            <fileNamePattern>${logDir}/app-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-
-            <!-- Keep logs for the last 30 days -->
-            <maxHistory>30</maxHistory>
-
-            <!-- Keep the most recent log file uncompressed -->
-            <cleanHistoryOnStart>false</cleanHistoryOnStart>
-        </rollingPolicy>
-
-        <!-- Optional: Size-Based Triggering Policy (roll when the file exceeds 10MB) -->
-        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+        <!-- 滚动策略 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logDir}/app-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
-        </triggeringPolicy>
-
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <!-- 输出格式 -->
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5p | %c{1} | %L | %thread | %m%n</pattern>
         </encoder>
+        <!-- 使用 ThresholdFilter 设置文件输出级别为 INFO -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
     </appender>
 
     <!-- Root Logger: Set the log level to INFO and bind appends -->
-    <root level="${LOG_LEVEL}">
+    <root level="${GLOBAL_LOG_LEVEL}">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="ROLLING"/>
+        <appender-ref ref="ROLLING_FILE"/>
     </root>
 
     <!-- Logger for a specific package -->
