@@ -1,7 +1,7 @@
 package com.syncduo.server.util;
 
 import com.syncduo.server.enums.SyncFlowStatusEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.JsonException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.api.syncflow.*;
@@ -61,7 +61,7 @@ public class EntityValidationUtil {
             } else {
                 JsonUtil.deserializeStringToList(filterCriteria);
             }
-        } catch (SyncDuoException e) {
+        } catch (JsonException e) {
             throw new ValidationException("isCreateSyncFlowRequestValid failed. " +
                     "filterCriteria:%s can't deserialize to list<String>".formatted(filterCriteria));
         }
@@ -104,7 +104,7 @@ public class EntityValidationUtil {
         }
         try {
             JsonUtil.deserializeStringToList(updateFilterCriteriaRequest.getFilterCriteria());
-        } catch (SyncDuoException e) {
+        } catch (JsonException e) {
             throw new ValidationException("isUpdateFilterCriteriaRequestValid failed. " +
                     "filterCriteria %s can't convert to list<string>"
                             .formatted(updateFilterCriteriaRequest.getFilterCriteria()));

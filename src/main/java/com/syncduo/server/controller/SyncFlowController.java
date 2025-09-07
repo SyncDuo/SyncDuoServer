@@ -2,7 +2,7 @@ package com.syncduo.server.controller;
 
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.*;
 import com.syncduo.server.model.api.global.FolderStats;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.syncflow.*;
@@ -17,7 +17,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -66,7 +65,7 @@ public class SyncFlowController {
             return SyncDuoHttpResponse.success(null, "SyncFlow is deleted");
         }
         if (!SyncFlowStatusEnum.PAUSE.name().equals(syncFlowEntity.getSyncStatus())) {
-            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "sync flow status is not PAUSE");
+            throw new ValidationException("sync flow status is not PAUSE");
         }
         // 更新 filter
         syncFlowEntity.setFilterCriteria(updateFilterCriteriaRequest.getFilterCriteria());
@@ -90,8 +89,7 @@ public class SyncFlowController {
         }
         SyncFlowStatusEnum from = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
         if (!SyncFlowStatusEnum.isTransitionValid(from, to)) {
-            throw new SyncDuoException(HttpStatus.BAD_REQUEST,
-                    "change status from %s to %s is not valid".formatted(from, to));
+            throw new ValidationException("change status from %s to %s is not valid".formatted(from, to));
         }
         // 更改状态
         this.changeSyncFlowStatusInner(syncFlowEntity, to);
@@ -117,16 +115,16 @@ public class SyncFlowController {
                     continue;
                 }
                 this.changeSyncFlowStatusInner(syncFlowEntity, to);
-            } catch (SyncDuoException e) {
-                log.error("changeAllSyncFlowStatus failed.", e);
+            } catch (Exception e) {
+                log.error("changeAllSyncFlowStatus failed.",
+                        new BusinessException("changeAllSyncFlowStatus failed", e));
             }
         }
         return SyncDuoHttpResponse.success();
     }
 
-    private void changeSyncFlowStatusInner(
-            SyncFlowEntity syncFlowEntity,
-            SyncFlowStatusEnum to) throws SyncDuoException {
+    private void changeSyncFlowStatusInner(SyncFlowEntity syncFlowEntity, SyncFlowStatusEnum to)
+    throws ValidationException, DbException {
         switch (to) {
             // sync 和 running 忽略, 因为这两个状态不应从前端传回
             case SYNC, RUNNING: {
@@ -187,8 +185,9 @@ public class SyncFlowController {
                 () -> {
                     try {
                         this.syncFlowService.deleteSyncFlow(dbResult);
-                    } catch (SyncDuoException e) {
-                        log.error("deleteSyncFlow failed.", e);
+                    } catch (Exception e) {
+                        log.error("deleteSyncFlow failed.",
+                                new BusinessException("deleteSyncFlow failed", e));
                     }
                 },
                 delayDeleteSec
@@ -207,25 +206,27 @@ public class SyncFlowController {
             try {
                 SyncFlowInfo syncFlowInfo = this.getSyncFlowInfo(syncFlowEntity);
                 result.add(syncFlowInfo);
-            } catch (SyncDuoException e) {
-                log.warn("getSyncFlowInfo failed.", e);
+            } catch (Exception e) {
+                log.warn("getSyncFlowInfo failed.",
+                        new BusinessException("getSyncFlowInfo failed", e));
             }
         }
         return SyncDuoHttpResponse.success(result);
     }
 
     private void isCreateSyncFlowRequestValid(
-            CreateSyncFlowRequest createSyncFlowRequest) throws SyncDuoException {
+            CreateSyncFlowRequest createSyncFlowRequest) throws ValidationException {
         EntityValidationUtil.isCreateSyncFlowRequestValid(createSyncFlowRequest);
         // 检查 source folder 是否存在
         if (!this.rcloneFacadeService.isSourceFolderExist(createSyncFlowRequest.getSourceFolderFullPath())) {
-            throw new SyncDuoException("isCreateSyncFlowRequestValid failed. " +
+            throw new ValidationException("isCreateSyncFlowRequestValid failed. " +
                     "sourceFolderPath is not exist. " +
                     "createSyncFlowRequest is %s.".formatted(createSyncFlowRequest));
         }
     }
 
-    private SyncFlowInfo getSyncFlowInfo(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+    private SyncFlowInfo getSyncFlowInfo(SyncFlowEntity syncFlowEntity)
+    throws ValidationException, ResourceNotFoundException, FileOperationException {
         // 本地获取 folderStat
         List<Long> folderInfo = FilesystemUtil.getFolderInfo(syncFlowEntity.getDestFolderPath());
         FolderStats folderStats = new FolderStats(folderInfo.get(0), folderInfo.get(1), folderInfo.get(2));

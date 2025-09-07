@@ -1,7 +1,10 @@
 package com.syncduo.server.controller;
 
 import com.syncduo.server.enums.ResticNodeTypeEnum;
+import com.syncduo.server.exception.BusinessException;
+import com.syncduo.server.exception.ResourceNotFoundException;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotInfo;
@@ -28,6 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,13 +62,13 @@ public class SnapshotsController {
 
     @PostMapping("/backup")
     public SyncDuoHttpResponse<Void> backup(
-            @RequestBody ManualBackupRequest manualBackupRequest) throws SyncDuoException {
+            @RequestBody ManualBackupRequest manualBackupRequest)  {
         EntityValidationUtil.isManualBackupRequestValid(manualBackupRequest);
         // 查询 syncflow
         SyncFlowEntity syncFlowEntity =
                 this.syncFlowService.getBySyncFlowId(manualBackupRequest.getInnerSyncFlowId());
         if (ObjectUtils.isEmpty(syncFlowEntity)) {
-            throw new SyncDuoException("backup failed. SyncFlow is deleted");
+            throw new ResourceNotFoundException("backup failed. SyncFlow is deleted");
         }
         // backup
         this.resticFacadeService.manualBackup(syncFlowEntity);
@@ -76,13 +80,12 @@ public class SnapshotsController {
             @Param("backupJobId") String backupJobId,
             @Param("pathString") String pathString) {
         if (StringUtils.isAnyBlank(backupJobId, pathString)) {
-            throw new SyncDuoException(HttpStatus.BAD_REQUEST,
-                    "getSnapshotsFile failed. backupJobId or path is null.");
+            throw new ValidationException("getSnapshotsFile failed. backupJobId or path is null.");
         }
         // 查询 backup job entity
         BackupJobEntity backupJobEntity = this.backupJobService.getByBackupJobId(Long.parseLong(backupJobId));
         if (ObjectUtils.isEmpty(backupJobEntity)) {
-            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "getSnapshotsFile failed. backupJobId not found.");
+            throw new ResourceNotFoundException("getSnapshotsFile failed. backupJobId not found.");
         }
         // 如果 backup 没有产生 snapshot, 则使用最新的 snapshot
         if (StringUtils.isBlank(backupJobEntity.getSnapshotId())) {
@@ -124,7 +127,7 @@ public class SnapshotsController {
     }
 
     @GetMapping("/get-all-syncflow-with-snapshots")
-    public SyncDuoHttpResponse<List<SyncFlowWithSnapshots>> getAllSyncFlowWithSnapshots() throws SyncDuoException {
+    public SyncDuoHttpResponse<List<SyncFlowWithSnapshots>> getAllSyncFlowWithSnapshots() {
         // 获取全部 syncflow
         List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
         if (CollectionUtils.isEmpty(allSyncFlow)) {
@@ -140,9 +143,9 @@ public class SnapshotsController {
 
     @GetMapping("/get-syncflow-with-snapshots")
     public SyncDuoHttpResponse<SyncFlowWithSnapshots> getSyncFlowWithSnapshots(
-            @RequestParam("syncFlowId") String syncFlowId) throws SyncDuoException {
+            @RequestParam("syncFlowId") String syncFlowId) {
         if (StringUtils.isBlank(syncFlowId)) {
-            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "getSyncFlowWithSnapshots failed. syncFlowId is null.");
+            throw new ValidationException("getSyncFlowWithSnapshots failed. syncFlowId is null.");
         }
         SyncFlowEntity syncFlowEntity = this.syncFlowService.getBySyncFlowId(Long.parseLong(syncFlowId));
         if (ObjectUtils.isEmpty(syncFlowEntity)) {
@@ -153,50 +156,37 @@ public class SnapshotsController {
 
     @PostMapping("/download-snapshot-files")
     public ResponseEntity<Resource> downloadSnapshotFiles(
-            @RequestBody List<SnapshotFileInfo> snapshotFileInfoList) throws SyncDuoException {
+            @RequestBody List<SnapshotFileInfo> snapshotFileInfoList) {
+        EntityValidationUtil.isSnapshotFileInfoListValid(snapshotFileInfoList);
+        Path zipFile = this.resticFacadeService.restoreFiles(snapshotFileInfoList);
         try {
-            EntityValidationUtil.isSnapshotFileInfoListValid(snapshotFileInfoList);
-        } catch (SyncDuoException e) {
-            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "downloadSnapshotFiles failed. ", e);
-        }
-        try {
-            Path zipFile = this.resticFacadeService.restoreFiles(snapshotFileInfoList);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + zipFile.getFileName() + "\"")
                     .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(new UrlResource(zipFile.toUri()));
-        } catch (Exception e) {
-            throw new SyncDuoException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "downloadSnapshotFiles failed.", e);
+        } catch (MalformedURLException e) {
+            throw new BusinessException("zipFile:%s can't convert to url.".formatted(zipFile), e);
         }
     }
 
     @PostMapping("/download-snapshot-file")
-    public ResponseEntity<Resource> downloadSnapshotFile(
-            @RequestBody SnapshotFileInfo snapshotFileInfo) throws SyncDuoException {
-        try {
-            EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
-            if (!ResticNodeTypeEnum.FILE.getType().equals(snapshotFileInfo.getType())) {
-                throw new SyncDuoException("downloadSnapshotFile failed. snapshotFileInfo is not a file.");
-            }
-        } catch (SyncDuoException e) {
-            throw new SyncDuoException(HttpStatus.BAD_REQUEST, "downloadSnapshotFile failed. ", e);
+    public ResponseEntity<Resource> downloadSnapshotFile(@RequestBody SnapshotFileInfo snapshotFileInfo) {
+        EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
+        if (!ResticNodeTypeEnum.FILE.getType().equals(snapshotFileInfo.getType())) {
+            throw new ValidationException("downloadSnapshotFile failed. snapshotFileInfo is not a file.");
         }
+        Path restoreFile = this.resticFacadeService.restoreFile(snapshotFileInfo);
         try {
-            Path restoreFile = this.resticFacadeService.restoreFile(snapshotFileInfo);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + snapshotFileInfo.getFileName() + "\"")
                     .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(new UrlResource(restoreFile.toUri()));
-        } catch (Exception e) {
-            throw new SyncDuoException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "downloadSnapshotFile failed. ",
-                    e);
+        } catch (MalformedURLException e) {
+            throw new BusinessException("zipFile:%s can't convert to url.".formatted(restoreFile), e);
         }
     }
 

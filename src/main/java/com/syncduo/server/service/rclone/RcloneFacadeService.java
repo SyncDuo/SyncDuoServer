@@ -2,7 +2,6 @@ package com.syncduo.server.service.rclone;
 
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.BusinessException;
-import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.entity.CopyJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
@@ -176,10 +175,10 @@ public class RcloneFacadeService {
         // 失败则记录数据, 并终止逻辑
         Long copyJobId = copyJobEntity.getCopyJobId();
         if (!rcloneResponse.isSuccess()) {
-            SyncDuoException syncDuoException = rcloneResponse.getBusinessException();
-            this.copyJobService.markCopyJobAsFailed(copyJobId, syncDuoException.toString());
+            BusinessException businessException = rcloneResponse.getBusinessException();
+            this.copyJobService.markCopyJobAsFailed(copyJobId, businessException.toString());
             this.updateSyncFlowStatusDebounce(syncFlowEntity);
-            throw new SyncDuoException("createAndStartRcloneJob failed.", syncDuoException);
+            throw new BusinessException("createAndStartRcloneJob failed.", businessException);
         }
         // 成功则启动 rclone job status 跟踪
         int rcloneJobId = rcloneResponse.getData().getJobId();

@@ -2,7 +2,6 @@ package com.syncduo.server.bus;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
 import com.syncduo.server.exception.BusinessException;
-import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.internal.FilesystemEvent;
 import com.syncduo.server.util.FilesystemUtil;
@@ -136,7 +135,7 @@ public class FolderWatcher implements DisposableBean {
                     filesystemEventHandler.sendFileEvent(new FilesystemEvent(
                             folder, file.toPath(), FileEventTypeEnum.FILE_MODIFIED
                     ));
-                } catch (SyncDuoException e) {
+                } catch (Exception e) {
                     log.error("文件夹发送 file event 失败",
                             new BusinessException("observer onFileChange failed.", e));
                 }

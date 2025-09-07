@@ -2,6 +2,7 @@ package com.syncduo.server.controller;
 
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.global.FolderStats;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.systeminfo.SystemInfo;
@@ -58,50 +59,42 @@ public class SystemInfoController {
     }
 
     @GetMapping("/get-system-info")
-    public SyncDuoHttpResponse<SystemInfo> getSystemInfo() throws SyncDuoException {
+    public SyncDuoHttpResponse<SystemInfo> getSystemInfo() {
         SystemInfo systemInfo = new SystemInfo();
-        try {
-            // hostname
-            String hostName = SystemInfoUtil.getHostName();
-            systemInfo.setHostName(hostName);
-            // uptime
-            RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-            if (ObjectUtils.isEmpty(runtimeMXBean)) {
-                throw new SyncDuoException("spring boot runtimeMXBean is null");
-            }
-            long uptimeMillis = runtimeMXBean.getUptime();
-            systemInfo.setUptime(uptimeMillis);
-            // fileCopyRate
-            CoreStatsResponse coreStatsResponse = this.rcloneFacadeService.getCoreStats();
-            double totalMB = coreStatsResponse.getTotalBytes() / 1024.0 / 1024.0;
-            double transferTime = coreStatsResponse.getTransferTime();
-            systemInfo.setFileCopyRate(totalMB / transferTime);
-            // watchers
-            systemInfo.setWatchers(this.folderWatcher.getWatcherNumber());
-            // syncFlowNumber and folder stats
-            List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
-            if (CollectionUtils.isEmpty(allSyncFlow)) {
-                systemInfo.setSyncFlowNumber(0);
-                return SyncDuoHttpResponse.success(systemInfo);
-            }
-            systemInfo.setSyncFlowNumber(allSyncFlow.size());
-            // 遍历 sync flow 累加 folder stats
-            long[] folderStatsArray = {0, 0, 0};
-            for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
-                List<Long> folderInfo = FilesystemUtil.getFolderInfo(syncFlowEntity.getDestFolderPath());
-                folderStatsArray[0] += folderInfo.get(0);
-                folderStatsArray[1] += folderInfo.get(1);
-                folderStatsArray[2] += folderInfo.get(2);
-            }
-            FolderStats folderStats = new FolderStats(folderStatsArray);
-            systemInfo.setFolderStats(folderStats);
-            return SyncDuoHttpResponse.success(systemInfo);
-        } catch (SyncDuoException e) {
-            throw new SyncDuoException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "getSystemInfo failed. ",
-                    e
-            );
+        // hostname
+        String hostName = SystemInfoUtil.getHostName();
+        systemInfo.setHostName(hostName);
+        // uptime
+        RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+        if (ObjectUtils.isEmpty(runtimeMXBean)) {
+            throw new ValidationException("spring boot runtimeMXBean is null");
         }
+        long uptimeMillis = runtimeMXBean.getUptime();
+        systemInfo.setUptime(uptimeMillis);
+        // fileCopyRate
+        CoreStatsResponse coreStatsResponse = this.rcloneFacadeService.getCoreStats();
+        double totalMB = coreStatsResponse.getTotalBytes() / 1024.0 / 1024.0;
+        double transferTime = coreStatsResponse.getTransferTime();
+        systemInfo.setFileCopyRate(totalMB / transferTime);
+        // watchers
+        systemInfo.setWatchers(this.folderWatcher.getWatcherNumber());
+        // syncFlowNumber and folder stats
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        if (CollectionUtils.isEmpty(allSyncFlow)) {
+            systemInfo.setSyncFlowNumber(0);
+            return SyncDuoHttpResponse.success(systemInfo);
+        }
+        systemInfo.setSyncFlowNumber(allSyncFlow.size());
+        // 遍历 sync flow 累加 folder stats
+        long[] folderStatsArray = {0, 0, 0};
+        for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
+            List<Long> folderInfo = FilesystemUtil.getFolderInfo(syncFlowEntity.getDestFolderPath());
+            folderStatsArray[0] += folderInfo.get(0);
+            folderStatsArray[1] += folderInfo.get(1);
+            folderStatsArray[2] += folderInfo.get(2);
+        }
+        FolderStats folderStats = new FolderStats(folderStatsArray);
+        systemInfo.setFolderStats(folderStats);
+        return SyncDuoHttpResponse.success(systemInfo);
     }
 }

@@ -44,7 +44,7 @@ public class SyncDuoHttpResponse<T> {
         result.statusCode = ObjectUtils.isEmpty(e.getStatus()) ?
                 HttpStatus.INTERNAL_SERVER_ERROR.value() :
                 e.getStatus().value();
-        result.message = e.getSyncDuoMessage();
+        result.message = e.getMessageRecursive();
         return result;
     }
 }

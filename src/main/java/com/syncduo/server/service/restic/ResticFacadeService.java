@@ -170,7 +170,7 @@ public class ResticFacadeService {
         } else {
             this.backupJobService.addFailBackupJob(
                     syncFlowEntity.getSyncFlowId(),
-                    backupResult.getBusinessException().getSyncDuoMessage()
+                    backupResult.getBusinessException().getMessageRecursive()
             );
         }
     }

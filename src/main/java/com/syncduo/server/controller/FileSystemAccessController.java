@@ -1,6 +1,5 @@
 package com.syncduo.server.controller;
 
-import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.filesystem.Folder;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.util.FilesystemUtil;
@@ -23,7 +22,7 @@ import java.util.List;
 public class FileSystemAccessController {
 
     @GetMapping("/get-hostname")
-    public SyncDuoHttpResponse<String> getHostName() throws SyncDuoException {
+    public SyncDuoHttpResponse<String> getHostName() {
         return SyncDuoHttpResponse.success(SystemInfoUtil.getHostName());
     }
 

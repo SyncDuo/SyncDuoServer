@@ -238,7 +238,7 @@ public class FilesystemUtil {
     /**
      * 删除指定路径的文件夹及其所有内容
      * @param folderPathString 要删除的文件夹路径
-     * @throws SyncDuoException 如果删除过程中发生错误
+     * @throws FileOperationException 如果删除过程中发生错误
      */
     public static void deleteFolder(String folderPathString)
             throws ValidationException, ResourceNotFoundException, FileOperationException {
