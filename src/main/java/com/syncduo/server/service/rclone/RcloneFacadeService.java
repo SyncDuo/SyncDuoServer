@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -118,7 +119,8 @@ public class RcloneFacadeService {
 
     public void copyFile(FilesystemEvent filesystemEvent) {
         String sourceFolderPath = filesystemEvent.getFolder().toAbsolutePath().toString();
-        String filePath = filesystemEvent.getFile().toAbsolutePath().toString();
+        Path file = filesystemEvent.getFile();
+        String filePath = file.toAbsolutePath().toString();
         String fileRelativePath = FilesystemUtil.splitPath(sourceFolderPath, filePath);
         // 根据 filesystem event 的 folder 查询下游 syncflow entity, 过滤 PAUSE 的记录
         List<SyncFlowEntity> downstreamSyncFlowEntityList =
@@ -133,15 +135,18 @@ public class RcloneFacadeService {
                     syncFlowEntity,
                     SyncFlowStatusEnum.RUNNING
             );
-            // 获取 filter criteria as list
-            List<String> filterCriteriaAsList = this.syncFlowService.getFilterCriteriaAsList(syncFlowEntity);
+            // 手动 filter, 因为 rclone 设计 copyfile api 不支持 filter
+            if (isFileFiltered(
+                    file.getFileName().toString(),
+                    this.syncFlowService.getFilterCriteriaAsList(syncFlowEntity))) {
+                continue;
+            }
             // 创建 copyFileRequest
             CopyFileRequest copyFileRequest = new CopyFileRequest(
                     sourceFolderPath,
                     fileRelativePath,
                     syncFlowEntity.getDestFolderPath(),
-                    fileRelativePath,
-                    filterCriteriaAsList
+                    fileRelativePath
             );
             // 发起请求
             this.createAndStartRcloneJob(syncFlowEntity, () -> rcloneService.copyFile(copyFileRequest));
@@ -248,5 +253,39 @@ public class RcloneFacadeService {
                 },
                 INTERVAL
         );
+    }
+
+    private boolean isFileFiltered(String fileName, List<String> filterCriteriaList) {
+        if (CollectionUtils.isEmpty(filterCriteriaList)) {
+            return false;
+        }
+        if (StringUtils.isEmpty(fileName)) {
+            return false;
+        }
+        for (String filterCriteria : filterCriteriaList) {
+            // 手动实现 rclone 的 patten.  https://rclone.org/filtering/
+            // 目前仅实现 "*" patten
+            String regexString = convertToRegex(filterCriteria);
+            if (fileName.matches(regexString)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String convertToRegex(String filterCriteria) {
+        // 转义正则表达式中的特殊字符，除了 '*'
+        StringBuilder regexBuilder = new StringBuilder();
+        for (char c : filterCriteria.toCharArray()) {
+            if (c == '*') {
+                regexBuilder.append("[^/]*");
+            } else if ("\\^$.|?*+[]{}()".indexOf(c) != -1) {
+                // 如果字符是正则表达式中预留的字符, 则增加 "\\" 表示转义
+                regexBuilder.append('\\').append(c);
+            } else {
+                regexBuilder.append(c);
+            }
+        }
+        return regexBuilder.toString();
     }
 }

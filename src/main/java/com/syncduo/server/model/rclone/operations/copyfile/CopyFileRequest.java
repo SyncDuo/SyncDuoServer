@@ -1,10 +1,6 @@
 package com.syncduo.server.model.rclone.operations.copyfile;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.syncduo.server.model.rclone.global.Filter;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 public class CopyFileRequest {
@@ -22,23 +18,14 @@ public class CopyFileRequest {
     // 子路径
     private String dstRemote;
 
-    @JsonProperty("_filter")
-    private final Filter filter = new Filter();
-
     public CopyFileRequest(
             String srcFs,
             String srcRemote,
             String dstFs,
-            String dstRemote,
-            List<String> filterCriteria) {
+            String dstRemote) {
         this.srcFs = srcFs;
         this.srcRemote = srcRemote;
         this.dstFs = dstFs;
         this.dstRemote = dstRemote;
-        this.exclude(filterCriteria);
-    }
-
-    public void exclude(List<String> excludeList) {
-        this.filter.setExcludeRule(excludeList);
     }
 }

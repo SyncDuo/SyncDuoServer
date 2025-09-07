@@ -400,11 +400,18 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenCreateSyncFlowWithFilter() throws SyncDuoException {
+    void ShouldReturnTrueWhenCreateSyncFlowWithFilter() throws SyncDuoException, IOException {
         String filterCriteria = "[\"*.bin\"]";
         createSyncFlow(filterCriteria);
-
         List<Path> allFile = FilesystemUtil.getAllFile(Path.of(this.syncFlowEntity.getDestFolderPath()));
+        for (Path path : allFile) {
+            assert !path.getFileName().toString().contains("bin");
+        }
+        // 源文件创建文件
+        FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
+        // 等待文件处理
+        waitSingleFileHandle(sourceFolderPath);
+        allFile = FilesystemUtil.getAllFile(Path.of(this.syncFlowEntity.getDestFolderPath()));
         for (Path path : allFile) {
             assert !path.getFileName().toString().contains("bin");
         }
