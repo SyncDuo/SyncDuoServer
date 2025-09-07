@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.syncduo.server.enums.CommonStatus;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.DbException;
 import com.syncduo.server.mapper.BackupJobMapper;
 import com.syncduo.server.model.entity.BackupJobEntity;
 import com.syncduo.server.model.restic.backup.BackupSummary;
@@ -25,7 +25,7 @@ public class BackupJobService
 
     public void addSuccessBackupJob(
             long syncFlowId,
-            BackupSummary backupSummary) throws SyncDuoException {
+            BackupSummary backupSummary) throws DbException {
         BackupJobEntity backupJobEntity = new BackupJobEntity();
         backupJobEntity.setBackupJobStatus(CommonStatus.SUCCESS.name());
         backupJobEntity.setSyncFlowId(syncFlowId);
@@ -35,7 +35,7 @@ public class BackupJobService
             // 保存
             boolean saved = this.save(backupJobEntity);
             if (!saved) {
-                throw new SyncDuoException("addSuccessBackupJob failed. can't write to database.");
+                throw new DbException("addSuccessBackupJob failed. can't write to database.");
             }
             return;
         }
@@ -50,13 +50,13 @@ public class BackupJobService
         // 保存
         boolean saved = this.save(backupJobEntity);
         if (!saved) {
-            throw new SyncDuoException("addSuccessBackupJob failed. can't write to database.");
+            throw new DbException("addSuccessBackupJob failed. can't write to database.");
         }
     }
 
     public void addFailBackupJob(
             long syncFlowId,
-            String errorMessage) throws SyncDuoException {
+            String errorMessage) throws DbException {
         if (StringUtils.isBlank(errorMessage)) {
             errorMessage = "";
         }
@@ -68,7 +68,7 @@ public class BackupJobService
         // 保存
         boolean saved = this.save(backupJobEntity);
         if (!saved) {
-            throw new SyncDuoException("addFailBackupJob failed. can't write to database.");
+            throw new DbException("addFailBackupJob failed. can't write to database.");
         }
     }
 

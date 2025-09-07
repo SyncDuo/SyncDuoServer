@@ -6,7 +6,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.syncduo.server.exception.JsonException;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +29,7 @@ public class JsonUtil {
     public static <T> T parseResticJsonLine(
             String stdout,
             String condition,
-            Class<T> clazz) throws SyncDuoException {
+            Class<T> clazz) throws ValidationException, JsonException {
         List<T> result = parseResticJsonLines(stdout, condition, clazz);
         if (CollectionUtils.isEmpty(result)) {
             return null;
@@ -38,9 +40,9 @@ public class JsonUtil {
     public static <T> List<T> parseResticJsonLines(
             String commandLineOutput,
             String condition,
-            Class<T> clazz) throws SyncDuoException {
+            Class<T> clazz) throws ValidationException, JsonException {
         if (ObjectUtils.isEmpty(clazz)) {
-            throw new SyncDuoException("parseLine failed. clazz is null.");
+            throw new ValidationException("parseLine failed. clazz is null.");
         }
         if (StringUtils.isAnyBlank(commandLineOutput, condition)) {
             return null;
@@ -58,7 +60,7 @@ public class JsonUtil {
             }
             return result;
         } catch (IOException e) {
-            throw new SyncDuoException("parseResticJsonLine failed. " +
+            throw new JsonException("parseResticJsonLine failed. " +
                     "commandLineOutput is %s".formatted(commandLineOutput),
                     e);
         }
@@ -67,35 +69,35 @@ public class JsonUtil {
     public static <T> T parseResticJsonDocument(
             String commandLineOutput,
             Class<T> clazz
-    ) throws SyncDuoException {
+    ) throws ValidationException, JsonException {
         if (ObjectUtils.isEmpty(clazz)) {
-            throw new SyncDuoException("parseResticJsonDocument failed. clazz is null.");
+            throw new ValidationException("parseResticJsonDocument failed. clazz is null.");
         }
         if (StringUtils.isBlank(commandLineOutput)) {
-            throw new SyncDuoException("parseResticJsonDocument failed. commandLineOutput is null.");
+            throw new ValidationException("parseResticJsonDocument failed. commandLineOutput is null.");
         }
         try {
             return objectMapper.readValue(commandLineOutput, clazz);
         } catch (JsonProcessingException e) {
-            throw new SyncDuoException("parseResticJsonDocument failed. " +
+            throw new JsonException("parseResticJsonDocument failed. " +
                     "commandLineOutput is %s".formatted(commandLineOutput),
                     e);
         }
     }
 
-    public static List<String> deserializeStringToList(String jsonString) throws SyncDuoException {
+    public static List<String> deserializeStringToList(String jsonString) throws JsonException {
         try {
             return objectMapper.readValue(jsonString, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
-            throw new SyncDuoException("deserializeStringToList failed. jsonString is %s".formatted(jsonString), e);
+            throw new JsonException("deserializeStringToList failed. jsonString is %s".formatted(jsonString), e);
         }
     }
 
-    public static String serializeListToString(List<String> list) throws SyncDuoException {
+    public static String serializeListToString(List<String> list) throws JsonException {
         try {
             return objectMapper.writeValueAsString(list);
         } catch (JsonProcessingException e) {
-            throw new SyncDuoException("serializeListToString failed. list is %s".formatted(list), e);
+            throw new JsonException("serializeListToString failed. list is %s".formatted(list), e);
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.syncduo.server.service.restic;
 
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.restic.backup.BackupError;
 import com.syncduo.server.model.restic.backup.BackupSummary;
 import com.syncduo.server.model.restic.cat.CatConfig;
@@ -35,15 +37,11 @@ public class ResticService {
     private String RESTIC_BACKUP_PATH;
 
     // create restic repository
-    protected ResticExecResult<Init, ExitErrors> init() throws SyncDuoException {
+    protected ResticExecResult<Init, ExitErrors> init() throws ValidationException {
         // 参数检查
-        try {
-            FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
-        } catch (SyncDuoException e) {
-            throw new SyncDuoException("init failed. RESTIC_BACKUP_PATH invalid. ", e);
-        }
+        FilesystemUtil.isFolderPathValid(RESTIC_BACKUP_PATH);
         if (StringUtils.isBlank(RESTIC_PASSWORD)) {
-            throw new SyncDuoException("init failed. RESTIC_PASSWORD is empty");
+            throw new ValidationException("init failed. RESTIC_PASSWORD is empty");
         }
         try {
             CommandLine commandLine = getDefaultCommandLine();
@@ -56,11 +54,12 @@ public class ResticService {
             );
             return future.get();
         } catch (Exception e) {
-            throw new SyncDuoException("init failed. future get failed. ", e);
+            throw new BusinessException("init failed.", e);
         }
     }
 
-    public ResticExecResult<BackupSummary, List<BackupError>> backup(String folderPathString) throws SyncDuoException {
+    public ResticExecResult<BackupSummary, List<BackupError>> backup(
+            String folderPathString) throws BusinessException {
         FilesystemUtil.isFolderPathValid(folderPathString);
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("backup");
@@ -79,12 +78,12 @@ public class ResticService {
         );
         try {
             return future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new SyncDuoException("backup failed. future get failed. ", e);
+        } catch (Exception e) {
+            throw new BusinessException("backup failed. future get failed. ", e);
         }
     }
 
-    public ResticExecResult<Stats, ExitErrors> stats() throws SyncDuoException {
+    public ResticExecResult<Stats, ExitErrors> stats() throws BusinessException {
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("stats");
         commandLine.addArgument("--mode");
@@ -97,12 +96,12 @@ public class ResticService {
         );
         try {
             return future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new SyncDuoException("stats failed. future get failed. ", e);
+        } catch (Exception e) {
+            throw new BusinessException("stats failed. future get failed. ", e);
         }
     }
 
-    public ResticExecResult<CatConfig, ExitErrors> catConfig() throws SyncDuoException {
+    public ResticExecResult<CatConfig, ExitErrors> catConfig() throws BusinessException {
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("cat");
         commandLine.addArgument("config");
@@ -114,14 +113,15 @@ public class ResticService {
         );
         try {
             return future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new SyncDuoException("catConfig failed. future get failed. ", e);
+        } catch (Exception e) {
+            throw new BusinessException("catConfig failed. future get failed. ", e);
         }
     }
 
-    public ResticExecResult<List<Node>, ExitErrors> ls(String snapshotId, String pathString) throws SyncDuoException {
+    public ResticExecResult<List<Node>, ExitErrors> ls(
+            String snapshotId, String pathString) throws ValidationException, BusinessException {
         if (StringUtils.isBlank(snapshotId)) {
-            throw new SyncDuoException("ls failed. snapshotsId is null");
+            throw new ValidationException("ls failed. snapshotsId is null");
         }
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("ls");
@@ -138,20 +138,20 @@ public class ResticService {
         );
         try {
             return future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new SyncDuoException("ls failed. future get failed. ", e);
+        } catch (Exception e) {
+            throw new BusinessException("ls failed. future get failed. ", e);
         }
     }
 
     public ResticExecResult<RestoreSummary, List<RestoreError>> restore(
             String snapshotId,
             String[] pathStrings,
-            String targetString) throws SyncDuoException {
+            String targetString) throws ValidationException, BusinessException {
         if (StringUtils.isAnyBlank(snapshotId, targetString)) {
-            throw new SyncDuoException("restoreFile failed. snapshotsId or targetString is null");
+            throw new ValidationException("restoreFile failed. snapshotsId or targetString is null");
         }
         if (ArrayUtils.isEmpty(pathStrings)) {
-            throw new SyncDuoException("restoreFile failed. pathStrings is empty");
+            throw new ValidationException("restoreFile failed. pathStrings is empty");
         }
         CommandLine restoreCommandLine = getDefaultCommandLine();
         restoreCommandLine.addArgument("restore");
@@ -160,7 +160,7 @@ public class ResticService {
         restoreCommandLine.addArgument(targetString);
         for (String filePathString : pathStrings) {
             if (StringUtils.isBlank(filePathString)) {
-                throw new SyncDuoException("restore failed. pathStrings has blank string");
+                throw new ValidationException("restore failed. pathStrings has blank string");
             }
             restoreCommandLine.addArgument("--include");
             restoreCommandLine.addArgument(filePathString);
@@ -178,8 +178,8 @@ public class ResticService {
         );
         try {
             return future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new SyncDuoException("restoreFile failed. future get failed. ", e);
+        } catch (Exception e) {
+            throw new BusinessException("restoreFile failed. future get failed. ", e);
         }
     }
 

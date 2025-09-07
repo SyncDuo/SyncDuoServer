@@ -1,55 +1,60 @@
 package com.syncduo.server.model.rclone.global;
 
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.model.entity.BackupJobEntity;
 import lombok.Data;
 import org.apache.commons.lang3.ObjectUtils;
 
 @Data
 public class RcloneResponse<T> {
 
-    private final int httpCode;
+    private int httpCode;
 
-    private final boolean success;
+    private boolean success;
 
-    private final T data;
+    private T data;
 
     // has response but http code is not 2xx
-    private final ErrorInfo errorInfo;
+    private ErrorInfo errorInfo;
 
     // does not have response
-    private final Throwable ex;
+    private BusinessException ex;
 
-    public RcloneResponse(int httpCode, boolean success, T data, ErrorInfo errorInfo, Throwable ex) {
-        this.httpCode = httpCode;
-        this.success = success;
-        this.data = data;
-        this.errorInfo = errorInfo;
-        this.ex = ex;
-    }
+    private RcloneResponse() {}
 
     // 成功响应工厂
     public static <T> RcloneResponse<T> success(int httpCode, T data) {
-        return new RcloneResponse<>(httpCode, true, data, null, null);
+        RcloneResponse<T> rcloneResponse = new RcloneResponse<>();
+        rcloneResponse.setHttpCode(httpCode);
+        rcloneResponse.setSuccess(true);
+        rcloneResponse.setData(data);
+        return rcloneResponse;
     }
 
     // 错误响应工厂
     public static <T> RcloneResponse<T> error(int httpCode, ErrorInfo errorInfo) {
-        return new RcloneResponse<>(httpCode, false, null, errorInfo, null);
+        RcloneResponse<T> rcloneResponse = new RcloneResponse<>();
+        rcloneResponse.setHttpCode(httpCode);
+        rcloneResponse.setSuccess(false);
+        rcloneResponse.setErrorInfo(errorInfo);
+        return rcloneResponse;
     }
 
     // 无响应工厂
     public static <T> RcloneResponse<T> error(Throwable ex) {
-        return new RcloneResponse<>(-1, false, null, null, ex);
+        RcloneResponse<T> rcloneResponse = new RcloneResponse<>();
+        rcloneResponse.setSuccess(false);
+        rcloneResponse.setEx(new BusinessException("rclone failed with unexpected exception", ex));
+        return rcloneResponse;
     }
 
-    public SyncDuoException getSyncDuoException() {
-        if (this.success) {
-            return null;
+    public BusinessException getBusinessException() {
+        if (this.success) return null;
+        if (ObjectUtils.isNotEmpty(this.errorInfo)) {
+            return new BusinessException("rclone response has error http code. " +
+                    "ErrorInfo is %s.".formatted(errorInfo));
         }
-        if (ObjectUtils.isEmpty(this.errorInfo)) {
-            return new SyncDuoException("rclone has no response.", ex);
-        }
-        return new SyncDuoException("rclone response has error http code. " +
-                "ErrorInfo is %s.".formatted(errorInfo));
+        return this.ex;
     }
 }

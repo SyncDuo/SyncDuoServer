@@ -2,7 +2,10 @@ package com.syncduo.server.service.bussiness;
 
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
+import com.syncduo.server.exception.BusinessException;
+import com.syncduo.server.exception.DbException;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.service.db.impl.*;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
@@ -59,8 +62,9 @@ public class SystemManagementService {
                 this.rcloneFacadeService.syncCopy(syncFlowEntity);
                 // source folder add watcher
                 this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
-            } catch (SyncDuoException e) {
-                log.error("systemStartUp has error.", e);
+            } catch (Exception e) {
+                log.error("systemStartUp has error. " +
+                        "sync flow is {}", syncFlowEntity, new BusinessException("systemStartUp has error", e));
             }
         }
     }
@@ -92,8 +96,9 @@ public class SystemManagementService {
                     // copy
                     this.rcloneFacadeService.syncCopy(syncFlowEntity);
                 }
-            } catch (SyncDuoException e) {
-                log.error("periodicalScan failed.", e);
+            } catch (Exception e) {
+                log.error("periodicalScan failed. " +
+                        "sync flow is {}", syncFlowEntity, new BusinessException("periodicalScan failed.", e));
             }
         }
     }

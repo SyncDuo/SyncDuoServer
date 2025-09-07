@@ -1,7 +1,7 @@
 package com.syncduo.server.model.restic.global;
 
 import com.syncduo.server.enums.ResticExitCodeEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.BusinessException;
 import lombok.Data;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -19,7 +19,7 @@ public class ResticExecResult<SR, FR> {
     private FR error;
 
     // fall back caught exception
-    private SyncDuoException ex;
+    private BusinessException ex;
 
     private ResticExecResult() {}
 
@@ -46,7 +46,7 @@ public class ResticExecResult<SR, FR> {
         ResticExecResult<SR, FR> result = new ResticExecResult<>();
         result.setSuccess(false);
         result.setExitCode(resticExitCodeEnum);
-        result.setEx(new SyncDuoException("restic failed with unexpected exception.", ex));
+        result.setEx(new BusinessException("restic failed with unexpected exception.", ex));
         return result;
     }
 
@@ -54,14 +54,14 @@ public class ResticExecResult<SR, FR> {
     public static <SR, FR> ResticExecResult<SR, FR> failed(Throwable ex) {
         ResticExecResult<SR, FR> result = new ResticExecResult<>();
         result.setSuccess(false);
-        result.setEx(new SyncDuoException("restic failed with unexpected exception.", ex));
+        result.setEx(new BusinessException("restic failed with unexpected exception.", ex));
         return result;
     }
 
-    public SyncDuoException getSyncDuoException() {
+    public BusinessException getBusinessException() {
         if (this.success) return null;
         if (ObjectUtils.isNotEmpty(error)) {
-            return new SyncDuoException("restic command failed. " +
+            return new BusinessException("restic command failed. " +
                     "exit code is %s. exit message is %s. ".formatted(
                             this.exitCode.getCode(), this.exitCode.getMessage()) +
                     "commandError is %s".formatted(this.error));

@@ -1,9 +1,6 @@
 package com.syncduo.server.util;
 
-import com.syncduo.server.exception.BusinessException;
-import com.syncduo.server.exception.ResourceNotFoundException;
-import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.exception.ValidationException;
+import com.syncduo.server.exception.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -65,7 +62,8 @@ public class FilesystemUtil {
         }
     }
 
-    public static List<Long> getFolderInfo(String path) throws ValidationException, ResourceNotFoundException {
+    public static List<Long> getFolderInfo(String path)
+            throws ValidationException, ResourceNotFoundException, FileOperationException {
         // 参数检查
         Path folder = FilesystemUtil.isFolderPathValid(path);
         // 初始化变量
@@ -89,7 +87,7 @@ public class FilesystemUtil {
                 }
             });
         } catch (IOException e) {
-            throw new ResourceNotFoundException("getFolderInfo failed.", e);
+            throw new FileOperationException("getFolderInfo failed.", e);
         }
 
         return Arrays.asList(fileCount.get(), subFolderCount.get(), totalSize.get());
@@ -125,7 +123,7 @@ public class FilesystemUtil {
     }
 
     public static List<Path> getSubFolders(
-            String folderPathString) throws ValidationException, ResourceNotFoundException {
+            String folderPathString) throws ValidationException, FileOperationException {
         if (StringUtils.isBlank(folderPathString)) {
             return Collections.emptyList();
         }
@@ -142,7 +140,7 @@ public class FilesystemUtil {
                 }
             }
         } catch (IOException e) {
-            throw new ResourceNotFoundException(("getSubfolders failed. " +
+            throw new FileOperationException(("getSubfolders failed. " +
                     "folderPathString is %s").formatted(folderPathString),
                     e);
         }
@@ -150,7 +148,7 @@ public class FilesystemUtil {
     }
 
     public static String createRandomEnglishFolder(
-            String parentFolderPathString) throws ValidationException {
+            String parentFolderPathString) throws ValidationException, FileOperationException {
         Path parentFolder = isFolderPathValid(parentFolderPathString);
         // 拼接路径
         for (int i = 0; i < MAX_ATTEMPTS; i++) {
@@ -169,22 +167,23 @@ public class FilesystemUtil {
                 Path newFolder = Files.createDirectory(newFolderTmp);
                 return newFolder.toAbsolutePath().toString();
             } catch (IOException e) {
-                throw new ResourceNotFoundException("createRandomEnglishFolder failed. ", e);
+                throw new FileOperationException("createRandomEnglishFolder failed. ", e);
             }
         }
         throw new BusinessException("createRandomEnglishFolder failed after all attempts.");
     }
 
-    public static List<Path> getAllFile(Path folder) throws ResourceNotFoundException {
+    public static List<Path> getAllFile(Path folder)
+            throws FileOperationException {
         try(Stream<Path> list = Files.list(folder)) {
             return list.filter(Files::isRegularFile).toList();
         } catch (IOException e) {
-            throw new ResourceNotFoundException("getAllFile failed.", e);
+            throw new FileOperationException("getAllFile failed.", e);
         }
     }
 
-    public static Path zipAllFile(
-            String folderPathString, String prefix) throws ValidationException, ResourceNotFoundException {
+    public static Path zipAllFile(String folderPathString, String prefix)
+            throws ValidationException, ResourceNotFoundException, FileOperationException {
         // 检查参数
         Path folder = isFolderPathValid(folderPathString);
         // 获取随机zip文件名称
@@ -233,7 +232,7 @@ public class FilesystemUtil {
                 }
             });
         } catch (IOException e) {
-            throw new ResourceNotFoundException("zipAllFile failed.", e);
+            throw new FileOperationException("zipAllFile failed.", e);
         }
         return zipFile;
     }
@@ -243,8 +242,8 @@ public class FilesystemUtil {
      * @param folderPathString 要删除的文件夹路径
      * @throws SyncDuoException 如果删除过程中发生错误
      */
-    public static void deleteFolder(
-            String folderPathString) throws ValidationException, ResourceNotFoundException {
+    public static void deleteFolder(String folderPathString)
+            throws ValidationException, ResourceNotFoundException, FileOperationException {
         Path folderPath = isFolderPathValid(folderPathString);
         // 使用Files.walkFileTree遍历并删除文件夹内容
         try {
@@ -264,7 +263,7 @@ public class FilesystemUtil {
                 }
             });
         } catch (IOException e) {
-            throw new ResourceNotFoundException("deleteFolder failed.", e);
+            throw new FileOperationException("deleteFolder failed. ", e);
         }
     }
 }

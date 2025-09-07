@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.syncduo.server.enums.CommonStatus;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.DbException;
+import com.syncduo.server.exception.ResourceNotFoundException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.mapper.RestoreJobMapper;
 import com.syncduo.server.model.entity.RestoreJobEntity;
 import com.syncduo.server.model.restic.restore.RestoreSummary;
@@ -25,7 +27,7 @@ public class RestoreJobService
 
     public RestoreJobEntity addRunningRestoreJob(
             String snapshotId,
-            String restoreRootPath) throws SyncDuoException {
+            String restoreRootPath) throws DbException {
         RestoreJobEntity restoreJobEntity = new RestoreJobEntity();
         restoreJobEntity.setRestoreJobStatus(CommonStatus.RUNNING.name());
         restoreJobEntity.setSnapshotId(snapshotId);
@@ -33,18 +35,17 @@ public class RestoreJobService
         // 保存
         boolean saved = this.save(restoreJobEntity);
         if (!saved) {
-            throw new SyncDuoException("addRunningRestoreJob failed. can't write to database.");
+            throw new DbException("addRunningRestoreJob failed. can't write to database.");
         }
         return restoreJobEntity;
     }
 
     public void updateRestoreJobAsSuccess(
             long restoreJobId,
-            RestoreSummary restoreSummary) throws SyncDuoException {
+            RestoreSummary restoreSummary) throws ValidationException, DbException {
         RestoreJobEntity dbResult = this.getByRestoreJobId(restoreJobId);
         if (ObjectUtils.isEmpty(dbResult)) {
-            log.warn("restore job not found. id is {}", restoreJobId);
-            return;
+            throw new ResourceNotFoundException("restore job:%s does not exist.".formatted(restoreJobId));
         }
         // 设置失败状态和失败日志
         dbResult.setRestoreJobStatus(CommonStatus.SUCCESS.name());
@@ -54,17 +55,16 @@ public class RestoreJobService
         // 保存
         boolean saved = this.updateById(dbResult);
         if (!saved) {
-            throw new SyncDuoException("updateRestoreJobAsSuccess failed. can't write to database.");
+            throw new DbException("updateRestoreJobAsSuccess failed. can't write to database.");
         }
     }
 
     public void updateRestoreJobAsFailed(
             long restoreJobId,
-            String errorMessage) throws SyncDuoException {
+            String errorMessage) throws ValidationException, DbException {
         RestoreJobEntity dbResult = this.getByRestoreJobId(restoreJobId);
         if (ObjectUtils.isEmpty(dbResult)) {
-            log.warn("restore job not found. id is {}", restoreJobId);
-            return;
+            throw new ResourceNotFoundException("restore job:%s does not exist.".formatted(restoreJobId));
         }
         errorMessage = StringUtils.isBlank(errorMessage) ? "" : errorMessage;
         // 设置失败状态和失败日志
@@ -73,7 +73,7 @@ public class RestoreJobService
         // 保存
         boolean saved = this.updateById(dbResult);
         if (!saved) {
-            throw new SyncDuoException("updateRestoreJobAsFailed failed. can't write to database.");
+            throw new DbException("updateRestoreJobAsFailed failed. can't write to database.");
         }
     }
 

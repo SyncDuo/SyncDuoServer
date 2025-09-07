@@ -1,7 +1,9 @@
 package com.syncduo.server.service.restic;
 
 import com.syncduo.server.enums.SyncFlowStatusEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.BusinessException;
+import com.syncduo.server.exception.DbException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.entity.RestoreJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
@@ -82,10 +84,10 @@ public class ResticFacadeService {
         this.restoreJobService = restoreJobService;
     }
 
-    public void init() throws SyncDuoException {
+    public void init() {
         if (ObjectUtils.anyNull(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE_SEC) ||
                 RESTIC_BACKUP_INTERVAL < 1 || RESTIC_RESTORE_AGE_SEC < 1) {
-            throw new SyncDuoException(
+            throw new ValidationException(
                     "restic init failed. " +
                     "RESTIC_BACKUP_INTERVAL:%s or ".formatted(RESTIC_BACKUP_INTERVAL) +
                     "RESTIC_RESTORE_AGE:%s is null.".formatted(RESTIC_RESTORE_AGE_SEC));
@@ -98,7 +100,7 @@ public class ResticFacadeService {
         if (!catConfigResult.isSuccess()) {
             ResticExecResult<Init, ExitErrors> initResult = this.resticService.init();
             if (!initResult.isSuccess()) {
-                throw new SyncDuoException("Restic Init failed.", initResult.getSyncDuoException());
+                throw new BusinessException("Restic Init failed.", initResult.getBusinessException());
             }
         }
         // 启动定时任务
@@ -110,13 +112,9 @@ public class ResticFacadeService {
         log.info("restic init success.");
     }
 
-    public void manualBackup(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
-        try {
-            EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
-            this.backup(syncFlowEntity);
-        } catch (SyncDuoException e) {
-            throw new SyncDuoException("manualBackup failed.", e);
-        }
+    public void manualBackup(SyncFlowEntity syncFlowEntity) {
+        EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
+        this.backup(syncFlowEntity);
     }
 
     public void periodicalBackup() {
@@ -127,33 +125,33 @@ public class ResticFacadeService {
         for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
             try {
                 this.backup(syncFlowEntity);
-            } catch (SyncDuoException e) {
+            } catch (BusinessException e) {
                 log.error("periodicalBackup failed. syncFlowEntity is {}", syncFlowEntity, e);
             }
         }
     }
 
-    public Stats getStats() throws SyncDuoException {
+    public Stats getStats() throws BusinessException {
         ResticExecResult<Stats, ExitErrors> statsResult = this.resticService.stats();
         if (!statsResult.isSuccess()) {
-            throw new SyncDuoException("getStats failed. ", statsResult.getSyncDuoException());
+            throw new BusinessException("getStats failed. ", statsResult.getBusinessException());
         }
         return statsResult.getData();
     }
 
-    public List<Node> getSnapshotFileInfo(String snapshotId, String pathString) throws SyncDuoException {
+    public List<Node> getSnapshotFileInfo(String snapshotId, String pathString) {
         if (StringUtils.isAnyBlank(snapshotId, pathString)) {
-            throw new SyncDuoException("getSnapshotFileInfo failed. " +
+            throw new ValidationException("getSnapshotFileInfo failed. " +
                     "snapshotsId or pathString is null");
         }
         ResticExecResult<List<Node>, ExitErrors> lsResult = this.resticService.ls(snapshotId, pathString);
         if (!lsResult.isSuccess()) {
-            throw new SyncDuoException("getSnapshotFileInfo failed.", lsResult.getSyncDuoException());
+            throw new BusinessException("getSnapshotFileInfo failed.", lsResult.getBusinessException());
         }
         return lsResult.getData();
     }
 
-    private void backup(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+    private void backup(SyncFlowEntity syncFlowEntity) throws DbException, BusinessException {
         // SYNC 状态的 syncflow, 才执行backup
         SyncFlowStatusEnum syncFlowStatusEnum = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
         if (!syncFlowStatusEnum.equals(SyncFlowStatusEnum.SYNC)) {
@@ -172,12 +170,12 @@ public class ResticFacadeService {
         } else {
             this.backupJobService.addFailBackupJob(
                     syncFlowEntity.getSyncFlowId(),
-                    backupResult.getSyncDuoException().getSyncDuoMessage()
+                    backupResult.getBusinessException().getSyncDuoMessage()
             );
         }
     }
 
-    public Path restoreFiles(List<SnapshotFileInfo> snapshotFileInfoList) throws SyncDuoException {
+    public Path restoreFiles(List<SnapshotFileInfo> snapshotFileInfoList) {
         EntityValidationUtil.isSnapshotFileInfoListValid(snapshotFileInfoList);
         String snapshotId = snapshotFileInfoList.get(0).getSnapshotId();
         String[] pathStrings = snapshotFileInfoList.stream().map(SnapshotFileInfo::getPath).toArray(String[]::new);
@@ -199,12 +197,12 @@ public class ResticFacadeService {
                 restoreTargetPathString
         );
         if (!restoreResult.isSuccess()) {
-            SyncDuoException restoreException = restoreResult.getSyncDuoException();
+            BusinessException restoreException = restoreResult.getBusinessException();
             this.restoreJobService.updateRestoreJobAsFailed(
                     restoreJobEntity.getRestoreJobId(),
                     restoreException.toString()
             );
-            throw new SyncDuoException("restoreFiles failed.", restoreResult.getSyncDuoException());
+            throw new BusinessException("restoreFiles failed.", restoreResult.getBusinessException());
         }
         // 记录成功日志
         this.restoreJobService.updateRestoreJobAsSuccess(
@@ -216,7 +214,7 @@ public class ResticFacadeService {
     }
 
 
-    public Path restoreFile(SnapshotFileInfo snapshotFileInfo) throws SyncDuoException {
+    public Path restoreFile(SnapshotFileInfo snapshotFileInfo) {
         EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
         String restoreTargetPathString = FilesystemUtil.createRandomEnglishFolder(this.RESTIC_RESTORE_PATH);
         // 添加 restore job
@@ -236,12 +234,12 @@ public class ResticFacadeService {
         );
         // 记录失败日志
         if (!restoreResult.isSuccess() || restoreResult.getData().getFilesRestored().intValue() < 1) {
-            SyncDuoException restoreException = restoreResult.getSyncDuoException();
+            BusinessException restoreException = restoreResult.getBusinessException();
             this.restoreJobService.updateRestoreJobAsFailed(
                     restoreJobEntity.getRestoreJobId(),
                     restoreException.toString()
             );
-            throw new SyncDuoException("restoreFile failed.", restoreException);
+            throw new BusinessException("restoreFile failed.", restoreException);
         }
         // 记录成功日志
         this.restoreJobService.updateRestoreJobAsSuccess(

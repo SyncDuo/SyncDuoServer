@@ -1,7 +1,10 @@
 package com.syncduo.server.service.rclone;
 
 import com.syncduo.server.enums.SyncFlowStatusEnum;
+import com.syncduo.server.exception.BusinessException;
+import com.syncduo.server.exception.DbException;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.entity.CopyJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.internal.FilesystemEvent;
@@ -38,10 +41,10 @@ import java.util.function.Supplier;
 @Slf4j
 public class RcloneFacadeService {
 
-    @Value("${syncduo.server.rclone.jobStatusTrackTimeoutSec:5}")
+    @Value("${syncduo.server.rclone.jobStatusTrackTimeoutSec}")
     private int TIMEOUT;
 
-    @Value("${syncduo.server.rclone.jobStatusTrackIntervalSec:5}")
+    @Value("${syncduo.server.rclone.jobStatusTrackIntervalSec}")
     private int INTERVAL;
 
     private final DebounceService.ModuleDebounceService moduleDebounceService;
@@ -64,37 +67,30 @@ public class RcloneFacadeService {
         this.syncFlowService = syncFlowService;
     }
 
-    public void init() throws SyncDuoException {
+    public void init() {
         this.getCoreStats();
         log.info("rclone init success");
     }
 
-    public CoreStatsResponse getCoreStats() throws SyncDuoException {
+    public CoreStatsResponse getCoreStats() {
         RcloneResponse<CoreStatsResponse> rcloneResponse = this.rcloneService.getCoreStats();
-        if (ObjectUtils.isEmpty(rcloneResponse)) {
-            throw new SyncDuoException("getCoreStats failed. rcloneResponse is null");
-        }
         if (!rcloneResponse.isSuccess()) {
-            throw new SyncDuoException("getCoreStats failed. rcloneResponse failed. " +
-                    "Error is %s".formatted(rcloneResponse.getSyncDuoException()));
+            throw new BusinessException("getCoreStats failed.", rcloneResponse.getBusinessException());
         }
         return rcloneResponse.getData();
     }
 
-    public boolean isSourceFolderExist(String sourceFolderPath) throws SyncDuoException {
+    public boolean isSourceFolderExist(String sourceFolderPath) {
         if (StringUtils.isBlank(sourceFolderPath)) {
-            throw new SyncDuoException("isSourceFolderExist failed. sourceFolderPath is empty");
+            throw new ValidationException("isSourceFolderExist failed. sourceFolderPath is empty");
         }
         StatsRequest statsRequest = new StatsRequest(
                 "/",
                 sourceFolderPath
         );
         RcloneResponse<StatsResponse> rcloneResponse = this.rcloneService.getDirStat(statsRequest);
-        if (ObjectUtils.isEmpty(rcloneResponse)) {
-            throw new SyncDuoException("isSourceFolderExist failed. http response is null");
-        }
         if (!rcloneResponse.isSuccess()) {
-            throw new SyncDuoException("isSourceFolderExist failed.", rcloneResponse.getSyncDuoException());
+            throw new BusinessException("isSourceFolderExist failed.", rcloneResponse.getBusinessException());
         }
         StatsResponse statsResponse = rcloneResponse.getData();
         if (ObjectUtils.isEmpty(statsResponse.getItem())) {
@@ -103,12 +99,8 @@ public class RcloneFacadeService {
         return statsResponse.getItem().isDir();
     }
 
-    public boolean oneWayCheck(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
-        try {
-            EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
-        } catch (SyncDuoException e) {
-            throw new SyncDuoException("oneWayCheck failed.", e);
-        }
+    public boolean oneWayCheck(SyncFlowEntity syncFlowEntity) {
+        EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
         CheckRequest checkRequest = new CheckRequest(
                 syncFlowEntity.getSourceFolderPath(),
                 syncFlowEntity.getDestFolderPath()
@@ -119,17 +111,14 @@ public class RcloneFacadeService {
             checkRequest.exclude(filterCriteria);
         }
         RcloneResponse<CheckResponse> rcloneResponse = this.rcloneService.oneWayCheck(checkRequest);
-        if (ObjectUtils.isEmpty(rcloneResponse)) {
-            throw new SyncDuoException("oneWayCheck failed. http response is null");
-        }
         if (rcloneResponse.isSuccess()) {
             return rcloneResponse.getData().isSuccess();
         } else {
-            throw new SyncDuoException("oneWayCheck failed.", rcloneResponse.getSyncDuoException());
+            throw new BusinessException("oneWayCheck failed.", rcloneResponse.getBusinessException());
         }
     }
 
-    public void copyFile(FilesystemEvent filesystemEvent) throws SyncDuoException {
+    public void copyFile(FilesystemEvent filesystemEvent) {
         String sourceFolderPath = filesystemEvent.getFolder().toAbsolutePath().toString();
         String filePath = filesystemEvent.getFile().toAbsolutePath().toString();
         String fileRelativePath = FilesystemUtil.splitPath(sourceFolderPath, filePath);
@@ -161,12 +150,8 @@ public class RcloneFacadeService {
         }
     }
 
-    public void syncCopy(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
-        try {
-            EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
-        } catch (SyncDuoException e) {
-            throw new SyncDuoException("syncCopy failed. ", e);
-        }
+    public void syncCopy(SyncFlowEntity syncFlowEntity) {
+        EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
         // 创建 sync copy request
         SyncCopyRequest syncCopyRequest = new SyncCopyRequest(
                 syncFlowEntity.getSourceFolderPath(),
@@ -184,7 +169,7 @@ public class RcloneFacadeService {
     @Async("generalTaskScheduler")
     protected void createAndStartRcloneJob(
             SyncFlowEntity syncFlowEntity,
-            Supplier<RcloneResponse<RcloneAsyncResponse>> supplier) throws SyncDuoException {
+            Supplier<RcloneResponse<RcloneAsyncResponse>> supplier) {
         // 创建 copy job
         CopyJobEntity copyJobEntity = this.copyJobService.addCopyJob(syncFlowEntity.getSyncFlowId());
         // 发起请求
@@ -192,7 +177,7 @@ public class RcloneFacadeService {
         // 失败则记录数据, 并终止逻辑
         Long copyJobId = copyJobEntity.getCopyJobId();
         if (!rcloneResponse.isSuccess()) {
-            SyncDuoException syncDuoException = rcloneResponse.getSyncDuoException();
+            SyncDuoException syncDuoException = rcloneResponse.getBusinessException();
             this.copyJobService.markCopyJobAsFailed(copyJobId, syncDuoException.toString());
             this.updateSyncFlowStatusDebounce(syncFlowEntity);
             throw new SyncDuoException("createAndStartRcloneJob failed.", syncDuoException);

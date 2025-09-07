@@ -1,6 +1,6 @@
 package com.syncduo.server.service.rclone;
 
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsRequest;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsResponse;
 import com.syncduo.server.model.rclone.core.transferred.TransferredStatResponse;
@@ -39,21 +39,21 @@ public class RcloneService {
     protected RcloneResponse<TransferredStatResponse> getTransferredStat() {
         return this.post(
                 "core/transferred",
+                null,
                 TransferredStatResponse.class
         );
     }
 
     protected RcloneResponse<StatsResponse> getDirStat(
-            StatsRequest statsRequest) throws SyncDuoException {
+            StatsRequest statsRequest) throws ValidationException {
         if (ObjectUtils.isEmpty(statsRequest)) {
-            throw new SyncDuoException("getDirStat failed. statsRequest is empty");
+            throw new ValidationException("getDirStat failed. statsRequest is empty");
         }
         if (StringUtils.isAnyBlank(
                 statsRequest.getFs(),
                 statsRequest.getRemote()
         )) {
-            throw new SyncDuoException("getDirStat failed. " +
-                    "fs or remote is blank");
+            throw new ValidationException("getDirStat failed. fs or remote is blank");
         }
         return this.post(
                 "operations/stat",
@@ -64,11 +64,11 @@ public class RcloneService {
 
     // 获得单个Job的stats
     protected RcloneResponse<CoreStatsResponse> getCoreStats(
-            CoreStatsRequest coreStatsRequest) throws SyncDuoException {
+            CoreStatsRequest coreStatsRequest) throws ValidationException {
         if (ObjectUtils.anyNull(coreStatsRequest, coreStatsRequest.getGroup())) {
-            throw new SyncDuoException("getCoreStats failed. " +
-                    "coreStatsRequest or group is null" +
-                    "%s".formatted(coreStatsRequest));
+            throw new ValidationException("getCoreStats failed. " +
+                    "coreStatsRequest or group is null." +
+                    "coreStatsRequest is %s".formatted(coreStatsRequest));
         }
         return this.post(
                 "core/stats",
@@ -78,7 +78,7 @@ public class RcloneService {
     }
 
     // 获得全部Job聚合的stat
-    protected RcloneResponse<CoreStatsResponse> getCoreStats() throws SyncDuoException {
+    protected RcloneResponse<CoreStatsResponse> getCoreStats() {
         CoreStatsRequest coreStatsRequest = new CoreStatsRequest("");
         return this.post(
                 "core/stats",
@@ -88,11 +88,11 @@ public class RcloneService {
     }
 
     protected RcloneResponse<JobStatusResponse> getJobStatus(
-            JobStatusRequest jobStatusRequest) throws SyncDuoException {
+            JobStatusRequest jobStatusRequest) throws ValidationException {
         if (ObjectUtils.anyNull(jobStatusRequest, jobStatusRequest.getJobId())) {
-            throw new SyncDuoException("getJobStatus failed. " +
+            throw new ValidationException("getJobStatus failed. " +
                     "jobStatusRequest or jobId is null." +
-                    "%s".formatted(jobStatusRequest));
+                    "jobStatusRequest is %s".formatted(jobStatusRequest));
         }
         return this.post(
                 "job/status",
@@ -102,44 +102,42 @@ public class RcloneService {
     }
 
     protected RcloneResponse<RcloneAsyncResponse> copyFile(
-            CopyFileRequest copyFileRequest) throws SyncDuoException {
+            CopyFileRequest copyFileRequest) throws ValidationException {
         if (ObjectUtils.anyNull(
                 copyFileRequest,
                 copyFileRequest.getSrcFs(),
                 copyFileRequest.getSrcRemote(),
                 copyFileRequest.getDstFs(),
                 copyFileRequest.getDstRemote())) {
-            throw new SyncDuoException("syncCopy failed." +
+            throw new ValidationException("syncCopy failed." +
                     "copyFileRequest, srcFs, srcRemote, dstFs, dstRemote is null." +
-                    "%s".formatted(copyFileRequest));
+                    "copyFileRequest is %s".formatted(copyFileRequest));
         }
         return this.postAsyncRequest(
                 "operations/copyfile",
-                copyFileRequest,
-                RcloneAsyncResponse.class
+                copyFileRequest
         );
     }
 
     protected RcloneResponse<RcloneAsyncResponse> syncCopy(
-            SyncCopyRequest syncCopyRequest) throws SyncDuoException {
+            SyncCopyRequest syncCopyRequest) throws ValidationException {
         if (ObjectUtils.anyNull(syncCopyRequest, syncCopyRequest.getSrcFs(), syncCopyRequest.getDstFs())) {
-            throw new SyncDuoException("syncCopy failed." +
+            throw new ValidationException("syncCopy failed." +
                     "copyRequest, srcFs, dstFs is null." +
-                    "%s".formatted(syncCopyRequest));
+                    "syncCopyRequest is %s".formatted(syncCopyRequest));
         }
         return this.postAsyncRequest(
                 "sync/copy",
-                syncCopyRequest,
-                RcloneAsyncResponse.class
+                syncCopyRequest
         );
     }
 
     protected RcloneResponse<CheckResponse> oneWayCheck(
-            CheckRequest checkRequest) throws SyncDuoException {
+            CheckRequest checkRequest) throws ValidationException {
         if (ObjectUtils.anyNull(checkRequest, checkRequest.getSrcFs(), checkRequest.getDstFs())) {
-            throw new SyncDuoException("oneWayCheck failed." +
+            throw new ValidationException("oneWayCheck failed." +
                     "checkRequest, srcFs or dstFs is null." +
-                    "%s".formatted(checkRequest));
+                    "checkRequest is %s".formatted(checkRequest));
         }
         return this.post(
                 "operations/check",
@@ -148,30 +146,30 @@ public class RcloneService {
         );
     }
 
-    private <Res> RcloneResponse<Res> post(
-            String url, Class<Res> clazz) {
-        return this.handleClientResponse(
-                this.restClient.post().uri(url),
-                clazz
-        );
-    }
-
     private <Req, Res> RcloneResponse<Res> post(
             String url, Req request, Class<Res> clazz) {
-        return this.handleClientResponse(
-                this.restClient.post().uri(url).body(request),
-                clazz
-        );
+        if (ObjectUtils.isEmpty(request)) {
+            // post without body
+            return this.handleClientResponse(
+                    this.restClient.post().uri(url),
+                    clazz
+            );
+        } else {
+            return this.handleClientResponse(
+                    this.restClient.post().uri(url).body(request),
+                    clazz
+            );
+        }
     }
 
-    private <Req, Res> RcloneResponse<Res> postAsyncRequest(
-            String url, Req request, Class<Res> clazz) {
+    private <Req> RcloneResponse<RcloneAsyncResponse> postAsyncRequest(
+            String url, Req request) {
         return this.handleClientResponse(
                 this.restClient.post()
                         .uri(uriBuilder ->
                                 uriBuilder.path(url).queryParam("_async", "true").build())
                         .body(request),
-                clazz
+                        RcloneAsyncResponse.class
         );
     }
 

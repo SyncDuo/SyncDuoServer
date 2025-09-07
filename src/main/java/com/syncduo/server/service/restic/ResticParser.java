@@ -1,12 +1,12 @@
 package com.syncduo.server.service.restic;
 
 import com.syncduo.server.enums.ResticExitCodeEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.model.restic.global.ExitErrors;
 import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
+import net.sf.jsqlparser.util.validation.ValidationException;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.exec.*;
 import org.apache.commons.lang3.ObjectUtils;
@@ -14,11 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -34,7 +32,7 @@ public class ResticParser {
             String resticRepository,
             CommandLine commandLine,
             Function<String, SR> successHandler
-    ) {
+    ) throws com.syncduo.server.exception.ValidationException {
         return execute(
                 resticPassword,
                 resticRepository,
@@ -53,7 +51,7 @@ public class ResticParser {
             CommandLine commandLine,
             Function<String, SR> successHandler,
             Function<String, FR> failedHandler
-    ) {
+    ) throws ValidationException {
         return execute(
                 resticPassword,
                 resticRepository,
@@ -73,12 +71,17 @@ public class ResticParser {
             CommandLine commandLine,
             Function<String, SR> successHandler,
             Function<String, FR> failedHandler
-            ) {
+            ) throws ValidationException {
+        // 检查参数
+        if (ObjectUtils.anyNull(commandLine, successHandler, failedHandler)) {
+            throw new ValidationException("restic execute failed. " +
+                    "commandLine, successHandler or failedHandler is null");
+        }
+        if (StringUtils.isAnyBlank(resticPassword, resticRepository)) {
+            throw new ValidationException("restic execute failed. resticPassWord or resticRepository is null");
+        }
         Executor executor = DefaultExecutor.builder().get();
         CompletableFuture<ResticExecResult<SR, FR>> future = new CompletableFuture<>();
-        if (ObjectUtils.anyNull(successHandler, failedHandler)) {
-            throw new SyncDuoException("successHandler or failedHandler is null");
-        }
         // 1. 工作目录
         if (StringUtils.isNotBlank(workingDirectory)) {
             executor.setWorkingDirectory(new File(workingDirectory));
@@ -107,7 +110,7 @@ public class ResticParser {
                     } catch (Exception e) {
                         future.complete(ResticExecResult.failed(
                                 resticExitCodeEnum,
-                                new SyncDuoException("restic command success." +
+                                new BusinessException("restic command success." +
                                         "stdout is %s. but handler failed.".formatted(stdoutString), e)));
                     }
                 }
@@ -127,14 +130,14 @@ public class ResticParser {
                         // 使用 SyncDuoException 包装 stderr 返回
                         future.complete(ResticExecResult.failed(
                                 resticExitCodeEnum,
-                                new SyncDuoException("restic failed handler failed." +
+                                new BusinessException("restic failed handler failed." +
                                         "stderr is %s.".formatted(stderrString), e)));
                     }
                 }
             });
         } catch (Exception e) {
             future.complete(ResticExecResult.failed(
-                    new SyncDuoException("restic failed before command exec. ", e)));
+                    new BusinessException("restic failed before command exec. ", e)));
         }
         return future;
     }

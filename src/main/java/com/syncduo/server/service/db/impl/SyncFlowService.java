@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.DbException;
+import com.syncduo.server.exception.JsonException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.mapper.SyncFlowMapper;
 import com.syncduo.server.model.api.syncflow.CreateSyncFlowRequest;
 import com.syncduo.server.model.entity.SyncFlowEntity;
@@ -27,19 +29,21 @@ public class SyncFlowService
         extends ServiceImpl<SyncFlowMapper, SyncFlowEntity>
         implements ISyncFlowService {
 
-    public SyncFlowEntity createSyncFlow(CreateSyncFlowRequest createSyncFlowRequest) throws SyncDuoException {
+    public SyncFlowEntity createSyncFlow(
+            CreateSyncFlowRequest createSyncFlowRequest)
+            throws DbException {
         // 检查是否重名
         String syncFlowName = createSyncFlowRequest.getSyncFlowName();
         SyncFlowEntity dbResult = this.getBySyncFlowName(syncFlowName);
         if (ObjectUtils.isNotEmpty(dbResult)) {
-            throw new SyncDuoException("createSyncFlow failed. syncFlowName is duplicate");
+            throw new DbException("createSyncFlow failed. syncFlowName is duplicate");
         }
         // 检查 syncflow 是否重复
         String sourceFolderPath = createSyncFlowRequest.getSourceFolderFullPath();
         String destFolderPath = createSyncFlowRequest.getDestFolderFullPath();
         dbResult = this.getBySourceAndDestFolderPath(sourceFolderPath, destFolderPath);
         if (ObjectUtils.isNotEmpty(dbResult)) {
-            throw new SyncDuoException("createSyncFlow failed. " +
+            throw new DbException("createSyncFlow failed. " +
                     "sourceFolderPath:%s and destFolderPath:%s already created.".formatted(
                             sourceFolderPath, destFolderPath));
         }
@@ -55,9 +59,9 @@ public class SyncFlowService
         return syncFlowEntity;
     }
 
-    public SyncFlowEntity getBySyncFlowId(Long syncFlowId) throws SyncDuoException {
+    public SyncFlowEntity getBySyncFlowId(Long syncFlowId) throws ValidationException {
         if (ObjectUtils.isEmpty(syncFlowId)) {
-            throw new SyncDuoException("getBySyncFlowIdDB failed, syncFlowId is null");
+            throw new ValidationException("getBySyncFlowIdDB failed, syncFlowId is null");
         }
         LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SyncFlowEntity::getSyncFlowId, syncFlowId);
@@ -65,9 +69,9 @@ public class SyncFlowService
         return this.getOne(queryWrapper);
     }
 
-    public SyncFlowEntity getBySyncFlowName(String syncFlowName) throws SyncDuoException {
+    public SyncFlowEntity getBySyncFlowName(String syncFlowName) throws ValidationException {
         if (StringUtils.isBlank(syncFlowName)) {
-            throw new SyncDuoException("getBySyncFlowName failed. syncFlowName is null");
+            throw new ValidationException("getBySyncFlowName failed. syncFlowName is null");
         }
         LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SyncFlowEntity::getSyncFlowName, syncFlowName);
@@ -76,9 +80,9 @@ public class SyncFlowService
     }
 
     public List<SyncFlowEntity> getBySyncFlowStatus(
-            SyncFlowStatusEnum syncFlowStatusEnum) throws SyncDuoException {
+            SyncFlowStatusEnum syncFlowStatusEnum) throws ValidationException {
         if (ObjectUtils.isEmpty(syncFlowStatusEnum)) {
-            throw new SyncDuoException("syncFlowStatusEnum 为空");
+            throw new ValidationException("syncFlowStatusEnum 为空");
         }
         LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SyncFlowEntity::getSyncStatus, syncFlowStatusEnum.name());
@@ -94,24 +98,25 @@ public class SyncFlowService
         return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
     }
 
-    public SyncFlowEntity updateSyncFlowStatus(
+    public void updateSyncFlowStatus(
             SyncFlowEntity syncFlowEntity,
-            SyncFlowStatusEnum syncFlowStatusEnum) throws SyncDuoException {
+            SyncFlowStatusEnum syncFlowStatusEnum)
+            throws ValidationException, DbException {
         if (ObjectUtils.anyNull(syncFlowEntity, syncFlowStatusEnum)) {
-            throw new SyncDuoException("syncFlowEntity 或 syncFlowStatusEnum 为空");
+            throw new ValidationException("syncFlowEntity 或 syncFlowStatusEnum 为空");
         }
-        return this.updateSyncFlowStatus(syncFlowEntity.getSyncFlowId(), syncFlowStatusEnum);
+        this.updateSyncFlowStatus(syncFlowEntity.getSyncFlowId(), syncFlowStatusEnum);
     }
 
-    public SyncFlowEntity updateSyncFlowStatus(
+    public void updateSyncFlowStatus(
             Long syncFlowId,
-            SyncFlowStatusEnum syncFlowStatusEnum) throws SyncDuoException {
+            SyncFlowStatusEnum syncFlowStatusEnum) throws ValidationException, DbException {
         if (ObjectUtils.anyNull(syncFlowId, syncFlowStatusEnum)) {
-            throw new SyncDuoException("syncFlowId 或 syncFlowStatusEnum 为空");
+            throw new ValidationException("syncFlowId 或 syncFlowStatusEnum 为空");
         }
         SyncFlowEntity dbResult = this.getBySyncFlowId(syncFlowId);
         if (ObjectUtils.isEmpty(dbResult)) {
-            return null;
+            return;
         }
         dbResult.setSyncStatus(syncFlowStatusEnum.name());
         if (syncFlowStatusEnum == SyncFlowStatusEnum.SYNC) {
@@ -119,17 +124,16 @@ public class SyncFlowService
         }
         boolean updated = this.updateById(dbResult);
         if (!updated) {
-            throw new SyncDuoException("更新失败. dbResult 为 %s".formatted(dbResult));
+            throw new DbException("更新失败. dbResult 为 %s".formatted(dbResult));
         }
-        return dbResult;
     }
 
     public SyncFlowEntity getBySourceAndDestFolderPath(
             String sourceFolderPath,
             String destFolderPath
-    ) throws SyncDuoException {
+    ) throws ValidationException {
         if (StringUtils.isAnyBlank(sourceFolderPath, destFolderPath)) {
-            throw new SyncDuoException("getBySourceAndDestFolderPath failed." +
+            throw new ValidationException("getBySourceAndDestFolderPath failed." +
                     "sourceFolderPath:%s or destFolderPath:%s is null.".formatted(sourceFolderPath, destFolderPath));
         }
         LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
@@ -145,9 +149,9 @@ public class SyncFlowService
 
     public List<SyncFlowEntity> getBySourceFolderPath(
             String sourceFolderPath,
-            boolean ignorePausedSyncFlow) throws SyncDuoException {
+            boolean ignorePausedSyncFlow) throws ValidationException {
         if (StringUtils.isAnyBlank(sourceFolderPath)) {
-            throw new SyncDuoException("getBySourceFolderPath failed." +
+            throw new ValidationException("getBySourceFolderPath failed." +
                     "sourceFolderPath:%s is null.".formatted(sourceFolderPath));
         }
         LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
@@ -163,10 +167,11 @@ public class SyncFlowService
         return dbResult;
     }
 
-    public void deleteSyncFlow(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+    public void deleteSyncFlow(SyncFlowEntity syncFlowEntity)
+            throws ValidationException, DbException {
         // 检查参数
         if (ObjectUtils.anyNull(syncFlowEntity, syncFlowEntity.getSyncFlowId())) {
-            throw new SyncDuoException("deleteSyncFlow failed. syncFlowEntity or syncFlowId is null");
+            throw new ValidationException("deleteSyncFlow failed. syncFlowEntity or syncFlowId is null");
         }
         // 先找到记录
         SyncFlowEntity dbResult = this.getBySyncFlowId(syncFlowEntity.getSyncFlowId());
@@ -177,12 +182,12 @@ public class SyncFlowService
         dbResult.setRecordDeleted(DeletedEnum.DELETED.getCode());
         boolean isDeleted = this.updateById(dbResult);
         if (!isDeleted) {
-            throw new SyncDuoException("deleteSyncFlow failed." +
-                    "can't write to database");
+            throw new DbException("deleteSyncFlow failed. can't write to database");
         }
     }
 
-    public List<String> getFilterCriteriaAsList(SyncFlowEntity syncFlowEntity) throws SyncDuoException {
+    public List<String> getFilterCriteriaAsList(SyncFlowEntity syncFlowEntity)
+            throws ValidationException, JsonException {
         EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
         return JsonUtil.deserializeStringToList(syncFlowEntity.getFilterCriteria());
     }

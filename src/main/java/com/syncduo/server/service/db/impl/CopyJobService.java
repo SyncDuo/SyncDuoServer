@@ -4,7 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.syncduo.server.enums.CommonStatus;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.DbException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.mapper.CopyJobMapper;
 import com.syncduo.server.model.entity.CopyJobEntity;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsResponse;
@@ -25,7 +26,7 @@ public class CopyJobService
         extends ServiceImpl<CopyJobMapper, CopyJobEntity>
         implements ICopyJobService {
 
-    public CopyJobEntity addCopyJob(long syncFlowId) throws SyncDuoException {
+    public CopyJobEntity addCopyJob(long syncFlowId) throws DbException {
         CopyJobEntity copyJobEntity = new CopyJobEntity();
         copyJobEntity.setSyncFlowId(syncFlowId);
         // 设置默认值
@@ -33,7 +34,7 @@ public class CopyJobService
         // 保存数据库
         boolean saved = this.save(copyJobEntity);
         if (!saved) {
-            throw new SyncDuoException("addCopyJob failed. save to database failed.");
+            throw new DbException("addCopyJob failed. save to database failed.");
         }
         return copyJobEntity;
     }
@@ -41,7 +42,7 @@ public class CopyJobService
     public void markCopyJobAsSuccess(
             long copyJobId,
             JobStatusResponse jobStatusResponse,
-            CoreStatsResponse coreStatsResponse) throws SyncDuoException {
+            CoreStatsResponse coreStatsResponse) throws DbException {
         CopyJobEntity dbResult = this.getByCopyJobId(copyJobId);
         if (ObjectUtils.isEmpty(dbResult)) {
             return;
@@ -62,15 +63,15 @@ public class CopyJobService
         }
         boolean updated = this.updateById(dbResult);
         if (!updated) {
-            throw new SyncDuoException("markCopyJobAsSuccess failed. can't write to database.");
+            throw new DbException("markCopyJobAsSuccess failed. can't write to database.");
         }
     }
 
     public void markCopyJobAsFailed(
             long copyJobId,
-            String errorMessage) throws SyncDuoException {
+            String errorMessage) throws ValidationException, DbException {
         if (ObjectUtils.isEmpty(copyJobId)) {
-            throw new SyncDuoException("failJob failed. copyJobId is null.");
+            throw new ValidationException("markCopyJobAsFailed failed. copyJobId is null.");
         }
         if (StringUtils.isBlank(errorMessage)) {
             errorMessage = "";
@@ -83,11 +84,11 @@ public class CopyJobService
         dbResult.setErrorMessage(errorMessage);
         boolean updated = this.updateById(dbResult);
         if (!updated) {
-            throw new SyncDuoException("failJob failed. can't write to database.");
+            throw new DbException("markCopyJobAsFailed failed. can't write to database.");
         }
     }
 
-    public CopyJobEntity getByCopyJobId(long copyJobId) throws SyncDuoException {
+    public CopyJobEntity getByCopyJobId(long copyJobId) {
         LambdaQueryWrapper<CopyJobEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(CopyJobEntity::getCopyJobId, copyJobId);
         queryWrapper.eq(CopyJobEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
@@ -95,7 +96,7 @@ public class CopyJobService
         return this.list(queryWrapper).stream().findFirst().orElse(null);
     }
 
-    public CopyJobEntity getByRcloneJobId(long rcloneJobId) throws SyncDuoException {
+    public CopyJobEntity getByRcloneJobId(long rcloneJobId) {
         LambdaQueryWrapper<CopyJobEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(CopyJobEntity::getRcloneJobId, rcloneJobId);
         queryWrapper.eq(CopyJobEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
