@@ -1,10 +1,10 @@
 package com.syncduo.server.model.restic.ls;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.math.BigInteger;
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Data
 public class Node {

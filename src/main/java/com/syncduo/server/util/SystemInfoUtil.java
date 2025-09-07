@@ -1,7 +1,6 @@
 package com.syncduo.server.util;
 
 import com.syncduo.server.exception.ResourceNotFoundException;
-import com.syncduo.server.exception.SyncDuoException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;

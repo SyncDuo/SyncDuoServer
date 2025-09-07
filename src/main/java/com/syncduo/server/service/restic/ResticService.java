@@ -1,7 +1,6 @@
 package com.syncduo.server.service.restic;
 
 import com.syncduo.server.exception.BusinessException;
-import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.restic.backup.BackupError;
 import com.syncduo.server.model.restic.backup.BackupSummary;
@@ -16,7 +15,7 @@ import com.syncduo.server.model.restic.stats.Stats;
 import com.syncduo.server.util.FilesystemUtil;
 import com.syncduo.server.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.exec.*;
+import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Service

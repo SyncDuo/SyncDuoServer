@@ -1,11 +1,11 @@
 package com.syncduo.server.model.restic.ls;
 
-import java.time.Instant;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.syncduo.server.model.restic.snapshots.SnapshotSummary;
 import lombok.Data;
+
+import java.time.Instant;
+import java.util.List;
 
 @Data
 public class Snapshot {

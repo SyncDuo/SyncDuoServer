@@ -1,7 +1,7 @@
 package com.syncduo.server.bus;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.model.internal.FilesystemEvent;
 import com.syncduo.server.service.bussiness.DebounceService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
@@ -11,7 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 @Component
@@ -35,18 +36,19 @@ public class FilesystemEventHandler {
         this.rcloneFacadeService = rcloneFacadeService;
     }
 
-    public void sendFileEvent(FilesystemEvent fileSystemEvent) throws SyncDuoException {
+    public void sendFileEvent(FilesystemEvent fileSystemEvent) throws BusinessException {
         log.debug("fileEvent: {}", fileSystemEvent);
         try {
             this.filesystemEventQueue.put(fileSystemEvent);
         } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
         } catch (ClassCastException | NullPointerException | IllegalArgumentException e) {
-            throw new SyncDuoException("sendFileEvent failed. ", e);
+            throw new BusinessException("sendFileEvent failed. ", e);
         }
     }
 
     public void startHandle() {
+        // 起一个固定线程, 轮询 queue
         new Thread(() -> {
             log.info("Filesystem Event Handler Start");
             while (!Thread.currentThread().isInterrupted()) {

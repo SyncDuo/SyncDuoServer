@@ -1,7 +1,6 @@
 package com.syncduo.server;
 
 import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -12,7 +11,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Stream;
 
 import static com.syncduo.server.util.FilesystemUtil.getAllFile;
 

@@ -1,6 +1,5 @@
 package com.syncduo.server.model.restic.restore;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 

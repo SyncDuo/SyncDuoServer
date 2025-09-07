@@ -2,7 +2,7 @@ package com.syncduo.server.model.api.syncflow;
 
 import com.syncduo.server.model.api.global.FolderStats;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import lombok.*;
+import lombok.Data;
 import org.apache.commons.lang3.ObjectUtils;
 
 @Data

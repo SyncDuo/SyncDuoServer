@@ -1,10 +1,6 @@
 package com.syncduo.server.model.api.syncflow;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-
-import java.nio.file.Path;
-import java.util.List;
 
 @Data
 public class CreateSyncFlowRequest {

@@ -1,8 +1,6 @@
 package com.syncduo.server.model.rclone.global;
 
 import com.syncduo.server.exception.BusinessException;
-import com.syncduo.server.exception.SyncDuoException;
-import com.syncduo.server.model.entity.BackupJobEntity;
 import lombok.Data;
 import org.apache.commons.lang3.ObjectUtils;
 

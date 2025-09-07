@@ -1,7 +1,9 @@
 package com.syncduo.server.bus;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.internal.FilesystemEvent;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -39,9 +41,9 @@ public class FolderWatcher implements DisposableBean {
         this.filesystemEventHandler = filesystemEventHandler;
     }
 
-    public void addWatcher(String folderPath) throws SyncDuoException {
+    public void addWatcher(String folderPath) throws ValidationException, BusinessException {
         if (StringUtils.isBlank(folderPath)) {
-            throw new SyncDuoException("addWatcher failed. folderPath is empty");
+            throw new ValidationException("addWatcher failed. folderPath is empty");
         }
         Path folderPathValid = FilesystemUtil.isFolderPathValid(folderPath);
         if (monitorMap.containsKey(folderPath)) {
@@ -52,7 +54,7 @@ public class FolderWatcher implements DisposableBean {
         try {
             observer.initialize();
         } catch (Exception e) {
-            throw new SyncDuoException(("addWatcher failed. observer initialize failed. " +
+            throw new BusinessException(("addWatcher failed. observer initialize failed. " +
                     "folderPath is %s").formatted(folderPath), e);
         }
         FileAlterationMonitor monitor = new FileAlterationMonitor(getRandomInterval(interval), observer);
@@ -60,7 +62,7 @@ public class FolderWatcher implements DisposableBean {
             monitor.start();
             this.monitorMap.put(folderPath, monitor);
         } catch (Exception e) {
-            throw new SyncDuoException("addWatcher failed. folderId is %s".formatted(folderPath), e);
+            throw new BusinessException("addWatcher failed. folderPath is %s".formatted(folderPath), e);
         }
     }
 
@@ -90,7 +92,7 @@ public class FolderWatcher implements DisposableBean {
             log.warn("stopWatcher failed. monitor is {}, folderPath is {}",
                     fileAlterationMonitor,
                     folderPath,
-                    e);
+                    new BusinessException(("stopWatcher failed. monitor is %s").formatted(folderPath), e));
         }
     }
 
@@ -110,8 +112,9 @@ public class FolderWatcher implements DisposableBean {
                     filesystemEventHandler.sendFileEvent(new FilesystemEvent(
                         folder, file.toPath(), FileEventTypeEnum.FILE_CREATED
                     ));
-                } catch (SyncDuoException e) {
-                    log.error("文件夹发送 file event 失败", e);
+                } catch (Exception e) {
+                    log.error("文件夹发送 file event 失败",
+                            new BusinessException("observer onFileCreate failed.", e));
                 }
             }
 
@@ -121,8 +124,9 @@ public class FolderWatcher implements DisposableBean {
                     filesystemEventHandler.sendFileEvent(new FilesystemEvent(
                             folder, file.toPath(), FileEventTypeEnum.FILE_DELETED
                     ));
-                } catch (SyncDuoException e) {
-                    log.error("文件夹发送 file event 失败", e);
+                } catch (Exception e) {
+                    log.error("文件夹发送 file event 失败",
+                            new BusinessException("observer onFileDelete failed.", e));
                 }
             }
 
@@ -133,7 +137,8 @@ public class FolderWatcher implements DisposableBean {
                             folder, file.toPath(), FileEventTypeEnum.FILE_MODIFIED
                     ));
                 } catch (SyncDuoException e) {
-                    log.error("文件夹发送 file event 失败", e);
+                    log.error("文件夹发送 file event 失败",
+                            new BusinessException("observer onFileChange failed.", e));
                 }
             }
         });

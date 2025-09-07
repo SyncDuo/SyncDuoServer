@@ -2,7 +2,6 @@ package com.syncduo.server.configuration;
 
 
 import com.syncduo.server.bus.FilesystemEventHandler;
-import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.service.bussiness.SystemManagementService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
@@ -40,7 +39,7 @@ public class ApplicationLifeCycleConfig {
     }
 
     @PostConstruct
-    public void startUp() throws SyncDuoException {
+    public void startUp() {
         this.rcloneFacadeService.init();
         this.resticFacadeService.init();
         // 系统启动扫描

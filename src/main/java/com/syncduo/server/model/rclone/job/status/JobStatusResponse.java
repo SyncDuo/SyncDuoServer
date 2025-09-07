@@ -2,8 +2,6 @@ package com.syncduo.server.model.rclone.job.status;
 
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 public class JobStatusResponse {
 
