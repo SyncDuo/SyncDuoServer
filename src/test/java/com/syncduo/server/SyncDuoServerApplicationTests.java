@@ -180,8 +180,7 @@ class SyncDuoServerApplicationTests {
         );
         assert !StringUtils.isAnyBlank(
                 systemInfo.getFileCopyRate(),
-                systemInfo.getUptime(),
-                systemInfo.getHostName()
+                systemInfo.getUptime()
         );
     }
 

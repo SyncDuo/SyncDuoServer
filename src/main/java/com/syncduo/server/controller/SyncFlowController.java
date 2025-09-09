@@ -15,6 +15,7 @@ import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -195,6 +196,25 @@ public class SyncFlowController {
         return SyncDuoHttpResponse.success();
     }
 
+    @GetMapping("/get-sync-flow-info")
+    public SyncDuoHttpResponse<SyncFlowInfo> getSyncFlowInfo(
+            @RequestParam("syncFlowIdString") String syncFlowIdString) {
+        if (StringUtils.isBlank(syncFlowIdString)) {
+            throw new ValidationException("syncFlowIdString is empty");
+        }
+        long syncFlowId;
+        try {
+            syncFlowId = Long.parseLong(syncFlowIdString);
+        } catch (NumberFormatException e) {
+            throw new ValidationException("syncFlowIdString is invalid.");
+        }
+        SyncFlowEntity syncFlowEntity = this.syncFlowService.getBySyncFlowId(syncFlowId);
+        if (ObjectUtils.isEmpty(syncFlowEntity)) {
+            return SyncDuoHttpResponse.success(null, "syncFlow is deleted");
+        }
+        return SyncDuoHttpResponse.success(this.getSyncFlowInfo(syncFlowEntity));
+    }
+
     @GetMapping("/get-all-sync-flow-info")
     public SyncDuoHttpResponse<List<SyncFlowInfo>> getAllSyncFlowInfo() {
         List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
@@ -226,7 +246,7 @@ public class SyncFlowController {
     }
 
     private SyncFlowInfo getSyncFlowInfo(SyncFlowEntity syncFlowEntity)
-    throws ValidationException, ResourceNotFoundException, FileOperationException {
+            throws ValidationException, ResourceNotFoundException, FileOperationException {
         // 本地获取 folderStat
         List<Long> folderInfo = FilesystemUtil.getFolderInfo(syncFlowEntity.getDestFolderPath());
         FolderStats folderStats = new FolderStats(folderInfo.get(0), folderInfo.get(1), folderInfo.get(2));

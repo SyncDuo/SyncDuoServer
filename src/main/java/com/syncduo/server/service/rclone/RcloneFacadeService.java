@@ -67,7 +67,11 @@ public class RcloneFacadeService {
     }
 
     public void init() {
-        this.getCoreStats();
+        try {
+            this.getCoreStats();
+        } catch (Exception e) {
+            throw new BusinessException("rclone init failed.", e);
+        }
         log.info("rclone init success");
     }
 

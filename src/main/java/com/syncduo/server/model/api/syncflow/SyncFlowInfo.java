@@ -20,7 +20,7 @@ public class SyncFlowInfo {
 
     private String lastSyncTimeStamp = "";
 
-    private String ignorePatten;
+    private String filterCriteria;
 
     private FolderStats destFolderStats;
 
@@ -37,7 +37,7 @@ public class SyncFlowInfo {
         if (ObjectUtils.isNotEmpty(syncFlowEntity.getLastSyncTime())) {
             this.lastSyncTimeStamp = syncFlowEntity.getLastSyncTime().toString();
         }
-        this.ignorePatten = syncFlowEntity.getFilterCriteria();
+        this.filterCriteria = syncFlowEntity.getFilterCriteria();
         this.destFolderStats = folderStats;
     }
 }

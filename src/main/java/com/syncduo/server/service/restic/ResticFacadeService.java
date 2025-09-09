@@ -85,30 +85,34 @@ public class ResticFacadeService {
     }
 
     public void init() {
-        if (ObjectUtils.anyNull(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE_SEC) ||
-                RESTIC_BACKUP_INTERVAL < 1 || RESTIC_RESTORE_AGE_SEC < 1) {
-            throw new ValidationException(
-                    "restic init failed. " +
-                    "RESTIC_BACKUP_INTERVAL:%s or ".formatted(RESTIC_BACKUP_INTERVAL) +
-                    "RESTIC_RESTORE_AGE:%s is null.".formatted(RESTIC_RESTORE_AGE_SEC));
-        }
-        // 检查 restore path 是否存在
-        this.rcloneFacadeService.isSourceFolderExist(RESTIC_RESTORE_PATH);
-        // 检查备份目录是否已经初始化
-        ResticExecResult<CatConfig, ExitErrors> catConfigResult = this.resticService.catConfig();
-        // 没有初始化则初始化
-        if (!catConfigResult.isSuccess()) {
-            ResticExecResult<Init, ExitErrors> initResult = this.resticService.init();
-            if (!initResult.isSuccess()) {
-                throw new BusinessException("Restic Init failed.", initResult.getBusinessException());
+        try {
+            if (ObjectUtils.anyNull(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE_SEC) ||
+                    RESTIC_BACKUP_INTERVAL < 1 || RESTIC_RESTORE_AGE_SEC < 1) {
+                throw new ValidationException(
+                        "RESTIC_BACKUP_INTERVAL:%s or ".formatted(RESTIC_BACKUP_INTERVAL) +
+                                "RESTIC_RESTORE_AGE:%s is null.".formatted(RESTIC_RESTORE_AGE_SEC));
             }
+            // 检查 restore path 是否存在
+            this.rcloneFacadeService.isSourceFolderExist(RESTIC_RESTORE_PATH);
+            // 检查备份目录是否已经初始化
+            ResticExecResult<CatConfig, ExitErrors> catConfigResult = this.resticService.catConfig();
+            // 没有初始化则初始化
+            if (!catConfigResult.isSuccess()) {
+                ResticExecResult<Init, ExitErrors> initResult = this.resticService.init();
+                if (!initResult.isSuccess()) {
+                    throw new BusinessException("execute restic init method failed",
+                            initResult.getBusinessException());
+                }
+            }
+            // 启动定时任务
+            this.systemManagementTaskScheduler.scheduleWithFixedDelay(
+                    this::periodicalBackup,
+                    Instant.now().plus(Duration.ofHours(1)),
+                    Duration.ofSeconds(RESTIC_BACKUP_INTERVAL)
+            );
+        } catch (Exception e) {
+            throw new BusinessException("Restic init failed", e);
         }
-        // 启动定时任务
-        this.systemManagementTaskScheduler.scheduleWithFixedDelay(
-                this::periodicalBackup,
-                Instant.now().plus(Duration.ofHours(1)),
-                Duration.ofSeconds(RESTIC_BACKUP_INTERVAL)
-        );
         log.info("restic init success.");
     }
 
