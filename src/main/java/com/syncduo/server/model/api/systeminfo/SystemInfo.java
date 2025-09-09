@@ -8,8 +8,6 @@ import java.time.Duration;
 @Data
 public class SystemInfo {
 
-    private String hostName;
-
     private int syncFlowNumber;
 
     private String fileCopyRate; // xx.xxMB/s(xx.xx MB copied in second)

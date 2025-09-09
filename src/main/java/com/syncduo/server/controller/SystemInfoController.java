@@ -1,7 +1,6 @@
 package com.syncduo.server.controller;
 
 import com.syncduo.server.bus.FolderWatcher;
-import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.global.FolderStats;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
@@ -12,12 +11,10 @@ import com.syncduo.server.model.rclone.core.stat.CoreStatsResponse;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.util.FilesystemUtil;
-import com.syncduo.server.util.SystemInfoUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -61,9 +58,6 @@ public class SystemInfoController {
     @GetMapping("/get-system-info")
     public SyncDuoHttpResponse<SystemInfo> getSystemInfo() {
         SystemInfo systemInfo = new SystemInfo();
-        // hostname
-        String hostName = SystemInfoUtil.getHostName();
-        systemInfo.setHostName(hostName);
         // uptime
         RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
         if (ObjectUtils.isEmpty(runtimeMXBean)) {

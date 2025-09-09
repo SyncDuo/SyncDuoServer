@@ -195,8 +195,8 @@ public class SyncFlowController {
         return SyncDuoHttpResponse.success();
     }
 
-    @GetMapping("/get-sync-flow")
-    public SyncDuoHttpResponse<List<SyncFlowInfo>> getSyncFlow() {
+    @GetMapping("/get-all-sync-flow-info")
+    public SyncDuoHttpResponse<List<SyncFlowInfo>> getAllSyncFlowInfo() {
         List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
         if (ObjectUtils.isEmpty(allSyncFlow)) {
             return SyncDuoHttpResponse.success(null, "no sync flow found");
