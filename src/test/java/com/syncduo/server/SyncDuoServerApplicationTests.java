@@ -185,6 +185,58 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
+    void ShouldReturnTrueWhenDownloadFileCache() throws SyncDuoException, IOException {
+        // 创建 syncflow
+        createSyncFlow(null);
+        // 手动触发 backup job
+        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        // 获取 snapshot info
+        SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
+                this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
+        assert ObjectUtils.isNotEmpty(syncFlowWithSnapshots.getData());
+        assert CollectionUtils.isNotEmpty(syncFlowWithSnapshots.getData().getSnapshotInfoList());
+        // 获取 snapshot file info
+        SyncDuoHttpResponse<List<SnapshotFileInfo>> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
+                syncFlowWithSnapshots.getData().getSnapshotInfoList().get(0).getBackupJobId(),
+                "/"
+        );
+        // 下载文件
+        for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoResponse.getData()) {
+            if (snapshotFileInfo.getType().equals(ResticNodeTypeEnum.FILE.getType())) {
+                ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFile(snapshotFileInfo);
+                assert response.getStatusCode() == HttpStatus.OK;
+                assert ObjectUtils.isNotEmpty(response.getBody());
+                assert response.getBody().contentLength() > 0;
+                String headersString = response.getHeaders().toString();
+                assert headersString.contains(HttpHeaders.CONTENT_DISPOSITION) &&
+                        headersString.contains(snapshotFileInfo.getFileName());
+                assert headersString.contains(MediaType.APPLICATION_OCTET_STREAM.toString());
+            }
+        }
+        // 验证 restore 数据库记录是否生成
+        List<RestoreJobEntity> restoreJobEntities = this.restoreJobService.list();
+        assert CollectionUtils.isNotEmpty(restoreJobEntities);
+        for (RestoreJobEntity restoreJobEntity : restoreJobEntities) {
+            assert restoreJobEntity.getRestoreJobStatus().equals(CommonStatus.SUCCESS.name());
+        }
+        // 再次下载文件
+        for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoResponse.getData()) {
+            if (snapshotFileInfo.getType().equals(ResticNodeTypeEnum.FILE.getType())) {
+                ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFile(snapshotFileInfo);
+                assert response.getStatusCode() == HttpStatus.OK;
+                assert ObjectUtils.isNotEmpty(response.getBody());
+                assert response.getBody().contentLength() > 0;
+                String headersString = response.getHeaders().toString();
+                assert headersString.contains(HttpHeaders.CONTENT_DISPOSITION) &&
+                        headersString.contains(snapshotFileInfo.getFileName());
+                assert headersString.contains(MediaType.APPLICATION_OCTET_STREAM.toString());
+            }
+        }
+        // 验证走了缓存, 因为 restore 数据库记录没有生成
+        assert restoreJobEntities.size() == this.restoreJobService.list().size();
+    }
+
+    @Test
     void ShouldReturnTrueWhenDownloadFile() throws SyncDuoException, IOException {
         // 创建 syncflow
         createSyncFlow(null);

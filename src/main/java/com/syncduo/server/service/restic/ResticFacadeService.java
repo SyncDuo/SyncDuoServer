@@ -7,6 +7,7 @@ import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.entity.RestoreJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
+import com.syncduo.server.model.internal.RestoreFileCache;
 import com.syncduo.server.model.restic.backup.BackupError;
 import com.syncduo.server.model.restic.backup.BackupSummary;
 import com.syncduo.server.model.restic.cat.CatConfig;
@@ -26,6 +27,7 @@ import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +40,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 // Restic 设计为单备份仓库, 单密码
 @Slf4j
@@ -57,6 +61,10 @@ public class ResticFacadeService {
     private final RcloneFacadeService rcloneFacadeService;
 
     private final RestoreJobService restoreJobService;
+
+    // <SnapshotId, <File Original Path in Snapshot, RestoreFileCache>
+    private final Map<String, Map<String, RestoreFileCache>> restoreFileCacheMap =
+            new ConcurrentHashMap<>(100);
 
     @Value("${syncduo.server.restic.backupIntervalSec}")
     private long RESTIC_BACKUP_INTERVAL;
@@ -221,7 +229,13 @@ public class ResticFacadeService {
 
 
     public Path restoreFile(SnapshotFileInfo snapshotFileInfo) {
+        // 参数检查
         EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
+        // 查询缓存
+        Path restoreFileCached = isRestoreFileCached(snapshotFileInfo);
+        if (ObjectUtils.isNotEmpty(restoreFileCached)) {
+            return restoreFileCached;
+        }
         String restoreTargetPathString = FilesystemUtil.createRandomEnglishFolder(this.RESTIC_RESTORE_PATH);
         // 添加 restore job
         RestoreJobEntity restoreJobEntity = this.restoreJobService.addRunningRestoreJob(
@@ -229,8 +243,13 @@ public class ResticFacadeService {
                 restoreTargetPathString
         );
         // 创建删除 tmp folder 任务
-        this.moduleDebounceService.schedule(
-                () -> FilesystemUtil.deleteFolder(restoreTargetPathString, true),
+        this.moduleDebounceService.debounce(
+                restoreTargetPathString,
+                () -> {
+                    // 删除文件夹和缓存
+                    FilesystemUtil.deleteFolder(restoreTargetPathString, true);
+                    this.deleteRestoreFileCache(snapshotFileInfo);
+                },
                 RESTIC_RESTORE_AGE_SEC
         );
         ResticExecResult<RestoreSummary, List<RestoreError>> restoreResult = this.resticService.restore(
@@ -252,6 +271,81 @@ public class ResticFacadeService {
                 restoreJobEntity.getRestoreJobId(),
                 restoreResult.getData()
         );
-        return FilesystemUtil.getAllFile(Paths.get(restoreTargetPathString)).get(0);
+        Path filePath = FilesystemUtil.getAllFile(Paths.get(restoreTargetPathString)).get(0);
+        // 添加缓存
+        addRestoreFileCache(
+                restoreTargetPathString,
+                restoreTargetPathString,
+                filePath.toAbsolutePath().toString(),
+                snapshotFileInfo
+        );
+        return filePath;
+    }
+
+    private Path isRestoreFileCached(SnapshotFileInfo snapshotFileInfo) {
+        if (ObjectUtils.isEmpty(snapshotFileInfo)) {
+            return null;
+        }
+        RestoreFileCache restoreFileCache = this.getRestoreFileCache(snapshotFileInfo);
+        if (ObjectUtils.isEmpty(restoreFileCache)) {
+            return null;
+        }
+        // 检查文件是否还存在
+        String fileFullPathString = restoreFileCache.getFileFullPath();
+        try {
+            Path filePath = FilesystemUtil.isFilePathValid(fileFullPathString);
+            // 延长删除任务
+            this.moduleDebounceService.debounce(
+                    restoreFileCache.getDebounceJobKey(),
+                    () -> {
+                        // 删除文件夹和缓存
+                        FilesystemUtil.deleteFolder(restoreFileCache.getFolderFullPath(), true);
+                        this.deleteRestoreFileCache(snapshotFileInfo);
+                    },
+                    RESTIC_RESTORE_AGE_SEC
+            );
+            return filePath;
+        } catch (Exception e) {
+            log.debug("restore file hit cache, but filesystem doesn't exist.", e);
+            // 删除文件缓存
+            this.deleteRestoreFileCache(snapshotFileInfo);
+        }
+        return null;
+    }
+
+    private void addRestoreFileCache(
+            String debounceJobKey,
+            String folderFullPath,
+            String fileFullPathString,
+            SnapshotFileInfo snapshotFileInfo) {
+        String snapshotId = snapshotFileInfo.getSnapshotId();
+        RestoreFileCache restoreFileCache = new RestoreFileCache(
+                debounceJobKey,
+                folderFullPath,
+                snapshotId,
+                fileFullPathString
+        );
+        Map<String, RestoreFileCache> snapshotCache = this.restoreFileCacheMap.getOrDefault(
+                snapshotId,
+                new ConcurrentHashMap<>()
+        );
+        snapshotCache.put(snapshotFileInfo.getPath(), restoreFileCache);
+        this.restoreFileCacheMap.put(snapshotId, snapshotCache);
+    }
+
+    private RestoreFileCache getRestoreFileCache(SnapshotFileInfo snapshotFileInfo) {
+        Map<String, RestoreFileCache> snapshotCache = this.restoreFileCacheMap.get(snapshotFileInfo.getSnapshotId());
+        if (MapUtils.isEmpty(snapshotCache)) {
+            return null;
+        }
+        return snapshotCache.get(snapshotFileInfo.getPath());
+    }
+
+    private void deleteRestoreFileCache(SnapshotFileInfo snapshotFileInfo) {
+        Map<String, RestoreFileCache> snapshotCache = this.restoreFileCacheMap.get(snapshotFileInfo.getSnapshotId());
+        if (MapUtils.isEmpty(snapshotCache)) {
+            return;
+        }
+        snapshotCache.remove(snapshotFileInfo.getPath());
     }
 }
