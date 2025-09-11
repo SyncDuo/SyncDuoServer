@@ -240,7 +240,7 @@ public class FilesystemUtil {
      * @param folderPathString 要删除的文件夹路径
      * @throws FileOperationException 如果删除过程中发生错误
      */
-    public static void deleteFolder(String folderPathString)
+    public static void deleteFolder(String folderPathString, boolean includeSelf)
             throws ValidationException, ResourceNotFoundException, FileOperationException {
         Path folderPath = isFolderPathValid(folderPathString);
         // 使用Files.walkFileTree遍历并删除文件夹内容
@@ -256,6 +256,10 @@ public class FilesystemUtil {
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
                     // 删除目录（在访问完目录内容后执行）
+                    if (!includeSelf && dir.equals(folderPath)) {
+                        // 遇到 self 则跳过
+                        return FileVisitResult.CONTINUE;
+                    }
                     Files.delete(dir);
                     return FileVisitResult.CONTINUE;
                 }

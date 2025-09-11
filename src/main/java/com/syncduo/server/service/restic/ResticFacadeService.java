@@ -94,6 +94,8 @@ public class ResticFacadeService {
             }
             // 检查 restore path 是否存在
             this.rcloneFacadeService.isSourceFolderExist(RESTIC_RESTORE_PATH);
+            // 删除 restore path 的所有子文件夹
+            FilesystemUtil.deleteFolder(RESTIC_RESTORE_PATH, false);
             // 检查备份目录是否已经初始化
             ResticExecResult<CatConfig, ExitErrors> catConfigResult = this.resticService.catConfig();
             // 没有初始化则初始化
@@ -192,7 +194,7 @@ public class ResticFacadeService {
         );
         // 创建删除 tmp folder 任务
         this.moduleDebounceService.schedule(
-                () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
+                () -> FilesystemUtil.deleteFolder(restoreTargetPathString, true),
                 RESTIC_RESTORE_AGE_SEC
         );
         ResticExecResult<RestoreSummary, List<RestoreError>> restoreResult = this.resticService.restore(
@@ -228,7 +230,7 @@ public class ResticFacadeService {
         );
         // 创建删除 tmp folder 任务
         this.moduleDebounceService.schedule(
-                () -> FilesystemUtil.deleteFolder(restoreTargetPathString),
+                () -> FilesystemUtil.deleteFolder(restoreTargetPathString, true),
                 RESTIC_RESTORE_AGE_SEC
         );
         ResticExecResult<RestoreSummary, List<RestoreError>> restoreResult = this.resticService.restore(

@@ -42,10 +42,10 @@ public class FileOperationTestUtil {
             @Override
             public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
                 if (dir.equals(path)) {
-                    return super.postVisitDirectory(dir, exc);
+                    return FileVisitResult.CONTINUE;
                 }
                 Files.delete(dir);
-                return super.postVisitDirectory(dir, exc);
+                return FileVisitResult.CONTINUE;
             }
         });
         log.info("All folders and files have been deleted successfully.");
