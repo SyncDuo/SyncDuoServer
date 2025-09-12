@@ -190,6 +190,41 @@ public class SnapshotsController {
         }
     }
 
+    @PostMapping("/preview-file")
+    public ResponseEntity<Resource> previewFile(@RequestBody SnapshotFileInfo snapshotFileInfo) {
+        EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
+        if (!ResticNodeTypeEnum.FILE.getType().equals(snapshotFileInfo.getType())) {
+            throw new ValidationException("downloadSnapshotFile failed. snapshotFileInfo is not a file.");
+        }
+        String fileName = snapshotFileInfo.getFileName();
+        MediaType mediaType = determineContentType(fileName);
+        if (ObjectUtils.isEmpty(mediaType)) {
+            throw new BusinessException("previewFile failed. fileType not supported.");
+        }
+        Path file = this.resticFacadeService.restoreFile(snapshotFileInfo);
+        try {
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+                    .body(new UrlResource(file.toUri()));
+        } catch (MalformedURLException e) {
+            throw new BusinessException("previewFile failed. file convert to url resource failed.", e);
+        }
+    }
+
+    private MediaType determineContentType(String filename) {
+        // 根据文件扩展名返回对应的 MIME 类型
+        String extension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+        return switch (extension) {
+            case "pdf" -> MediaType.APPLICATION_JSON;
+            case "txt" -> MediaType.parseMediaType("text/plain; charset=UTF-8"); // 明确指定字符集，避免中文乱码
+            case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
+            case "png" -> MediaType.IMAGE_PNG;
+            // ... 可以添加更多支持的类型
+            default -> null;
+        };
+    }
+
     private SyncFlowWithSnapshots combineSyncFlowWithSnapshotInfo(SyncFlowEntity syncFlowEntity) {
         // syncflow entity 转换为 SyncFlowWith Snapshots
         SyncFlowWithSnapshots syncFlowWithSnapshots = new SyncFlowWithSnapshots();
