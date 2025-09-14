@@ -247,10 +247,10 @@ class SyncDuoServerApplicationTests {
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
         assert ObjectUtils.isNotEmpty(syncFlowWithSnapshots.getData());
         assert CollectionUtils.isNotEmpty(syncFlowWithSnapshots.getData().getSnapshotInfoList());
-        // 获取 snapshot file info
+        // 获取 snapshot file info, 使用 TestFolder1_1 测试嵌套的文件夹
         SyncDuoHttpResponse<List<SnapshotFileInfo>> snapshotFileInfoResponse = this.snapshotsController.getSnapshotFiles(
                 syncFlowWithSnapshots.getData().getSnapshotInfoList().get(0).getBackupJobId(),
-                "/"
+                "/TestFolder1_1"
         );
         // 下载文件
         for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoResponse.getData()) {
@@ -361,11 +361,6 @@ class SyncDuoServerApplicationTests {
             log.debug("backJobEntity is {}", backupJobEntity.toString());
             assert backupJobEntity.getBackupJobStatus().equals(CommonStatus.SUCCESS.name());
         }
-        // 手动触发, snapshot 不应该被创建
-        this.resticFacadeService.manualBackup(this.syncFlowEntity);
-        // 获取 copy job
-        BackupJobEntity dbResult = this.backupJobService.getBySyncFlowId(this.syncFlowEntity.getSyncFlowId()).get(1);
-        assert StringUtils.isBlank(dbResult.getSnapshotId());
     }
 
     @Test

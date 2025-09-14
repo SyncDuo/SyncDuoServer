@@ -144,7 +144,6 @@ public class SyncFlowController {
                 } else {
                     // sync copy
                     this.rcloneFacadeService.syncCopy(syncFlowEntity);
-                    this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RUNNING);
                 }
                 break;
             }

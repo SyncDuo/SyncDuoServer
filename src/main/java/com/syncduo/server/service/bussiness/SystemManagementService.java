@@ -53,8 +53,6 @@ public class SystemManagementService {
                     this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
                     continue;
                 }
-                // update status
-                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RUNNING);
                 // copy
                 this.rcloneFacadeService.syncCopy(syncFlowEntity);
                 // source folder add watcher
@@ -88,8 +86,6 @@ public class SystemManagementService {
                 // check
                 boolean isSync = rcloneFacadeService.oneWayCheck(syncFlowEntity);
                 if (!isSync) {
-                    // update status
-                    this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RUNNING);
                     // copy
                     this.rcloneFacadeService.syncCopy(syncFlowEntity);
                 }

@@ -134,17 +134,15 @@ public class RcloneFacadeService {
         }
         log.debug("get downstream syncflow as {}", downstreamSyncFlowEntityList);
         for (SyncFlowEntity syncFlowEntity : downstreamSyncFlowEntityList) {
+            // 手动 filter, 因为 rclone 设计 copyfile api 不支持 filter
+            if (isFileFiltered(file.getFileName().toString(), syncFlowEntity)) {
+                continue;
+            }
             // syncflow status 修改为 RUNNING
             this.syncFlowService.updateSyncFlowStatus(
                     syncFlowEntity,
                     SyncFlowStatusEnum.RUNNING
             );
-            // 手动 filter, 因为 rclone 设计 copyfile api 不支持 filter
-            if (isFileFiltered(
-                    file.getFileName().toString(),
-                    this.syncFlowService.getFilterCriteriaAsList(syncFlowEntity))) {
-                continue;
-            }
             // 创建 copyFileRequest
             CopyFileRequest copyFileRequest = new CopyFileRequest(
                     sourceFolderPath,
@@ -169,6 +167,11 @@ public class RcloneFacadeService {
         if (CollectionUtils.isNotEmpty(filterCriteria)) {
             syncCopyRequest.exclude(filterCriteria);
         }
+        // syncflow status 修改为 RUNNING
+        this.syncFlowService.updateSyncFlowStatus(
+                syncFlowEntity,
+                SyncFlowStatusEnum.RUNNING
+        );
         // 发起请求
         this.createAndStartRcloneJob(syncFlowEntity, () -> this.rcloneService.syncCopy(syncCopyRequest));
     }
@@ -259,7 +262,8 @@ public class RcloneFacadeService {
         );
     }
 
-    private boolean isFileFiltered(String fileName, List<String> filterCriteriaList) {
+    private boolean isFileFiltered(String fileName, SyncFlowEntity syncFlowEntity) {
+        List<String> filterCriteriaList = this.syncFlowService.getFilterCriteriaAsList(syncFlowEntity);
         if (CollectionUtils.isEmpty(filterCriteriaList)) {
             return false;
         }

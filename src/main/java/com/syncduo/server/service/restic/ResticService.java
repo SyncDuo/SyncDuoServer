@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -153,15 +154,10 @@ public class ResticService {
         }
         CommandLine restoreCommandLine = getDefaultCommandLine();
         restoreCommandLine.addArgument("restore");
-        restoreCommandLine.addArgument(snapshotId);
-        restoreCommandLine.addArgument("--target");
-        restoreCommandLine.addArgument(targetString);
-        for (String filePathString : pathStrings) {
-            if (StringUtils.isBlank(filePathString)) {
-                throw new ValidationException("restore failed. pathStrings has blank string");
-            }
-            restoreCommandLine.addArgument("--include");
-            restoreCommandLine.addArgument(filePathString);
+        if (pathStrings.length == 1) {
+            buildRestoreOneFileComanndLine(restoreCommandLine, snapshotId, pathStrings[0], targetString);
+        } else {
+            buildRestoreMultipleCommandLine(restoreCommandLine, snapshotId, pathStrings, targetString);
         }
         CompletableFuture<ResticExecResult<RestoreSummary, List<RestoreError>>> future = ResticParser.execute(
                 RESTIC_PASSWORD,
@@ -185,5 +181,41 @@ public class ResticService {
         CommandLine commandLine = new CommandLine("restic");
         commandLine.addArgument("--json");
         return commandLine;
+    }
+
+    private void buildRestoreOneFileComanndLine(
+            CommandLine restoreCommandLine,
+            String snapshotId,
+            String pathString,
+            String targetString) {
+        if (StringUtils.isBlank(pathString)) {
+            throw new ValidationException("restoreOneFile failed. pathString is blank");
+        }
+        // 使用 snapshotId:<fileParentPath> 的方式, 把父级目录去掉
+        Path file = Path.of(pathString);
+        String fileParentPathString = file.getParent().toAbsolutePath().toString();
+        restoreCommandLine.addArgument("%s:%s".formatted(snapshotId, fileParentPathString));
+        restoreCommandLine.addArgument("--target");
+        restoreCommandLine.addArgument(targetString);
+        // 使用 /<fileName> 的方式, 把父级目录去掉
+        restoreCommandLine.addArgument("--include");
+        restoreCommandLine.addArgument("/" + file.getFileName().toString());
+    }
+
+    private void buildRestoreMultipleCommandLine(
+            CommandLine restoreCommandLine,
+            String snapshotId,
+            String[] pathStrings,
+            String targetString) {
+        restoreCommandLine.addArgument(snapshotId);
+        restoreCommandLine.addArgument("--target");
+        restoreCommandLine.addArgument(targetString);
+        for (String pathString : pathStrings) {
+            if (StringUtils.isBlank(pathString)) {
+                throw new ValidationException("restoreMultipleFiles failed. pathStrings has blank string");
+            }
+            restoreCommandLine.addArgument("--include");
+            restoreCommandLine.addArgument(pathString);
+        }
     }
 }
