@@ -46,3 +46,4 @@ build/
 /src/main/resources/backupPath/
 /src/main/resources/restorePath/
 /src/main/resources/destPath/
+/src/test/resources/sourceFolder/
