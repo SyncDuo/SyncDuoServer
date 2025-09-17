@@ -21,8 +21,9 @@ WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 
 # 创建非特权用户（虽然容器将以特权模式运行，但仍建议使用非root用户运行应用）
-RUN groupadd -r spring && useradd -r -g spring spring
-USER spring
+RUN groupadd -g 1000 appuser && \
+    useradd -r -u 1000 -g appuser appuser
+USER appuser
 
 # 暴露应用程序端口
 EXPOSE 10000
