@@ -1,1 +1,1 @@
-docker build -t syncduo-server .
+docker build -t my-app:"$(git rev-parse --short HEAD)" .
