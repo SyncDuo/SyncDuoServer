@@ -16,7 +16,7 @@ FROM eclipse-temurin:17-jdk
 
 RUN apt-get update && apt-get install -y \
     curl \
-    unzip \
+    bzip2 \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装 Restic
