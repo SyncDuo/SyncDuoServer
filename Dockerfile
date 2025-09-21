@@ -2,6 +2,7 @@
 FROM maven:3.8.6-eclipse-temurin-17 AS builder
 
 # 设置工作目录
+RUN mkdir -p /app
 WORKDIR /app
 
 # 复制项目文件
