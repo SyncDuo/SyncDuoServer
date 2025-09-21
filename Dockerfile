@@ -27,19 +27,18 @@ RUN apt-get update && apt-get install -y \
 RUN curl -L https://github.com/restic/restic/releases/download/v0.18.0/restic_0.18.0_linux_amd64.bz2 |  \
     bunzip2 > /usr/local/bin/restic && chmod +x /usr/local/bin/restic
 
-# 设置工作目录
-RUN mkdir -p /app
+# 设置工作目录和日志目录
+RUN mkdir -p /app /app/logs
 WORKDIR /app
 
 # 从构建阶段复制生成的 JAR 文件
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/target/*.jar /app/app.jar
 
-# 创建非特权用户（虽然容器将以特权模式运行，但仍建议使用非root用户运行应用）
-RUN groupadd -r syncduo_server && useradd -r -g syncduo_server syncduo_server
-USER syncduo_server
+# 确保有 app.jar 文件复制成功
+RUN find /app -name "*.jar"
 
 # 暴露应用程序端口
 EXPOSE 10000
 
 # 设置容器以特权模式运行的入口点
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
