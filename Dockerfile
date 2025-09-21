@@ -14,7 +14,17 @@ RUN mvn clean package -DskipTests
 # 第二阶段：运行应用
 FROM eclipse-temurin:17-jdk
 
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 Restic
+RUN curl -L https://github.com/restic/restic/releases/download/v0.18.0/restic_0.18.0_linux_amd64.bz2 |  \
+    bunzip2 > /usr/local/bin/restic && chmod +x /usr/local/bin/restic
+
 # 设置工作目录
+RUN mkdir -p /app
 WORKDIR /app
 
 # 从构建阶段复制生成的 JAR 文件
