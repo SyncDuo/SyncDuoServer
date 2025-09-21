@@ -12,6 +12,9 @@ COPY src ./src
 # 构建应用（跳过测试以提高构建速度）
 RUN mvn clean package -DskipTests
 
+# 确保有 app.jar 文件生成
+RUN find /app -name "*.jar"
+
 # 第二阶段：运行应用
 FROM eclipse-temurin:17-jdk
 
