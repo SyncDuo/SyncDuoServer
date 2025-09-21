@@ -155,7 +155,7 @@ public class ResticService {
         CommandLine restoreCommandLine = getDefaultCommandLine();
         restoreCommandLine.addArgument("restore");
         if (pathStrings.length == 1) {
-            buildRestoreOneFileComanndLine(restoreCommandLine, snapshotId, pathStrings[0], targetString);
+            buildRestoreOneFileCommandLine(restoreCommandLine, snapshotId, pathStrings[0], targetString);
         } else {
             buildRestoreMultipleCommandLine(restoreCommandLine, snapshotId, pathStrings, targetString);
         }
@@ -183,7 +183,7 @@ public class ResticService {
         return commandLine;
     }
 
-    private void buildRestoreOneFileComanndLine(
+    private void buildRestoreOneFileCommandLine(
             CommandLine restoreCommandLine,
             String snapshotId,
             String pathString,
