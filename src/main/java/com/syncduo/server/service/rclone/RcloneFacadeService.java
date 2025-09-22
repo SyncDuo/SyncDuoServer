@@ -373,7 +373,8 @@ public class RcloneFacadeService implements DisposableBean {
         commandLine.addArgument("--rc-addr");
         commandLine.addArgument(this.httpUrl);
         // rclone web 设置
-        commandLine.addArgument("--rc-web-gui --rc-web-gui-no-open-browser");
+        commandLine.addArgument("--rc-web-gui");
+        commandLine.addArgument("--rc-web-gui-no-open-browser");
         // rclone 日志设置
         commandLine.addArgument("--log-file=%s/rclone.log".formatted(this.logFolderPath));
         commandLine.addArgument("--log-level=INFO");
