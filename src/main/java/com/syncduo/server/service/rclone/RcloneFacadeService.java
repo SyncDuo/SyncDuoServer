@@ -337,7 +337,6 @@ public class RcloneFacadeService implements DisposableBean {
         CommandLine commandLine = buildStartRcloneCommandLine();
         // 创建执行器
         DefaultExecutor executor = DefaultExecutor.builder().get();
-        executor.setExitValue(1);
         this.watchdog = ExecuteWatchdog.builder().setTimeout(ExecuteWatchdog.INFINITE_TIMEOUT_DURATION).get();
         executor.setWatchdog(this.watchdog);
         // 捕获输出以检查启动错误
