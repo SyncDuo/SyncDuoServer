@@ -18,10 +18,20 @@ RUN find /app -name "*.jar"
 # 第二阶段：运行应用
 FROM eclipse-temurin:17-jdk
 
+# 更新系统依赖
 RUN apt-get update && apt-get install -y \
     curl \
+    unzip \
     bzip2 \
     && rm -rf /var/lib/apt/lists/*
+
+# 安装 Rclone
+RUN curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip && \
+    unzip rclone-current-linux-amd64.zip && \
+    cd rclone-*-linux-amd64 && \
+    cp rclone /usr/bin/ && \
+    chown root:root /usr/bin/rclone && \
+    chmod 755 /usr/bin/rclone
 
 # 安装 Restic
 RUN curl -L https://github.com/restic/restic/releases/download/v0.18.0/restic_0.18.0_linux_amd64.bz2 |  \
@@ -39,6 +49,7 @@ RUN find /app -name "*.jar"
 
 # 暴露应用程序端口
 EXPOSE 10000
+EXPOSE 5572
 
-# 设置容器以特权模式运行的入口点
+# 设置容器运行的入口点
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
