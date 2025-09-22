@@ -23,28 +23,52 @@ import com.syncduo.server.service.db.impl.CopyJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Service
 @Slf4j
-public class RcloneFacadeService {
+public class RcloneFacadeService implements DisposableBean {
+
+    @Value("${syncduo.server.rclone.httpBaseUrl}")
+    private String httpUrl;
+
+    @Value("${syncduo.server.rclone.httpUser}")
+    private String httpUser;
+
+    @Value("${syncduo.server.rclone.httpPassword}")
+    private String httpPassword;
+
+    @Value("${syncduo.server.rclone.logFolderPath}")
+    private String logFolderPath;
 
     @Value("${syncduo.server.rclone.jobStatusTrackTimeoutSec}")
     private int TIMEOUT;
 
     @Value("${syncduo.server.rclone.jobStatusTrackIntervalSec}")
     private int INTERVAL;
+
+    private ExecuteWatchdog watchdog;
 
     private final DebounceService.ModuleDebounceService moduleDebounceService;
 
@@ -68,6 +92,7 @@ public class RcloneFacadeService {
 
     public void init() {
         try {
+            this.startRclone();
             this.getCoreStats();
         } catch (Exception e) {
             throw new BusinessException("rclone init failed.", e);
@@ -295,5 +320,68 @@ public class RcloneFacadeService {
             }
         }
         return regexBuilder.toString();
+    }
+
+    // 启动 rclone 的方法, 要求系统中已经安装并正确配置rclone
+    private void startRclone() {
+        // 参数校验
+        if (StringUtils.isAnyBlank(
+                this.httpUrl,
+                this.httpUser,
+                this.httpPassword,
+                this.logFolderPath)) {
+            throw new ValidationException("startRclone failed. " +
+                    "httpUrl, httpUser, httpPassword, logFileLocation is null");
+        }
+        FilesystemUtil.isFilePathValid(this.logFolderPath);
+        CommandLine commandLine = buildStartRcloneCommandLine();
+        // 创建执行器
+        DefaultExecutor executor = DefaultExecutor.builder().get();
+        executor.setExitValue(1);
+        this.watchdog = ExecuteWatchdog.builder().setTimeout(ExecuteWatchdog.INFINITE_TIMEOUT_DURATION).get();
+        executor.setWatchdog(this.watchdog);
+        // 捕获输出以检查启动错误
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream);
+        executor.setStreamHandler(streamHandler);
+        // 启动 rcd, 在后台线程中执行命令，避免阻塞
+        new Thread(() -> {
+            try {
+                executor.execute(commandLine);
+            } catch (IOException e) {
+                // 这里可以记录日志，但不抛出异常，因为我们在主线程中检查启动状态
+                log.error("startRclone failed.", new BusinessException("startRclone failed.", e));
+                this.watchdog.destroyProcess();
+            }
+        }, "Rclone-Process").start();
+        // 等待5秒, 保证 rclone 启动
+        try {
+            Thread.sleep(5 * 1000);
+        } catch (InterruptedException e) {
+            this.watchdog.destroyProcess();
+            throw new BusinessException("startRclone failed. Thread got interrupted", e);
+        }
+    }
+
+    private CommandLine buildStartRcloneCommandLine() {
+        CommandLine commandLine = new CommandLine("rclone");
+        commandLine.addArgument("rcd");
+        // rclone 认证设置
+        commandLine.addArgument("--rc-user=%s".formatted(this.httpUser));
+        commandLine.addArgument("--rc-pass=%s".formatted(this.httpPassword));
+        // rclone rcd 地址设置
+        commandLine.addArgument("--rc-addr");
+        commandLine.addArgument(this.httpUrl);
+        // rclone web 设置
+        commandLine.addArgument("--rc-web-gui --rc-web-gui-no-open-browser");
+        // rclone 日志设置
+        commandLine.addArgument("--log-file=%s/rclone.log".formatted(this.logFolderPath));
+        commandLine.addArgument("--log-level=INFO");
+        return commandLine;
+    }
+
+    @Override
+    public void destroy() {
+        this.watchdog.destroyProcess();
     }
 }

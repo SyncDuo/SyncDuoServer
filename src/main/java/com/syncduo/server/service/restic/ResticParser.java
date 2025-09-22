@@ -23,10 +23,6 @@ import java.util.function.Function;
 
 @Slf4j
 public class ResticParser {
-
-    private static final ExecuteWatchdog watchdog =
-            ExecuteWatchdog.builder().setTimeout(Duration.ofSeconds(60)).get();
-
     public static <SR>  CompletableFuture<ResticExecResult<SR, ExitErrors>> executeWithExitErrorsHandler(
             String resticPassword,
             String resticRepository,
@@ -92,6 +88,7 @@ public class ResticParser {
         PumpStreamHandler streamHandler = new PumpStreamHandler(stdout, stderr);
         executor.setStreamHandler(streamHandler);
         // 3. 设置超时
+        ExecuteWatchdog watchdog = ExecuteWatchdog.builder().setTimeout(Duration.ofSeconds(60)).get();
         executor.setWatchdog(watchdog);
         // 4. 非阻塞执行
         Map<String, String> env = getEnv(resticPassword, resticRepository, extraEnvMap);

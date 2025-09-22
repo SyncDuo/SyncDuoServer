@@ -31,6 +31,8 @@ public class SystemSettings {
     @Data
     public static class Rclone {
         private String httpBaseUrl;
+
+        private String logFolderPath;
     }
 
     @Data
