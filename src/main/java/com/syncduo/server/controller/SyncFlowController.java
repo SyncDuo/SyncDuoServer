@@ -27,7 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/sync-flow")
 @Slf4j
-@CrossOrigin
+@CrossOrigin(originPatterns = "*")
 public class SyncFlowController {
 
     private final DebounceService.ModuleDebounceService moduleDebounceService;

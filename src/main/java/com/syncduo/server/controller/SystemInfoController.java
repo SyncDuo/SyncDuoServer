@@ -27,7 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/system-info")
 @Slf4j
-@CrossOrigin
+@CrossOrigin(originPatterns = "*")
 public class SystemInfoController {
 
     private final FolderWatcher folderWatcher;

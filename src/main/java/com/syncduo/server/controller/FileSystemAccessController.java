@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/filesystem")
-@CrossOrigin
+@CrossOrigin(originPatterns = "*")
 @Slf4j
 public class FileSystemAccessController {
 

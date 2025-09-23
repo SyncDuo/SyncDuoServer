@@ -3,7 +3,6 @@ package com.syncduo.server.controller;
 import com.syncduo.server.enums.ResticNodeTypeEnum;
 import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.ResourceNotFoundException;
-import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
@@ -26,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,7 +39,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/snapshots")
 @Slf4j
-@CrossOrigin
+@CrossOrigin(originPatterns = "*")
 public class SnapshotsController {
 
     private final SyncFlowService syncFlowService;
