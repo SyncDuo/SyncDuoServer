@@ -23,7 +23,6 @@ import com.syncduo.server.service.db.impl.CopyJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.exec.CommandLine;
@@ -39,11 +38,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Service
@@ -69,6 +65,8 @@ public class RcloneFacadeService implements DisposableBean {
     private int INTERVAL;
 
     private ExecuteWatchdog watchdog;
+
+    private volatile boolean stopRclone = false;
 
     private final DebounceService.ModuleDebounceService moduleDebounceService;
 
@@ -228,7 +226,11 @@ public class RcloneFacadeService implements DisposableBean {
         );
     }
 
-    private void trackJobStatus(long copyJobId, int rcloneJobId, String jobKey, SyncFlowEntity syncFlowEntity) {
+    private void trackJobStatus(
+            long copyJobId,
+            int rcloneJobId,
+            String jobKey,
+            SyncFlowEntity syncFlowEntity) {
         // 发起请求
         RcloneResponse<JobStatusResponse> jobStatusResponse =
                 rcloneService.getJobStatus(new JobStatusRequest(rcloneJobId));
@@ -337,6 +339,7 @@ public class RcloneFacadeService implements DisposableBean {
         CommandLine commandLine = buildStartRcloneCommandLine();
         // 创建执行器
         DefaultExecutor executor = DefaultExecutor.builder().get();
+        // 创建 watchdog
         this.watchdog = ExecuteWatchdog.builder().setTimeout(ExecuteWatchdog.INFINITE_TIMEOUT_DURATION).get();
         executor.setWatchdog(this.watchdog);
         // 捕获输出以检查启动错误
@@ -347,17 +350,23 @@ public class RcloneFacadeService implements DisposableBean {
         new Thread(() -> {
             try {
                 executor.execute(commandLine);
-            } catch (IOException e) {
-                // 这里可以记录日志，但不抛出异常，因为我们在主线程中检查启动状态
-                log.error("startRclone failed.", new BusinessException("startRclone failed.", e));
-                this.watchdog.destroyProcess();
+            } catch (Exception e) {
+                if (stopRclone) {
+                    log.info("stop rclone");
+                } else {
+                    // 如果不是正常退出, 则记录日志
+                    log.error("startRclone failed.", new BusinessException("startRclone failed.", e));
+                }
             }
         }, "Rclone-Process").start();
-        // 等待5秒, 保证 rclone 启动
         try {
+            // 等待5秒, 保证 rclone 启动
             Thread.sleep(5 * 1000);
+            // 判断 rclone 是否运行
+            if (ObjectUtils.isEmpty(this.watchdog) || !this.watchdog.isWatching()) {
+                throw new BusinessException("startRclone failed. Rclone Watchdog is not running");
+            }
         } catch (InterruptedException e) {
-            this.watchdog.destroyProcess();
             throw new BusinessException("startRclone failed. Thread got interrupted", e);
         }
     }
@@ -382,6 +391,9 @@ public class RcloneFacadeService implements DisposableBean {
 
     @Override
     public void destroy() {
-        this.watchdog.destroyProcess();
+        this.stopRclone = true;
+        if (ObjectUtils.isNotEmpty(this.watchdog)) {
+            this.watchdog.destroyProcess();
+        }
     }
 }
