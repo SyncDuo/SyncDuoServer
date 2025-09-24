@@ -1,4 +1,4 @@
-POST http://localhost:10000/sync-flow/add-sync-flow
+POST http://100.92.4.118:10000/sync-flow/add-sync-flow
 Content-Type: application/json
 
 {
@@ -7,4 +7,8 @@ Content-Type: application/json
   "filterCriteria": "[]",
   "syncFlowName": "test3"
 }
+###
+
+GET http://100.92.4.118:10000/sync-flow/get-all-sync-flow-info
+Content-Type: application/json
 ###
