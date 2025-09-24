@@ -136,7 +136,7 @@ public class SyncFlowController {
                 this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.PAUSE);
                 break;
             }
-            case RESCAN, RESUME: {
+            case FAILED, RESCAN, RESUME: {
                 // check
                 boolean isSync = this.rcloneFacadeService.oneWayCheck(syncFlowEntity);
                 if (isSync) {
