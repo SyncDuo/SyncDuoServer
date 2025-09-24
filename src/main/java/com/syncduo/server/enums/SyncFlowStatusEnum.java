@@ -31,19 +31,20 @@ public enum SyncFlowStatusEnum implements Status {
     private static final Map<SyncFlowStatusEnum, Set<SyncFlowStatusEnum>> VALID_TRANSITIONS = Map.of(
             RUNNING, Set.of(RUNNING, SYNC, PAUSE),
             SYNC, Set.of(SYNC, RUNNING, PAUSE, RESCAN),
-            PAUSE, Set.of(PAUSE, RESUME)
+            PAUSE, Set.of(PAUSE, RESUME),
+            FAILED, Set.of(RESCAN)
     );
 
-    public static boolean isTransitionValid(
+    public static boolean TransitionProhibit(
             SyncFlowStatusEnum from, SyncFlowStatusEnum to) {
         if (ObjectUtils.anyNull(from, to)) {
-            return false;
+            return true;
         }
         Set<SyncFlowStatusEnum> validNextStatus = VALID_TRANSITIONS.get(from);
         if (CollectionUtils.isEmpty(validNextStatus)) {
-            return false;
+            return true;
         }
-        return validNextStatus.contains(to);
+        return !validNextStatus.contains(to);
     }
 
     public static List<String> getNotPauseStatus() {

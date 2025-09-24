@@ -89,7 +89,7 @@ public class SyncFlowController {
             return SyncDuoHttpResponse.success(null, "sync flow is deleted");
         }
         SyncFlowStatusEnum from = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
-        if (!SyncFlowStatusEnum.isTransitionValid(from, to)) {
+        if (SyncFlowStatusEnum.TransitionProhibit(from, to)) {
             throw new ValidationException("change status from %s to %s is not valid".formatted(from, to));
         }
         // 更改状态
@@ -112,7 +112,7 @@ public class SyncFlowController {
         for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
             try {
                 SyncFlowStatusEnum from = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
-                if (!SyncFlowStatusEnum.isTransitionValid(from, to)) {
+                if (SyncFlowStatusEnum.TransitionProhibit(from, to)) {
                     continue;
                 }
                 this.changeSyncFlowStatusInner(syncFlowEntity, to);
@@ -136,7 +136,7 @@ public class SyncFlowController {
                 this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.PAUSE);
                 break;
             }
-            case FAILED, RESCAN, RESUME: {
+            case RESCAN, RESUME: {
                 // check
                 boolean isSync = this.rcloneFacadeService.oneWayCheck(syncFlowEntity);
                 if (isSync) {
