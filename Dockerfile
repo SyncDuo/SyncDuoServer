@@ -18,6 +18,12 @@ RUN find /app -name "*.jar"
 # 第二阶段：运行应用
 FROM eclipse-temurin:17-jdk
 
+# 创建应用用户和组（在安装系统依赖之前）
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+RUN groupadd -g $GROUP_ID syncduo-server && \
+    useradd -u $USER_ID -g $GROUP_ID -m syncduo-server
+
 # 更新系统依赖
 RUN apt-get update && apt-get install -y \
     curl \
@@ -38,14 +44,18 @@ RUN curl -L https://github.com/restic/restic/releases/download/v0.18.0/restic_0.
     bunzip2 > /usr/local/bin/restic && chmod +x /usr/local/bin/restic
 
 # 设置工作目录和日志目录
-RUN mkdir -p /app /app/logs
+RUN mkdir -p /app /app/logs && chown -R syncduo-server:syncduo-server /app
+
 WORKDIR /app
 
 # 从构建阶段复制生成的 JAR 文件
-COPY --from=builder /app/target/*.jar /app/app.jar
+COPY --from=builder --chown=syncduo-server:syncduo-server /app/target/*.jar /app/app.jar
 
 # 确保有 app.jar 文件复制成功
 RUN find /app -name "*.jar"
+
+# 切换到非 root 用户
+USER syncduo-server
 
 # 暴露应用程序端口
 EXPOSE 10000
