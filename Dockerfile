@@ -81,9 +81,6 @@ COPY --from=builder --chown=$USER_ID:$GROUP_ID /app/target/*.jar /app/app.jar
 # 确保有 app.jar 文件复制成功
 RUN find /app -name "*.jar"
 
-# 切换到非 root 用户
-USER $USER_ID
-
 # 暴露应用程序端口
 EXPOSE 10000
 EXPOSE 5572
