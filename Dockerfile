@@ -24,6 +24,10 @@ ARG GROUP_ID=1000
 RUN groupadd -g $GROUP_ID syncduo-server && \
     useradd -u $USER_ID -g $GROUP_ID -m syncduo-server
 
+# 设置时区
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # 更新系统依赖
 RUN apt-get update && apt-get install -y \
     curl \
