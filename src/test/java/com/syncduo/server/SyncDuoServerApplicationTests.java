@@ -1,5 +1,6 @@
 package com.syncduo.server;
 
+import com.syncduo.server.bus.FilesystemEventHandler;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.configuration.ApplicationLifeCycleConfig;
 import com.syncduo.server.controller.FileSystemAccessController;
@@ -25,12 +26,15 @@ import com.syncduo.server.model.entity.BackupJobEntity;
 import com.syncduo.server.model.entity.CopyJobEntity;
 import com.syncduo.server.model.entity.RestoreJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
+import com.syncduo.server.model.rslsync.folder.FolderInfoResponse;
+import com.syncduo.server.model.rslsync.global.RslsyncResponse;
 import com.syncduo.server.service.db.impl.BackupJobService;
 import com.syncduo.server.service.db.impl.CopyJobService;
 import com.syncduo.server.service.db.impl.RestoreJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
+import com.syncduo.server.service.rslsync.RslsyncService;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -83,7 +87,9 @@ class SyncDuoServerApplicationTests {
 
     private final FileSystemAccessController fileSystemAccessController;
 
-    private final ApplicationLifeCycleConfig applicationLifeCycleConfig;
+    private final FilesystemEventHandler filesystemEventHandler;
+
+    private final RslsyncService rslsyncService;
 
     private SyncFlowEntity syncFlowEntity;
 
@@ -121,7 +127,8 @@ class SyncDuoServerApplicationTests {
             SnapshotsController snapshotsController,
             SystemInfoController systemInfoController,
             FileSystemAccessController fileSystemAccessController,
-            ApplicationLifeCycleConfig applicationLifeCycleConfig) {
+            FilesystemEventHandler filesystemEventHandler,
+            RslsyncService rslsyncService) {
         this.syncFlowController = syncFlowController;
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
@@ -133,7 +140,14 @@ class SyncDuoServerApplicationTests {
         this.snapshotsController = snapshotsController;
         this.systemInfoController = systemInfoController;
         this.fileSystemAccessController = fileSystemAccessController;
-        this.applicationLifeCycleConfig = applicationLifeCycleConfig;
+        this.filesystemEventHandler = filesystemEventHandler;
+        this.rslsyncService = rslsyncService;
+    }
+
+    @Test
+    void ShouldReturnTrueWhenUseRslsyncService() {
+        RslsyncResponse<FolderInfoResponse> syncFolderInfo = this.rslsyncService.getSyncFolderInfo();
+        System.out.println(1);
     }
 
     @Test
@@ -533,9 +547,17 @@ class SyncDuoServerApplicationTests {
                 4,
                 3
         );
-        // 初始化, 因为 @PostConstruct 先执行而 BeforeEach 后执行, 会导致 Restic 的 backupPath 被清掉
-        this.applicationLifeCycleConfig.startUp();
+        // 初始化, 测试手动初始化
+        this.initSystemComponent();
         log.info("initial finish");
+    }
+
+    void initSystemComponent() {
+        log.debug("initSystemComponent for test");
+        this.rcloneFacadeService.init();
+        this.resticFacadeService.init();
+        // 启动 handler
+        this.filesystemEventHandler.startHandle();
     }
 
     void deleteFolder() {

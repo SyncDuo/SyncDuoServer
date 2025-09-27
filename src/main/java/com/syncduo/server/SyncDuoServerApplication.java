@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableScheduling
 @EnableTransactionManagement
+// todo: 1. 对接 resilio-sync, 2. 增加 pending folder 提示
 public class SyncDuoServerApplication {
 
     public static void main(String[] args) {

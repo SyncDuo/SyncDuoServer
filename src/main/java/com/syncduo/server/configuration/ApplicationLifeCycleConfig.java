@@ -40,15 +40,15 @@ public class ApplicationLifeCycleConfig {
 
     @PostConstruct
     public void startUp() {
+        // 如果是测试则需要手动初始化, 不在这里执行
+        if (!"prod".equals(activeProfile)) {
+            return;
+        }
+        log.info("Starting up production environment");
         this.rcloneFacadeService.init();
         this.resticFacadeService.init();
         // 系统启动扫描
-        if ("prod".equals(activeProfile)) {
-            log.info("Starting up production environment");
-            this.systemManagementService.checkAllSyncFlowStatus();
-        } else {
-            log.info("Starting up development environment");
-        }
+        this.systemManagementService.checkAllSyncFlowStatus();
         // 启动 handler
         filesystemEventHandler.startHandle();
     }

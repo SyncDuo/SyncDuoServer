@@ -1,0 +1,17 @@
+GET https://nopepsi:0608@localhost:8888/gui/token.html
+Content-Type: text/html
+
+###
+GET https://nopepsi:0608@localhost:8888/gui/
+    ?token=LWQ8JbN0tmLDoyDw09lJI7fd7QJ4ZCN223q-9NHokl2GUe_hvijG9G4B2GgAAAAA
+    &action=getsyncfolders
+Content-Type: application/json
+
+###
+GET https://nopepsi:0608@localhost:8888/gui/
+    ?token=_Xhk7mfMzP81tSfxXK6BX6LVYtp4ZCN223q-9NHokl2GUe_hvijG9Hqx12gAAAAA
+    &action=getsyncfolders
+    &t=1758965986
+Content-Type: application/json
+
+###

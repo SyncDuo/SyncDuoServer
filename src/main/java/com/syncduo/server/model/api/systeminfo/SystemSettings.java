@@ -52,6 +52,6 @@ public class SystemSettings {
 
     @Data
     public static class Rslsync {
-        private String dataPath;
+        private String httpBaseUrl;
     }
 }
