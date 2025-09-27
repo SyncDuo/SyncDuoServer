@@ -38,6 +38,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Supplier;
@@ -342,9 +343,10 @@ public class RcloneFacadeService implements DisposableBean {
         // 创建 watchdog
         this.watchdog = ExecuteWatchdog.builder().setTimeout(ExecuteWatchdog.INFINITE_TIMEOUT_DURATION).get();
         executor.setWatchdog(this.watchdog);
-        // 捕获输出以检查启动错误
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream);
+        // 创建输出流处理器（捕获 stdout/stderr）
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        PumpStreamHandler streamHandler = new PumpStreamHandler(stdout, stderr);
         executor.setStreamHandler(streamHandler);
         // 启动 rcd, 在后台线程中执行命令，避免阻塞
         new Thread(() -> {
@@ -355,7 +357,9 @@ public class RcloneFacadeService implements DisposableBean {
                     log.info("stop rclone");
                 } else {
                     // 如果不是正常退出, 则记录日志
-                    log.error("startRclone failed.", new BusinessException("startRclone failed.", e));
+                    log.error("startRclone failed.", new BusinessException("startRclone failed. " +
+                            "stderr is %s".formatted(stderr.toString(StandardCharsets.UTF_8)),
+                            e));
                 }
             }
         }, "Rclone-Process").start();
@@ -364,7 +368,8 @@ public class RcloneFacadeService implements DisposableBean {
             Thread.sleep(5 * 1000);
             // 判断 rclone 是否运行
             if (ObjectUtils.isEmpty(this.watchdog) || !this.watchdog.isWatching()) {
-                throw new BusinessException("startRclone failed. Rclone Watchdog is not running");
+                throw new BusinessException("startRclone failed. Rclone Watchdog is not running. " +
+                        "stderr is %s".formatted(stderr.toString(StandardCharsets.UTF_8)));
             }
         } catch (InterruptedException e) {
             throw new BusinessException("startRclone failed. Thread got interrupted", e);

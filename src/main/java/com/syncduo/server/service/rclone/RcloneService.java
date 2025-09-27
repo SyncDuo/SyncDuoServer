@@ -28,17 +28,17 @@ import org.springframework.web.client.RestClient;
 @Service
 public class RcloneService {
 
-    private final RestClient restClient;
+    private final RestClient rcloneRestClient;
 
     @Autowired
-    protected RcloneService(RestClient restClient) {
-        this.restClient = restClient;
+    protected RcloneService(RestClient rcloneRestClient) {
+        this.rcloneRestClient = rcloneRestClient;
     }
 
     @Deprecated
     protected RcloneResponse<TransferredStatResponse> getTransferredStat() {
         return this.post(
-                "core/transferred",
+                "/core/transferred",
                 null,
                 TransferredStatResponse.class
         );
@@ -56,7 +56,7 @@ public class RcloneService {
             throw new ValidationException("getDirStat failed. fs or remote is blank");
         }
         return this.post(
-                "operations/stat",
+                "/operations/stat",
                 statsRequest,
                 StatsResponse.class
         );
@@ -71,7 +71,7 @@ public class RcloneService {
                     "coreStatsRequest is %s".formatted(coreStatsRequest));
         }
         return this.post(
-                "core/stats",
+                "/core/stats",
                 coreStatsRequest,
                 CoreStatsResponse.class
         );
@@ -81,7 +81,7 @@ public class RcloneService {
     protected RcloneResponse<CoreStatsResponse> getCoreStats() {
         CoreStatsRequest coreStatsRequest = new CoreStatsRequest("");
         return this.post(
-                "core/stats",
+                "/core/stats",
                 coreStatsRequest,
                 CoreStatsResponse.class
         );
@@ -95,7 +95,7 @@ public class RcloneService {
                     "jobStatusRequest is %s".formatted(jobStatusRequest));
         }
         return this.post(
-                "job/status",
+                "/job/status",
                 jobStatusRequest,
                 JobStatusResponse.class
         );
@@ -114,7 +114,7 @@ public class RcloneService {
                     "copyFileRequest is %s".formatted(copyFileRequest));
         }
         return this.postAsyncRequest(
-                "operations/copyfile",
+                "/operations/copyfile",
                 copyFileRequest
         );
     }
@@ -127,7 +127,7 @@ public class RcloneService {
                     "syncCopyRequest is %s".formatted(syncCopyRequest));
         }
         return this.postAsyncRequest(
-                "sync/copy",
+                "/sync/copy",
                 syncCopyRequest
         );
     }
@@ -140,7 +140,7 @@ public class RcloneService {
                     "checkRequest is %s".formatted(checkRequest));
         }
         return this.post(
-                "operations/check",
+                "/operations/check",
                 checkRequest,
                 CheckResponse.class
         );
@@ -151,12 +151,12 @@ public class RcloneService {
         if (ObjectUtils.isEmpty(request)) {
             // post without body
             return this.handleClientResponse(
-                    this.restClient.post().uri(url),
+                    this.rcloneRestClient.post().uri(url),
                     clazz
             );
         } else {
             return this.handleClientResponse(
-                    this.restClient.post().uri(url).body(request),
+                    this.rcloneRestClient.post().uri(url).body(request),
                     clazz
             );
         }
@@ -165,7 +165,7 @@ public class RcloneService {
     private <Req> RcloneResponse<RcloneAsyncResponse> postAsyncRequest(
             String url, Req request) {
         return this.handleClientResponse(
-                this.restClient.post()
+                this.rcloneRestClient.post()
                         .uri(uriBuilder ->
                                 uriBuilder.path(url).queryParam("_async", "true").build())
                         .body(request),
