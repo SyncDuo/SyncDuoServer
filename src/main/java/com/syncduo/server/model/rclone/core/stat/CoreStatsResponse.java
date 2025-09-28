@@ -71,5 +71,5 @@ public class CoreStatsResponse {
     private List<TransferringJobStat> transferring;
 
     // list of files name of currently checking files
-    private List<TransferringJobStat> checking;
+    private List<String> checking;
 }
