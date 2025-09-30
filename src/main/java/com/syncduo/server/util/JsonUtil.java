@@ -83,6 +83,14 @@ public class JsonUtil {
         }
     }
 
+    public static <T> T deserializeObjectToPojo(Object source, Class<T> clazz) throws JsonException {
+        try {
+            return objectMapper.convertValue(source, clazz);
+        } catch (IllegalArgumentException e) {
+            throw new JsonException("deserializeObjectToPojo failed. source is %s".formatted(source), e);
+        }
+    }
+
     public static List<String> deserializeStringToList(String jsonString) throws JsonException {
         try {
             return objectMapper.readValue(jsonString, new TypeReference<>() {});

@@ -132,17 +132,16 @@ public class RcloneService {
         );
     }
 
-    protected RcloneResponse<CheckResponse> oneWayCheck(
+    protected RcloneResponse<RcloneAsyncResponse> oneWayCheck(
             CheckRequest checkRequest) throws ValidationException {
         if (ObjectUtils.anyNull(checkRequest, checkRequest.getSrcFs(), checkRequest.getDstFs())) {
             throw new ValidationException("oneWayCheck failed." +
                     "checkRequest, srcFs or dstFs is null." +
                     "checkRequest is %s".formatted(checkRequest));
         }
-        return this.post(
+        return this.postAsyncRequest(
                 "/operations/check",
-                checkRequest,
-                CheckResponse.class
+                checkRequest
         );
     }
 

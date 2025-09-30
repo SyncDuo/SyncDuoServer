@@ -9,6 +9,7 @@ import com.syncduo.server.service.rclone.RcloneFacadeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -47,16 +48,10 @@ public class SystemManagementService {
                 continue;
             }
             try {
-                // check
-                boolean isSync = rcloneFacadeService.oneWayCheck(syncFlowEntity);
-                if (isSync) {
-                    this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
-                    continue;
-                }
-                // copy
-                this.rcloneFacadeService.syncCopy(syncFlowEntity);
                 // source folder add watcher
                 this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
+                // check status
+                this.checkSyncFlowStatus(syncFlowEntity);
             } catch (Exception e) {
                 log.error("systemStartUp has error. " +
                         "sync flow is {}", syncFlowEntity, new BusinessException("systemStartUp has error", e));
@@ -78,21 +73,30 @@ public class SystemManagementService {
             return;
         }
         for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
-            // filter only sync syncflow
+            // filter out only sync syncflow
             if (!SyncFlowStatusEnum.SYNC.name().equals(syncFlowEntity.getSyncStatus())) {
                 continue;
             }
             try {
-                // check
-                boolean isSync = rcloneFacadeService.oneWayCheck(syncFlowEntity);
-                if (!isSync) {
-                    // copy
-                    this.rcloneFacadeService.syncCopy(syncFlowEntity);
-                }
+                this.checkSyncFlowStatus(syncFlowEntity);
             } catch (Exception e) {
                 log.error("periodicalScan failed. " +
                         "sync flow is {}", syncFlowEntity, new BusinessException("periodicalScan failed.", e));
             }
+        }
+    }
+
+    @Async("generalTaskScheduler")
+    public void checkSyncFlowStatus(SyncFlowEntity syncFlowEntity) {
+        // 设置为 RUNNING
+        this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RUNNING);
+        // 检查并更新状态
+        boolean isSync = rcloneFacadeService.oneWayCheck(syncFlowEntity);
+        if (isSync) {
+            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
+        } else {
+            // syncflow 不同步, 发起 sync copy
+            this.rcloneFacadeService.syncCopy(syncFlowEntity);
         }
     }
 }

@@ -8,6 +8,7 @@ import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.service.bussiness.DebounceService;
+import com.syncduo.server.service.bussiness.SystemManagementService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.util.EntityValidationUtil;
@@ -38,6 +39,8 @@ public class SyncFlowController {
 
     private final RcloneFacadeService rcloneFacadeService;
 
+    private final SystemManagementService systemManagementService;
+
     @Value("${syncduo.server.system.syncflowDelayDeleteSec}")
     private long delayDeleteSec;
 
@@ -46,11 +49,13 @@ public class SyncFlowController {
             DebounceService debounceService,
             SyncFlowService syncFlowService,
             FolderWatcher folderWatcher,
-            RcloneFacadeService rcloneFacadeService) {
+            RcloneFacadeService rcloneFacadeService,
+            SystemManagementService systemManagementService) {
         this.moduleDebounceService = debounceService.forModule(SyncFlowController.class.getSimpleName());
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
+        this.systemManagementService = systemManagementService;
     }
 
     @PostMapping("/update-filter-criteria")
@@ -137,14 +142,7 @@ public class SyncFlowController {
                 break;
             }
             case RESCAN, RESUME: {
-                // check
-                boolean isSync = this.rcloneFacadeService.oneWayCheck(syncFlowEntity);
-                if (isSync) {
-                    this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
-                } else {
-                    // sync copy
-                    this.rcloneFacadeService.syncCopy(syncFlowEntity);
-                }
+                this.systemManagementService.checkSyncFlowStatus(syncFlowEntity);
                 break;
             }
         }
@@ -158,8 +156,8 @@ public class SyncFlowController {
         SyncFlowEntity syncFlowEntity = this.syncFlowService.createSyncFlow(createSyncFlowRequest);
         // 创建 watcher
         this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
-        // 初始化, 触发一次 sync copy
-        this.rcloneFacadeService.syncCopy(syncFlowEntity);
+        // 初始化, 因为 source 和 dest 肯定不一样, 肯定会触发一次 sync copy
+        this.systemManagementService.checkSyncFlowStatus(syncFlowEntity);
         // 返回 syncflow info
         SyncFlowInfo result = new SyncFlowInfo(syncFlowEntity);
         return SyncDuoHttpResponse.success(result);

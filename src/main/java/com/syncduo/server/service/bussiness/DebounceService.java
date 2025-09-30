@@ -23,6 +23,8 @@ public class DebounceService {
 
     private final Map<String, ScheduledFuture<?>> taskMap = new ConcurrentHashMap<>();
 
+    private final Map<String, ScheduledFuture<?>> cancelTaskMap = new ConcurrentHashMap<>();
+
     @Autowired
     public DebounceService(TaskScheduler generalTaskScheduler) {
         this.generalTaskScheduler = generalTaskScheduler;
@@ -32,22 +34,31 @@ public class DebounceService {
         this.generalTaskScheduler.schedule(task, Instant.now().plusSeconds(delaySec));
     }
 
-    public void scheduleAndCancelAfter(String key, Runnable task, long periodSec, long cancelAfterSec) {
+    public void scheduleAndCancelAfter(
+            String key,
+            Runnable task,
+            long periodSec,
+            long cancelAfterSec,
+            Runnable executeAfterTimeout) {
         // 启动定时任务
         ScheduledFuture<?> future = this.generalTaskScheduler.scheduleAtFixedRate(
                 task,
                 Duration.ofSeconds(periodSec)
         );
         this.taskMap.put(key, future);
-        // 启动一个一次性的任务, 用于取消定时任务并从 map 中移除 task
-        this.schedule(() -> this.cancel(key), cancelAfterSec);
+        // 启动一个一次性的任务, 用于取消定时任务并执行 executeAfterTimeout task
+        ScheduledFuture<?> cancelTask = this.generalTaskScheduler.schedule(() -> {
+            this.cancel(key);
+            executeAfterTimeout.run();
+        }, Instant.now().plusSeconds(cancelAfterSec));
+        this.cancelTaskMap.put(key, cancelTask);
     }
 
     public void debounce(String key, Runnable task, long delaySec) {
         // 有重复的未执行的task则取消
         this.cancel(key);
         // 规划新的task
-        ScheduledFuture<?> newTask = generalTaskScheduler.schedule(() -> {
+        ScheduledFuture<?> newTask = this.generalTaskScheduler.schedule(() -> {
             try {
                 task.run();
             } catch (Exception e) {
@@ -58,9 +69,20 @@ public class DebounceService {
             }
         }, Instant.now().plusSeconds(delaySec));
         // 新的task放进map中
-        taskMap.put(key, newTask);
+        this.taskMap.put(key, newTask);
     }
 
+    // cancel schedule task and executeAfterTimeoutTask
+    public void earlyCancel(String key) {
+        this.cancel(key);
+        ScheduledFuture<?> cancelTask = this.cancelTaskMap.get(key);
+        if (ObjectUtils.isNotEmpty(cancelTask)) {
+            cancelTask.cancel(false);
+            cancelTaskMap.remove(key);
+        }
+    }
+
+    // only cancel schedule task
     public void cancel(String key) {
         ScheduledFuture<?> existingTask = taskMap.get(key);
         if (ObjectUtils.isNotEmpty(existingTask)) {
@@ -95,14 +117,33 @@ public class DebounceService {
             debounceService.schedule(task, delaySec);
         }
 
-        public void cancelAfter(String key, Runnable task, long periodSec, long cancelAfterSec) {
+        public void cancelAfter(
+                String key,
+                Runnable task,
+                long periodSec,
+                long cancelAfterSec,
+                Runnable executeAfterTimeout) {
             String fullKey = modulePrefix + key;
-            debounceService.scheduleAndCancelAfter(fullKey, task, periodSec, cancelAfterSec);
+            debounceService.scheduleAndCancelAfter(fullKey, task, periodSec, cancelAfterSec, executeAfterTimeout);
+        }
+
+        public void cancelAfter(
+                String key,
+                Runnable task,
+                long periodSec,
+                long cancelAfterSec) {
+            String fullKey = modulePrefix + key;
+            debounceService.scheduleAndCancelAfter(fullKey, task, periodSec, cancelAfterSec, () -> {});
         }
 
         public void cancel(String key) {
             String fullKey = modulePrefix + key;
             debounceService.cancel(fullKey);
+        }
+
+        public void earlyCancel(String key) {
+            String fullKey = modulePrefix + key;
+            debounceService.earlyCancel(fullKey);
         }
     }
 }
