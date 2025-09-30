@@ -2,7 +2,6 @@ package com.syncduo.server;
 
 import com.syncduo.server.bus.FilesystemEventHandler;
 import com.syncduo.server.bus.FolderWatcher;
-import com.syncduo.server.configuration.ApplicationLifeCycleConfig;
 import com.syncduo.server.controller.FileSystemAccessController;
 import com.syncduo.server.controller.SnapshotsController;
 import com.syncduo.server.controller.SyncFlowController;
@@ -26,8 +25,6 @@ import com.syncduo.server.model.entity.BackupJobEntity;
 import com.syncduo.server.model.entity.CopyJobEntity;
 import com.syncduo.server.model.entity.RestoreJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.model.rslsync.folder.FolderInfoResponse;
-import com.syncduo.server.model.rslsync.global.RslsyncResponse;
 import com.syncduo.server.service.db.impl.BackupJobService;
 import com.syncduo.server.service.db.impl.CopyJobService;
 import com.syncduo.server.service.db.impl.RestoreJobService;
@@ -142,12 +139,6 @@ class SyncDuoServerApplicationTests {
         this.fileSystemAccessController = fileSystemAccessController;
         this.filesystemEventHandler = filesystemEventHandler;
         this.rslsyncService = rslsyncService;
-    }
-
-    @Test
-    void ShouldReturnTrueWhenUseRslsyncService() {
-        RslsyncResponse<FolderInfoResponse> syncFolderInfo = this.rslsyncService.getSyncFolderInfo();
-        System.out.println(1);
     }
 
     @Test
@@ -353,6 +344,8 @@ class SyncDuoServerApplicationTests {
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
         assert ObjectUtils.isNotEmpty(syncFlowWithSnapshots.getData());
         assert CollectionUtils.isNotEmpty(syncFlowWithSnapshots.getData().getSnapshotInfoList());
+        SnapshotInfo snapshotInfo = syncFlowWithSnapshots.getData().getSnapshotInfoList().get(0);
+        assert snapshotInfo.getBackupJobStatus().equals(CommonStatus.SUCCESS.name());
         // 再手动触发 backup
         this.resticFacadeService.manualBackup(syncFlowEntity);
         syncFlowWithSnapshots =
@@ -541,23 +534,19 @@ class SyncDuoServerApplicationTests {
         this.truncateAllTable();
         // 清空文件夹
         this.deleteFolder();
-        // create folder
+        // 停止 watcher
+        this.destroyStatefulComponent();
+        // 创建 source folder
         FileOperationTestUtil.createFolders(
                 sourceFolderPath,
                 4,
                 3
         );
-        // 初始化, 测试手动初始化
-        this.initSystemComponent();
-        log.info("initial finish");
-    }
-
-    void initSystemComponent() {
-        log.debug("initSystemComponent for test");
-        this.rcloneFacadeService.init();
+        // 因为 spring boot 的 PostConstruct 方法在整个测试中只会执行一次
+        // 而 deleteFolder 在每个测试方法前都会执行, 把 restic 的 backup folder 清空
+        // 所以这里需要再执行一次 restic init
         this.resticFacadeService.init();
-        // 启动 handler
-        this.filesystemEventHandler.startHandle();
+        log.info("initial finish");
     }
 
     void deleteFolder() {
@@ -617,5 +606,9 @@ class SyncDuoServerApplicationTests {
             );
         }
         log.info("truncate all table");
+    }
+
+    void destroyStatefulComponent() {
+        this.folderWatcher.destroy();
     }
 }

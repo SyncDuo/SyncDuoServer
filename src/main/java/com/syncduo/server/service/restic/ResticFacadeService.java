@@ -114,7 +114,7 @@ public class ResticFacadeService {
                             initResult.getBusinessException());
                 }
             }
-            // 启动定时任务
+            // 启动定时备份任务
             this.systemManagementTaskScheduler.scheduleWithFixedDelay(
                     this::periodicalBackup,
                     Instant.now().plus(Duration.ofHours(1)),
@@ -184,7 +184,7 @@ public class ResticFacadeService {
         } else {
             this.backupJobService.addFailBackupJob(
                     syncFlowEntity.getSyncFlowId(),
-                    backupResult.getBusinessException().getMessageRecursive()
+                    backupResult.getBusinessException().toString()
             );
         }
     }

@@ -40,11 +40,7 @@ public class ApplicationLifeCycleConfig {
 
     @PostConstruct
     public void startUp() {
-        // 如果是测试则需要手动初始化, 不在这里执行
-        if (!"prod".equals(activeProfile)) {
-            return;
-        }
-        log.info("Starting up production environment");
+        log.info("Starting up {} environment", this.activeProfile);
         this.rcloneFacadeService.init();
         this.resticFacadeService.init();
         // 系统启动扫描

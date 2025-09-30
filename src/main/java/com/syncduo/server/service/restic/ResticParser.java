@@ -100,6 +100,9 @@ public class ResticParser {
                     String stdoutString = getStdAsString(stdout);
                     try {
                         SR successResult = successHandler.apply(stdoutString);
+                        if (ObjectUtils.isEmpty(successResult)) {
+                            throw new BusinessException("restic success handler failed.");
+                        }
                         future.complete(ResticExecResult.success(
                                 resticExitCodeEnum,
                                 successResult
@@ -119,6 +122,10 @@ public class ResticParser {
                     String stderrString = getStdAsString(stderr);
                     try {
                         FR failedResult = failedHandler.apply(stderrString);
+                        // fall back
+                        if (ObjectUtils.isEmpty(failedResult)) {
+                            throw new BusinessException("restic failed handler failed.");
+                        }
                         future.complete(ResticExecResult.failed(
                                 resticExitCodeEnum,
                                 failedResult
@@ -127,7 +134,7 @@ public class ResticParser {
                         // 使用 SyncDuoException 包装 stderr 返回
                         future.complete(ResticExecResult.failed(
                                 resticExitCodeEnum,
-                                new BusinessException("restic failed handler failed." +
+                                new BusinessException("restic failed handler fallback." +
                                         "stderr is %s.".formatted(stderrString), e)));
                     }
                 }
