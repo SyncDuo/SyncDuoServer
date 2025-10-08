@@ -405,6 +405,10 @@ public class RcloneFacadeService implements DisposableBean {
         // rclone 日志设置
         commandLine.addArgument("--log-file=%s/rclone.log".formatted(this.logFolderPath));
         commandLine.addArgument("--log-level=INFO");
+        commandLine.addArgument("--log-file-max-size=10M");
+        commandLine.addArgument("--log-file-max-backups=30");
+        commandLine.addArgument("--log-format=date,time,microseconds,shortfile");
+        commandLine.addArgument("--log-file-compress");
         return commandLine;
     }
 

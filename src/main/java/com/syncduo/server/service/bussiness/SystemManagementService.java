@@ -157,7 +157,7 @@ public class SystemManagementService {
             fixedDelayString = "${syncduo.server.system.checkSyncflowStatusIntervalMillis}",
             scheduler = "systemManagementTaskScheduler"
     )
-    private void periodicalCheckSyncFlowStatus() {
+    protected void periodicalCheckSyncFlowStatus() {
         log.info("Periodical Check SyncFlow Status");
         // 获取全部 syncflow
         List<SyncFlowEntity> syncFlowEntityList = this.syncFlowService.getAllSyncFlow();
@@ -184,7 +184,7 @@ public class SystemManagementService {
             fixedDelayString = "${syncduo.server.system.backupIntervalMillis}",
             scheduler = "systemManagementTaskScheduler"
     )
-    private void periodicalBackup() {
+    protected void periodicalBackup() {
         log.info("Periodical Backup SyncFlow");
         // 获取全部 syncflow
         List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
