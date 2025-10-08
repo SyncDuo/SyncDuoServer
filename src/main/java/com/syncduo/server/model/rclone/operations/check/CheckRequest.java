@@ -1,6 +1,7 @@
 package com.syncduo.server.model.rclone.operations.check;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.syncduo.server.model.rclone.global.Config;
 import com.syncduo.server.model.rclone.global.Filter;
 import lombok.Data;
 
@@ -26,6 +27,9 @@ public class CheckRequest {
 
     @JsonProperty("_filter")
     private final Filter filter = new Filter();
+
+    @JsonProperty("_config")
+    private final Config config = new Config();
 
     public CheckRequest(String srcFs, String dstFs) {
         this.srcFs = srcFs;
