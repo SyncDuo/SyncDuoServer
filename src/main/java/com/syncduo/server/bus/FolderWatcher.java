@@ -5,6 +5,7 @@ import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.internal.FilesystemEvent;
 import com.syncduo.server.util.FilesystemUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
@@ -20,7 +21,9 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Random;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 @Service
@@ -29,16 +32,12 @@ public class FolderWatcher implements DisposableBean {
     @Value("${syncduo.server.system.folderWatcherIntervalMillis:5000}")
     private int interval;
 
-    private final FilesystemEventHandler filesystemEventHandler;
+    @Getter
+    private final BlockingQueue<FilesystemEvent> filesystemEventQueue = new LinkedBlockingQueue<>(1000);
 
     // <folderPath, monitor>
     private final ConcurrentHashMap<String, FileAlterationMonitor> monitorMap =
             new ConcurrentHashMap<>(100);
-
-    @Autowired
-    public FolderWatcher(FilesystemEventHandler filesystemEventHandler) {
-        this.filesystemEventHandler = filesystemEventHandler;
-    }
 
     public void addWatcher(String folderPath) throws ValidationException, BusinessException {
         if (StringUtils.isBlank(folderPath)) {
@@ -108,9 +107,7 @@ public class FolderWatcher implements DisposableBean {
             @Override
             public void onFileCreate(File file) {
                 try {
-                    filesystemEventHandler.sendFileEvent(new FilesystemEvent(
-                        folder, file.toPath(), FileEventTypeEnum.FILE_CREATED
-                    ));
+                    sendFileEvent(new FilesystemEvent(folder, file.toPath(), FileEventTypeEnum.FILE_CREATED));
                 } catch (Exception e) {
                     log.error("文件夹发送 file event 失败",
                             new BusinessException("observer onFileCreate failed.", e));
@@ -120,9 +117,7 @@ public class FolderWatcher implements DisposableBean {
             @Override
             public void onFileDelete(File file) {
                 try {
-                    filesystemEventHandler.sendFileEvent(new FilesystemEvent(
-                            folder, file.toPath(), FileEventTypeEnum.FILE_DELETED
-                    ));
+                    sendFileEvent(new FilesystemEvent(folder, file.toPath(), FileEventTypeEnum.FILE_DELETED));
                 } catch (Exception e) {
                     log.error("文件夹发送 file event 失败",
                             new BusinessException("observer onFileDelete failed.", e));
@@ -132,9 +127,7 @@ public class FolderWatcher implements DisposableBean {
             @Override
             public void onFileChange(File file) {
                 try {
-                    filesystemEventHandler.sendFileEvent(new FilesystemEvent(
-                            folder, file.toPath(), FileEventTypeEnum.FILE_MODIFIED
-                    ));
+                    sendFileEvent(new FilesystemEvent(folder, file.toPath(), FileEventTypeEnum.FILE_MODIFIED));
                 } catch (Exception e) {
                     log.error("文件夹发送 file event 失败",
                             new BusinessException("observer onFileChange failed.", e));
@@ -142,6 +135,17 @@ public class FolderWatcher implements DisposableBean {
             }
         });
         return observer;
+    }
+
+    private void sendFileEvent(FilesystemEvent fileSystemEvent) throws BusinessException {
+        log.debug("fileEvent: {}", fileSystemEvent);
+        try {
+            this.filesystemEventQueue.put(fileSystemEvent);
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+        } catch (ClassCastException | NullPointerException | IllegalArgumentException e) {
+            throw new BusinessException("sendFileEvent failed. ", e);
+        }
     }
 
     public int getWatcherNumber() {

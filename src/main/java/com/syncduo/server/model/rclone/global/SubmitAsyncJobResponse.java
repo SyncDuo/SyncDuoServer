@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class RcloneAsyncResponse {
+public class SubmitAsyncJobResponse {
     @JsonProperty("jobid")
     private int jobId;
 }

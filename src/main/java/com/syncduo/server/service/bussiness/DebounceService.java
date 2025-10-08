@@ -1,5 +1,6 @@
 package com.syncduo.server.service.bussiness;
 
+import com.syncduo.server.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +11,10 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.function.Supplier;
 
 
 @Slf4j
@@ -36,20 +39,36 @@ public class DebounceService {
 
     public void scheduleAndCancelAfter(
             String key,
-            Runnable task,
+            Supplier<Boolean> task,
             long periodSec,
             long cancelAfterSec,
-            Runnable executeAfterTimeout) {
-        // 启动定时任务
-        ScheduledFuture<?> future = this.generalTaskScheduler.scheduleAtFixedRate(
-                task,
+            CompletableFuture<?> future) {
+        // 启动周期任务
+        ScheduledFuture<?> scheduledTask = this.generalTaskScheduler.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        Boolean stopEarly = task.get();
+                        if (stopEarly) {
+                            this.earlyCancel(key);
+                        }
+                    } catch (Exception e) {
+                        future.obtrudeException(new BusinessException(
+                                "scheduleAndCancelAfter failed. key is %s".formatted(key),
+                                e));
+                        // task 发生异常, 则终止执行
+                        this.earlyCancel(key);
+                    }
+                },
                 Duration.ofSeconds(periodSec)
         );
-        this.taskMap.put(key, future);
-        // 启动一个一次性的任务, 用于取消定时任务并执行 executeAfterTimeout task
+        this.taskMap.put(key, scheduledTask);
+        // 启动一个一次性的任务
         ScheduledFuture<?> cancelTask = this.generalTaskScheduler.schedule(() -> {
+            // 取消周期任务
             this.cancel(key);
-            executeAfterTimeout.run();
+            // future 返回超时异常
+            future.obtrudeException(new BusinessException(
+                    "scheduleAndCancelAfter timeout. key is %s".formatted(key)));
         }, Instant.now().plusSeconds(cancelAfterSec));
         this.cancelTaskMap.put(key, cancelTask);
     }
@@ -63,16 +82,15 @@ public class DebounceService {
                 task.run();
             } catch (Exception e) {
                 log.warn("execute debounce task(key:{}, task:{} failed", key, task, e);
-            } finally {
-                // task 执行完, 将 task 从 map 中移除
-                taskMap.remove(key);
+                // task 发生异常, 将 task 从 map 中移除, 也就是终止执行
+                this.cancel(key);
             }
         }, Instant.now().plusSeconds(delaySec));
         // 新的task放进map中
         this.taskMap.put(key, newTask);
     }
 
-    // cancel schedule task and executeAfterTimeoutTask
+    // cancel schedule task and cancel task
     public void earlyCancel(String key) {
         this.cancel(key);
         ScheduledFuture<?> cancelTask = this.cancelTaskMap.get(key);
@@ -119,21 +137,12 @@ public class DebounceService {
 
         public void cancelAfter(
                 String key,
-                Runnable task,
+                Supplier<Boolean> task,
                 long periodSec,
                 long cancelAfterSec,
-                Runnable executeAfterTimeout) {
+                CompletableFuture<?> future) {
             String fullKey = modulePrefix + key;
-            debounceService.scheduleAndCancelAfter(fullKey, task, periodSec, cancelAfterSec, executeAfterTimeout);
-        }
-
-        public void cancelAfter(
-                String key,
-                Runnable task,
-                long periodSec,
-                long cancelAfterSec) {
-            String fullKey = modulePrefix + key;
-            debounceService.scheduleAndCancelAfter(fullKey, task, periodSec, cancelAfterSec, () -> {});
+            debounceService.scheduleAndCancelAfter(fullKey, task, periodSec, cancelAfterSec, future);
         }
 
         public void cancel(String key) {

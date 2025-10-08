@@ -16,18 +16,23 @@ Content-Type: application/json
 
 {
   "srcFs": "/",
-  "srcRemote": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/sourceFolder/TestFile0_3.bin",
+  "srcRemote": "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/resources/sourceFolder/TestFile0_3.bin",
   "dstFs": "/",
-  "dstRemote": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/contentParentFolder/random1/justBinary.bin"
+  "dstRemote": "/home/nopepsi-dev/IdeaProject/SyncDuoServer/src/test/resources/contentParentFolder/random1/justBinary.bin"
 }
 
 ###
 
-POST http://nopepsi:0608@localhost:5572/operations/check
+POST http://nopepsi:0608@192.168.28.199:5572/operations/check
 Content-Type: application/json
 
 {
-  "srcFs": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/sourceFolder",
-  "dstFs": "/home/nopepsi-lenovo-laptop/SyncDuoServer/src/test/resources/contentParentFolder/sourceFolder",
-  "oneway": true
+  "srcFs": "/home/nopepsi-laptop/SyncDuoApp/Resilio-Sync/sync/nopepsi-desktop/Warehouse",
+  "dstFs": "/home/nopepsi-laptop/SyncDuoApp/contentPath/Image-Warehouse",
+  "oneway": true,
+  "_config":{
+    "SizeOnly": true,
+    "Checkers": 1
+  },
+  "_async": true
 }

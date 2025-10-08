@@ -8,7 +8,7 @@ import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.internal.FilesystemEvent;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsRequest;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsResponse;
-import com.syncduo.server.model.rclone.global.RcloneAsyncResponse;
+import com.syncduo.server.model.rclone.global.SubmitAsyncJobResponse;
 import com.syncduo.server.model.rclone.global.RcloneResponse;
 import com.syncduo.server.model.rclone.job.status.JobStatusRequest;
 import com.syncduo.server.model.rclone.job.status.JobStatusResponse;
@@ -35,15 +35,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 @Service
@@ -129,7 +128,7 @@ public class RcloneFacadeService implements DisposableBean {
         return statsResponse.getItem().isDir();
     }
 
-    public boolean oneWayCheck(SyncFlowEntity syncFlowEntity) {
+    public CompletableFuture<Boolean> oneWayCheck(SyncFlowEntity syncFlowEntity) {
         EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
         CheckRequest checkRequest = new CheckRequest(
                 syncFlowEntity.getSourceFolderPath(),
@@ -141,99 +140,69 @@ public class RcloneFacadeService implements DisposableBean {
             checkRequest.exclude(filterCriteria);
         }
         // 获取 RcloneAsyncResponse
-        RcloneResponse<RcloneAsyncResponse> rcloneAsyncResponse = this.rcloneService.oneWayCheck(checkRequest);
-        if (!rcloneAsyncResponse.isSuccess()) {
-            throw new BusinessException("oneWayCheck failed. rcloneAsyncResponse failed. " +
+        RcloneResponse<SubmitAsyncJobResponse> submitAsyncJobResponse = this.rcloneService.oneWayCheck(checkRequest);
+        if (!submitAsyncJobResponse.isSuccess()) {
+            throw new BusinessException("oneWayCheck failed. submitAsyncJob failed. " +
                     "syncFlowEntity is %s".formatted(syncFlowEntity),
-                    rcloneAsyncResponse.getBusinessException());
+                    submitAsyncJobResponse.getBusinessException());
         }
-        // 创建定时任务, 当任务成功时 set future. 超时则 set exception future
-        int rcloneJobId = rcloneAsyncResponse.getData().getJobId();
-        String trackJobStatusKey = "RcloneJobId::%s".formatted(rcloneJobId);
+        // 创建周期任务
+        int rcloneJobId = submitAsyncJobResponse.getData().getJobId();
+        return this.trackOneWayCheckJob(rcloneJobId);
+    }
+
+    private CompletableFuture<Boolean> trackOneWayCheckJob(int rcloneJobId) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         this.moduleDebounceService.cancelAfter(
-                trackJobStatusKey,
-                () -> this.trackOneWayCheckJob(
-                        trackJobStatusKey,
-                        rcloneJobId,
-                        future
-                ),
+                "RcloneJobId::%s".formatted(rcloneJobId),
+                () -> {
+                    // 查询 rclone 异步任务执行的情况
+                    RcloneResponse<JobStatusResponse> jobStatusResponse =
+                            this.rcloneService.getJobStatus(new JobStatusRequest(rcloneJobId));
+                    // rclone 访问失败或者 job status 不是 finish, 则重试
+                    if (!jobStatusResponse.isSuccess() || !jobStatusResponse.getData().isFinished()) {
+                        // return false 表示继续执行周期任务
+                        return false;
+                    }
+                    // rclone 异步任务完成
+                    JobStatusResponse jobStatusData = jobStatusResponse.getData();
+                    // rclone 异步任务执行失败了, 抛出异常, 终止周期任务
+                    if (!jobStatusData.isSuccess()) {
+                        throw new BusinessException("oneWayCheck failed. " +
+                                "error is %s".formatted(jobStatusData.getError()));
+                    }
+                    // 反序列化 output 为 CheckResponse
+                    CheckResponse checkResponse =
+                            JsonUtil.deserializeObjectToPojo(jobStatusData.getOutput(), CheckResponse.class);
+                    future.complete(checkResponse.isSuccess());
+                    // 提前取消周期任务
+                    return true;
+                },
                 INTERVAL,
                 TIMEOUT,
-                () -> future.obtrudeException(new BusinessException(
-                        "oneWayCheck timeout. " +
-                        "syncFlowEntity is %s".formatted(syncFlowEntity))
-                )
+                future
         );
-        try {
-            return future.get();
-        } catch (Exception e) {
-            throw new BusinessException("oneWayCheck throw exception.", e);
-        }
+        return future;
     }
 
-    private void trackOneWayCheckJob(
-            String trackJobStatusKey,
-            int rcloneJobId,
-            CompletableFuture<Boolean> future) {
-        try {
-            RcloneResponse<JobStatusResponse> asyncJobStatus =
-                    this.rcloneService.getJobStatus(new JobStatusRequest(rcloneJobId));
-            // rclone 访问失败或者 job status 不是 finish, 则重试
-            if (!asyncJobStatus.isSuccess() || !asyncJobStatus.getData().isFinished()) {
-                return;
-            }
-            JobStatusResponse asyncJobStatusData = asyncJobStatus.getData();
-            if (!asyncJobStatusData.isSuccess()) {
-                throw new BusinessException("oneWayCheck failed. " +
-                        "error is %s".formatted(asyncJobStatusData.getError()));
-            }
-            // 反序列化 output 为 CheckResponse
-            CheckResponse checkResponse =
-                    JsonUtil.deserializeObjectToPojo(asyncJobStatusData.getOutput(), CheckResponse.class);
-            future.complete(checkResponse.isSuccess());
-        } catch (Exception e) {
-            future.obtrudeException(new BusinessException("trackOneWayCheckJob failed.", e));
-            // oneWayCheck 失败, 取消定时任务
-            this.moduleDebounceService.cancel(trackJobStatusKey);
-        }
-    }
-
-    public void copyFile(FilesystemEvent filesystemEvent) {
-        String sourceFolderPath = filesystemEvent.getFolder().toAbsolutePath().toString();
-        Path file = filesystemEvent.getFile();
-        String filePath = file.toAbsolutePath().toString();
+    public CompletableFuture<CopyJobEntity> copyFile(
+            SyncFlowEntity syncFlowEntity,
+            FilesystemEvent filesystemEvent) {
+        String sourceFolderPath = syncFlowEntity.getSourceFolderPath();
+        String filePath = filesystemEvent.getFile().toAbsolutePath().toString();
         String fileRelativePath = FilesystemUtil.splitPath(sourceFolderPath, filePath);
-        // 根据 filesystem event 的 folder 查询下游 syncflow entity, 过滤 PAUSE 的记录
-        List<SyncFlowEntity> downstreamSyncFlowEntityList =
-                this.syncFlowService.getBySourceFolderPath(sourceFolderPath, true);
-        if (CollectionUtils.isEmpty(downstreamSyncFlowEntityList)) {
-            return;
-        }
-        log.debug("get downstream syncflow as {}", downstreamSyncFlowEntityList);
-        for (SyncFlowEntity syncFlowEntity : downstreamSyncFlowEntityList) {
-            // 手动 filter, 因为 rclone 设计 copyfile api 不支持 filter
-            if (isFileFiltered(file.getFileName().toString(), syncFlowEntity)) {
-                continue;
-            }
-            // syncflow status 修改为 RUNNING
-            this.syncFlowService.updateSyncFlowStatus(
-                    syncFlowEntity,
-                    SyncFlowStatusEnum.RUNNING
-            );
-            // 创建 copyFileRequest
-            CopyFileRequest copyFileRequest = new CopyFileRequest(
-                    sourceFolderPath,
-                    fileRelativePath,
-                    syncFlowEntity.getDestFolderPath(),
-                    fileRelativePath
-            );
-            // 发起请求
-            this.createAndStartRcloneCopyJob(syncFlowEntity, () -> rcloneService.copyFile(copyFileRequest));
-        }
+        // 创建 copyFileRequest
+        CopyFileRequest copyFileRequest = new CopyFileRequest(
+                sourceFolderPath,
+                fileRelativePath,
+                syncFlowEntity.getDestFolderPath(),
+                fileRelativePath
+        );
+        // 发起请求
+        return this.createAndStartRcloneCopyJob(syncFlowEntity, () -> rcloneService.copyFile(copyFileRequest));
     }
 
-    public void syncCopy(SyncFlowEntity syncFlowEntity) {
+    public CompletableFuture<CopyJobEntity> syncCopy(SyncFlowEntity syncFlowEntity) {
         EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
         // 创建 sync copy request
         SyncCopyRequest syncCopyRequest = new SyncCopyRequest(
@@ -246,104 +215,98 @@ public class RcloneFacadeService implements DisposableBean {
             syncCopyRequest.exclude(filterCriteria);
         }
         // 发起请求
-        this.createAndStartRcloneCopyJob(syncFlowEntity, () -> this.rcloneService.syncCopy(syncCopyRequest));
+        return this.createAndStartRcloneCopyJob(syncFlowEntity, () -> this.rcloneService.syncCopy(syncCopyRequest));
     }
 
-    @Async("generalTaskScheduler")
-    protected void createAndStartRcloneCopyJob(
+    private CompletableFuture<CopyJobEntity> createAndStartRcloneCopyJob(
             SyncFlowEntity syncFlowEntity,
-            Supplier<RcloneResponse<RcloneAsyncResponse>> supplier) {
+            Supplier<RcloneResponse<SubmitAsyncJobResponse>> supplier) {
         // 创建 copy job
         CopyJobEntity copyJobEntity = this.copyJobService.addCopyJob(syncFlowEntity.getSyncFlowId());
-        // 发起请求
-        RcloneResponse<RcloneAsyncResponse> rcloneResponse = supplier.get();
-        // 失败则记录数据, 并终止逻辑
+        // 发起 rclone 异步任务的请求
+        RcloneResponse<SubmitAsyncJobResponse> submitAsyncJobResponse = supplier.get();
+        // 失败则记录数据库, 并抛出异常
         Long copyJobId = copyJobEntity.getCopyJobId();
-        if (!rcloneResponse.isSuccess()) {
-            BusinessException businessException = rcloneResponse.getBusinessException();
+        if (!submitAsyncJobResponse.isSuccess()) {
+            BusinessException businessException = submitAsyncJobResponse.getBusinessException();
             this.copyJobService.markCopyJobAsFailed(copyJobId, businessException.toString());
-            this.updateSyncFlowStatusDebounce(syncFlowEntity);
-            throw new BusinessException("createAndStartRcloneJob failed.", businessException);
+            throw new BusinessException("createAndStartRcloneJob failed. " +
+                    "submitAsyncJobResponse failed. ",
+                    businessException);
         }
         // 成功则启动 rclone job status 跟踪
-        int rcloneJobId = rcloneResponse.getData().getJobId();
-        String trackJobStatusKey = "CopyJobId::%s".formatted(copyJobId.toString());
-        this.moduleDebounceService.cancelAfter(
-                trackJobStatusKey,
-                () -> trackCopyJobStatus(copyJobId, rcloneJobId, trackJobStatusKey, syncFlowEntity),
-                INTERVAL,
-                TIMEOUT,
-                () -> {
-                    this.copyJobService.markCopyJobAsFailed(copyJobId, "rclone cancel after timeout");
-                    this.updateSyncFlowStatusDebounce(syncFlowEntity);
-                }
-        );
+        int rcloneJobId = submitAsyncJobResponse.getData().getJobId();
+        copyJobEntity.setRcloneJobId(((long) rcloneJobId));
+        return this.trackCopyJobStatus(copyJobEntity);
     }
 
-    private void trackCopyJobStatus(
-            long copyJobId,
-            int rcloneJobId,
-            String jobKey,
-            SyncFlowEntity syncFlowEntity) {
-        // 发起请求
-        RcloneResponse<JobStatusResponse> asyncJobResponse =
-                rcloneService.getJobStatus(new JobStatusRequest(rcloneJobId));
-        // rclone 访问失败或者 job status 不是 finish, 则重试
-        if (!asyncJobResponse.isSuccess() || !asyncJobResponse.getData().isFinished()) {
-            return;
-        }
-        // job 完成, 更新数据库
-        JobStatusResponse jobStatus = asyncJobResponse.getData();
-        if (!jobStatus.isSuccess()) {
-            // rclone job 完成但失败, 刷新数据库, 更新状态和错误信息
-            this.copyJobService.markCopyJobAsFailed(copyJobId, jobStatus.getError());
-            this.updateSyncFlowStatusDebounce(syncFlowEntity);
-            // rclone job 失败, 取消任务
-            this.moduleDebounceService.cancel(jobKey);
-            return;
-        }
-        // 记录成功
-        this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatus, null);
-        this.updateSyncFlowStatusDebounce(syncFlowEntity);
-        // 创建定时任务获取 core stats. core stats 更新较慢, 重复获取直到超时
-        String trackCoreStatsKey = "RcloneJobId::%s".formatted(String.valueOf(rcloneJobId));
+    private CompletableFuture<CopyJobEntity> trackCopyJobStatus(CopyJobEntity copyJobEntity) {
+        CompletableFuture<CopyJobEntity> future = new CompletableFuture<>();
+        Long copyJobId = copyJobEntity.getCopyJobId();
+        int rcloneJobId = copyJobEntity.getRcloneJobId().intValue();
+        // 创建周期任务
         this.moduleDebounceService.cancelAfter(
-                trackCoreStatsKey,
+                "CopyJobId::%s".formatted(copyJobId),
+                () -> {
+                    // 查询 rclone 异步任务执行的情况
+                    RcloneResponse<JobStatusResponse> jobStatusResponse =
+                            rcloneService.getJobStatus(new JobStatusRequest(rcloneJobId));
+                    // rclone 访问失败或者 job status 不是 finish, 则重试
+                    if (!jobStatusResponse.isSuccess() || !jobStatusResponse.getData().isFinished()) {
+                        return false;
+                    }
+                    // rclone 异步任务完成
+                    JobStatusResponse jobStatusData = jobStatusResponse.getData();
+                    if (!jobStatusData.isSuccess()) {
+                        // rclone 异步任务完成但失败, 刷新数据库, 更新状态和错误信息
+                        BusinessException ex = new BusinessException(("rclone async job failed. " +
+                                "error is %s").formatted(jobStatusData.getError()));
+                        this.copyJobService.markCopyJobAsFailed(copyJobId, ex.toString());
+                        // 抛出异常, 终止周期任务
+                        throw ex;
+                    }
+                    // 记录成功
+                    this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatusData);
+                    future.complete(copyJobEntity);
+                    // 提前取消周期任务
+                    return true;
+                },
+                INTERVAL,
+                TIMEOUT,
+                future
+        );
+        return future;
+    }
+
+    public CompletableFuture<Void> updateCopyJobStat(CopyJobEntity copyJobEntity) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        Long copyJobId = copyJobEntity.getCopyJobId();
+        Long rcloneJobId = copyJobEntity.getRcloneJobId();
+        this.moduleDebounceService.cancelAfter(
+                "RcloneJobId::%s".formatted(rcloneJobId),
                 () -> {
                     CoreStatsRequest coreStatsRequest = new CoreStatsRequest(rcloneJobId);
                     RcloneResponse<CoreStatsResponse> rcloneResponse =
                             this.rcloneService.getCoreStats(coreStatsRequest);
+                    // core stats 更新较慢, 重复获取直到超时
                     if (!rcloneResponse.isSuccess()) {
-                        return;
+                        return false;
                     }
                     // core stats 获取成功, 更新 copy job
                     CoreStatsResponse coreStats = rcloneResponse.getData();
-                    this.copyJobService.markCopyJobAsSuccess(copyJobId, jobStatus, coreStats);
-                    // core stats 获取成功, 取消定时任务
-                    this.moduleDebounceService.earlyCancel(trackCoreStatsKey);
+                    this.copyJobService.updateSuccessCopyJobStat(copyJobId, coreStats);
+                    future.complete(null);
+                    // core stats 获取成功, 取消周期任务
+                    return true;
                 },
                 INTERVAL,
-                TIMEOUT
+                TIMEOUT,
+                future
         );
-        // job status 获取成功, 取消定时任务
-        this.moduleDebounceService.earlyCancel(jobKey);
+        return future;
     }
 
-    private void updateSyncFlowStatusDebounce(SyncFlowEntity syncFlowEntity) {
-        this.moduleDebounceService.debounce(
-                "SyncFlowId::%s".formatted(syncFlowEntity.getSyncFlowId()),
-                () -> {
-                    boolean isSync = this.oneWayCheck(syncFlowEntity);
-                    this.syncFlowService.updateSyncFlowStatus(
-                            syncFlowEntity,
-                            isSync ? SyncFlowStatusEnum.SYNC : SyncFlowStatusEnum.FAILED
-                    );
-                },
-                INTERVAL
-        );
-    }
-
-    private boolean isFileFiltered(String fileName, SyncFlowEntity syncFlowEntity) {
+    public boolean isFileFiltered(String fileName, SyncFlowEntity syncFlowEntity) {
         List<String> filterCriteriaList = this.syncFlowService.getFilterCriteriaAsList(syncFlowEntity);
         if (CollectionUtils.isEmpty(filterCriteriaList)) {
             return false;

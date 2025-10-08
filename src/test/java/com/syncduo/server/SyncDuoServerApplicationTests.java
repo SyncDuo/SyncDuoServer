@@ -53,6 +53,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 
@@ -83,8 +84,6 @@ class SyncDuoServerApplicationTests {
     private final SystemInfoController systemInfoController;
 
     private final FileSystemAccessController fileSystemAccessController;
-
-    private final FilesystemEventHandler filesystemEventHandler;
 
     private final RslsyncService rslsyncService;
 
@@ -137,7 +136,6 @@ class SyncDuoServerApplicationTests {
         this.snapshotsController = snapshotsController;
         this.systemInfoController = systemInfoController;
         this.fileSystemAccessController = fileSystemAccessController;
-        this.filesystemEventHandler = filesystemEventHandler;
         this.rslsyncService = rslsyncService;
     }
 
@@ -371,7 +369,7 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenResumeSyncFlow() throws SyncDuoException, IOException {
+    void ShouldReturnTrueWhenResumeSyncFlow() throws SyncDuoException, IOException, ExecutionException, InterruptedException {
         // 创建 syncflow
         createSyncFlow(null);
         // 停止 syncflow
@@ -384,7 +382,7 @@ class SyncDuoServerApplicationTests {
         // 源文件夹创建文件
         FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
         // source and dest should be desync
-        assert !this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
+        assert !this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity).get();
         // 恢复 syncflow
         this.syncFlowController.changeSyncFlowStatus(
                 ChangeSyncFlowStatusRequest.builder()
@@ -393,11 +391,12 @@ class SyncDuoServerApplicationTests {
                         .build()
         );
         waitAllFileHandle();
-        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
+        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity).get();
     }
 
     @Test
-    void ShouldReturnTrueWhenDeleteSyncFlow() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenDeleteSyncFlow()
+            throws IOException, SyncDuoException, ExecutionException, InterruptedException {
         // 创建 syncflow
         createSyncFlow("[\"txt\"]");
         waitAllFileHandle();
@@ -412,11 +411,12 @@ class SyncDuoServerApplicationTests {
         // 等待文件处理
         waitSingleFileHandle(sourceFolderPath);
         // source and dest is desync
-        assert !this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
+        assert !this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity).get();
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByDeleteFile() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenTriggerWatcherByDeleteFile()
+            throws IOException, SyncDuoException, ExecutionException, InterruptedException {
         // 创建 syncflow
         createSyncFlow(null);
         waitAllFileHandle();
@@ -425,11 +425,12 @@ class SyncDuoServerApplicationTests {
         // 等待文件处理
         waitSingleFileHandle(sourceFolderPath);
         // 判断 fileEvent 是否处理正确
-        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
+        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity).get();
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByModifyFile() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenTriggerWatcherByModifyFile()
+            throws IOException, SyncDuoException, ExecutionException, InterruptedException {
         // 创建 syncflow
         createSyncFlow(null);
         // 源文件夹修改文件
@@ -437,11 +438,12 @@ class SyncDuoServerApplicationTests {
         // 等待文件处理
         waitSingleFileHandle(sourceFolderPath);
         // 判断 fileEvent 是否处理正确
-        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
+        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity).get();
     }
 
     @Test
-    void ShouldReturnTrueWhenTriggerWatcherByCreateFile() throws IOException, SyncDuoException {
+    void ShouldReturnTrueWhenTriggerWatcherByCreateFile()
+            throws IOException, SyncDuoException, ExecutionException, InterruptedException {
         // 创建 syncflow
         createSyncFlow(null);
         // 源文件夹创建文件
@@ -449,7 +451,7 @@ class SyncDuoServerApplicationTests {
         // 等待文件处理
         waitSingleFileHandle(sourceFolderPath);
         // 判断 fileEvent 是否处理正确
-        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity);
+        assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity).get();
     }
 
     @Test

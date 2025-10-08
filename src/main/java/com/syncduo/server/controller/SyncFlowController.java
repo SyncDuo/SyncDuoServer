@@ -142,7 +142,7 @@ public class SyncFlowController {
                 break;
             }
             case RESCAN, RESUME: {
-                this.systemManagementService.checkSyncFlowStatus(syncFlowEntity);
+                this.systemManagementService.checkSyncFlowStatus(syncFlowEntity, 2);
                 break;
             }
         }
@@ -157,7 +157,7 @@ public class SyncFlowController {
         // 创建 watcher
         this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
         // 初始化, 因为 source 和 dest 肯定不一样, 肯定会触发一次 sync copy
-        this.systemManagementService.checkSyncFlowStatus(syncFlowEntity);
+        this.systemManagementService.checkSyncFlowStatus(syncFlowEntity, 2);
         // 返回 syncflow info
         SyncFlowInfo result = new SyncFlowInfo(syncFlowEntity);
         return SyncDuoHttpResponse.success(result);

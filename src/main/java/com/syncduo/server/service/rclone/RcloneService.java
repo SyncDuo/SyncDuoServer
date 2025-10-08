@@ -5,12 +5,11 @@ import com.syncduo.server.model.rclone.core.stat.CoreStatsRequest;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsResponse;
 import com.syncduo.server.model.rclone.core.transferred.TransferredStatResponse;
 import com.syncduo.server.model.rclone.global.ErrorInfo;
-import com.syncduo.server.model.rclone.global.RcloneAsyncResponse;
+import com.syncduo.server.model.rclone.global.SubmitAsyncJobResponse;
 import com.syncduo.server.model.rclone.global.RcloneResponse;
 import com.syncduo.server.model.rclone.job.status.JobStatusRequest;
 import com.syncduo.server.model.rclone.job.status.JobStatusResponse;
 import com.syncduo.server.model.rclone.operations.check.CheckRequest;
-import com.syncduo.server.model.rclone.operations.check.CheckResponse;
 import com.syncduo.server.model.rclone.operations.copyfile.CopyFileRequest;
 import com.syncduo.server.model.rclone.operations.stats.StatsRequest;
 import com.syncduo.server.model.rclone.operations.stats.StatsResponse;
@@ -101,7 +100,7 @@ public class RcloneService {
         );
     }
 
-    protected RcloneResponse<RcloneAsyncResponse> copyFile(
+    protected RcloneResponse<SubmitAsyncJobResponse> copyFile(
             CopyFileRequest copyFileRequest) throws ValidationException {
         if (ObjectUtils.anyNull(
                 copyFileRequest,
@@ -119,7 +118,7 @@ public class RcloneService {
         );
     }
 
-    protected RcloneResponse<RcloneAsyncResponse> syncCopy(
+    protected RcloneResponse<SubmitAsyncJobResponse> syncCopy(
             SyncCopyRequest syncCopyRequest) throws ValidationException {
         if (ObjectUtils.anyNull(syncCopyRequest, syncCopyRequest.getSrcFs(), syncCopyRequest.getDstFs())) {
             throw new ValidationException("syncCopy failed." +
@@ -132,7 +131,7 @@ public class RcloneService {
         );
     }
 
-    protected RcloneResponse<RcloneAsyncResponse> oneWayCheck(
+    protected RcloneResponse<SubmitAsyncJobResponse> oneWayCheck(
             CheckRequest checkRequest) throws ValidationException {
         if (ObjectUtils.anyNull(checkRequest, checkRequest.getSrcFs(), checkRequest.getDstFs())) {
             throw new ValidationException("oneWayCheck failed." +
@@ -161,14 +160,14 @@ public class RcloneService {
         }
     }
 
-    private <Req> RcloneResponse<RcloneAsyncResponse> postAsyncRequest(
+    private <Req> RcloneResponse<SubmitAsyncJobResponse> postAsyncRequest(
             String url, Req request) {
         return this.handleClientResponse(
                 this.rcloneRestClient.post()
                         .uri(uriBuilder ->
                                 uriBuilder.path(url).queryParam("_async", "true").build())
                         .body(request),
-                        RcloneAsyncResponse.class
+                        SubmitAsyncJobResponse.class
         );
     }
 

@@ -1,10 +1,9 @@
 package com.syncduo.server.bus;
 
 import com.syncduo.server.enums.FileEventTypeEnum;
-import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.model.internal.FilesystemEvent;
 import com.syncduo.server.service.bussiness.DebounceService;
-import com.syncduo.server.service.rclone.RcloneFacadeService;
+import com.syncduo.server.service.bussiness.SystemManagementService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 
 @Component
@@ -24,27 +22,18 @@ public class FilesystemEventHandler {
 
     private final DebounceService.ModuleDebounceService moduleDebounceService;
 
-    private final RcloneFacadeService rcloneFacadeService;
+    private final SystemManagementService systemManagementService;
 
-    private final BlockingQueue<FilesystemEvent> filesystemEventQueue = new LinkedBlockingQueue<>(1000);
+    private final BlockingQueue<FilesystemEvent> filesystemEventQueue;
 
     @Autowired
     public FilesystemEventHandler(
             DebounceService debounceService,
-            RcloneFacadeService rcloneFacadeService) {
-        this.moduleDebounceService = debounceService.forModule(FilesystemEventHandler.class.getSimpleName());;
-        this.rcloneFacadeService = rcloneFacadeService;
-    }
-
-    public void sendFileEvent(FilesystemEvent fileSystemEvent) throws BusinessException {
-        log.debug("fileEvent: {}", fileSystemEvent);
-        try {
-            this.filesystemEventQueue.put(fileSystemEvent);
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
-        } catch (ClassCastException | NullPointerException | IllegalArgumentException e) {
-            throw new BusinessException("sendFileEvent failed. ", e);
-        }
+            SystemManagementService systemManagementService,
+            FolderWatcher folderWatcher) {
+        this.moduleDebounceService = debounceService.forModule(FilesystemEventHandler.class.getSimpleName());
+        this.systemManagementService = systemManagementService;
+        this.filesystemEventQueue = folderWatcher.getFilesystemEventQueue();
     }
 
     public void startHandle() {
@@ -68,10 +57,10 @@ public class FilesystemEventHandler {
                         log.debug("filtered fileEvent: {}", filesystemEvent);
                         continue;
                     }
-                    // debounce task, DEBOUNCE_WINDOW 内同个文件没有新的事件, 则执行 copyFile
+                    // DEBOUNCE_WINDOW 内同个文件没有新的事件, 则执行 copyFile
                     this.moduleDebounceService.debounce(
                             filesystemEvent.getFile().toAbsolutePath().toString(),
-                            () -> this.rcloneFacadeService.copyFile(filesystemEvent),
+                            () -> this.systemManagementService.copyFile(filesystemEvent),
                             DEBOUNCE_WINDOW
                     );
                 } catch (InterruptedException e) {

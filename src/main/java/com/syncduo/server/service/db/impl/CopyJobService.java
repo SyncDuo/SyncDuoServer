@@ -41,8 +41,7 @@ public class CopyJobService
 
     public void markCopyJobAsSuccess(
             long copyJobId,
-            JobStatusResponse jobStatusResponse,
-            CoreStatsResponse coreStatsResponse) throws DbException {
+            JobStatusResponse jobStatusResponse) throws DbException {
         CopyJobEntity dbResult = this.getByCopyJobId(copyJobId);
         if (ObjectUtils.isEmpty(dbResult)) {
             return;
@@ -56,11 +55,23 @@ public class CopyJobService
         offsetDateTime = OffsetDateTime.parse(jobStatusResponse.getStartTime());
         instant = offsetDateTime.toInstant();
         dbResult.setFinishedAt(Timestamp.from(instant));
-        // 设置 stats, 容许 stats 为空, 因为有可能 core stats 获取失败, 但是 job 是成功的
-        if (ObjectUtils.isNotEmpty(coreStatsResponse)) {
-            dbResult.setTransferredFiles(coreStatsResponse.getTransfers());
-            dbResult.setTransferredBytes(coreStatsResponse.getBytes());
+        boolean updated = this.updateById(dbResult);
+        if (!updated) {
+            throw new DbException("markCopyJobAsSuccess failed. can't write to database.");
         }
+    }
+
+    public void updateSuccessCopyJobStat(long copyJobId, CoreStatsResponse coreStatsResponse) {
+        if (ObjectUtils.isEmpty(coreStatsResponse)) {
+            return;
+        }
+        CopyJobEntity dbResult = this.getByCopyJobId(copyJobId);
+        if (ObjectUtils.isEmpty(dbResult) || !CommonStatus.SUCCESS.name().equals(dbResult.getCopyJobStatus())) {
+            return;
+        }
+        // 设置 stats
+        dbResult.setTransferredFiles(coreStatsResponse.getTransfers());
+        dbResult.setTransferredBytes(coreStatsResponse.getBytes());
         boolean updated = this.updateById(dbResult);
         if (!updated) {
             throw new DbException("markCopyJobAsSuccess failed. can't write to database.");
