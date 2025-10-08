@@ -154,7 +154,7 @@ public class RcloneFacadeService implements DisposableBean {
     private CompletableFuture<Boolean> trackOneWayCheckJob(int rcloneJobId) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         this.moduleDebounceService.cancelAfter(
-                "RcloneJobId::%s".formatted(rcloneJobId),
+                "RcloneJobId::%s::Check".formatted(rcloneJobId),
                 () -> {
                     // 查询 rclone 异步任务执行的情况
                     RcloneResponse<JobStatusResponse> jobStatusResponse =
@@ -234,9 +234,9 @@ public class RcloneFacadeService implements DisposableBean {
                     "submitAsyncJobResponse failed. ",
                     businessException);
         }
-        // 成功则启动 rclone job status 跟踪
+        // 成功则更新 CopyJobEntity 并启动 rclone job status 跟踪
         int rcloneJobId = submitAsyncJobResponse.getData().getJobId();
-        copyJobEntity.setRcloneJobId(((long) rcloneJobId));
+        copyJobEntity = this.copyJobService.updateRcloneJobId(copyJobEntity, rcloneJobId);
         return this.trackCopyJobStatus(copyJobEntity);
     }
 
@@ -283,7 +283,7 @@ public class RcloneFacadeService implements DisposableBean {
         Long copyJobId = copyJobEntity.getCopyJobId();
         Long rcloneJobId = copyJobEntity.getRcloneJobId();
         this.moduleDebounceService.cancelAfter(
-                "RcloneJobId::%s".formatted(rcloneJobId),
+                "RcloneJobId::%s::Stat".formatted(rcloneJobId),
                 () -> {
                     CoreStatsRequest coreStatsRequest = new CoreStatsRequest(rcloneJobId);
                     RcloneResponse<CoreStatsResponse> rcloneResponse =

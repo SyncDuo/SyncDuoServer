@@ -39,6 +39,20 @@ public class CopyJobService
         return copyJobEntity;
     }
 
+    public CopyJobEntity updateRcloneJobId(CopyJobEntity copyJobEntity, long rcloneJobId) throws DbException {
+        CopyJobEntity dbResult = this.getByCopyJobId(copyJobEntity.getCopyJobId());
+        if (ObjectUtils.isEmpty(dbResult)) {
+            throw new DbException("updateRcloneJobId failed. " +
+                    "can't find by copyJobId:%s".formatted(copyJobEntity.getCopyJobId()));
+        }
+        dbResult.setRcloneJobId(rcloneJobId);
+        boolean update = this.updateById(dbResult);
+        if (!update) {
+            throw new DbException("updateRcloneJobId failed. update to database failed.");
+        }
+        return dbResult;
+    }
+
     public void markCopyJobAsSuccess(
             long copyJobId,
             JobStatusResponse jobStatusResponse) throws DbException {
