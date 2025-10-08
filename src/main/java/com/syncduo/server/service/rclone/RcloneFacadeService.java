@@ -300,7 +300,8 @@ public class RcloneFacadeService implements DisposableBean {
                     return true;
                 },
                 INTERVAL,
-                TIMEOUT,
+                // rclone 存储的 core stat 在一分钟后删除, 所以 Timeout 设置为 1 分钟
+                60,
                 future
         );
         return future;
