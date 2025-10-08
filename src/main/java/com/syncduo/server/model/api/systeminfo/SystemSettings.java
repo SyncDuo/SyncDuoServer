@@ -28,6 +28,9 @@ public class SystemSettings {
 
         @JsonSerialize(using = ToStringSerializer.class)
         private Long checkSyncflowStatusIntervalMillis;
+
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long backupIntervalMillis;
     }
 
     @Data
@@ -40,9 +43,6 @@ public class SystemSettings {
     @Data
     public static class Restic {
         private String backupPath;
-
-        @JsonSerialize(using = ToStringSerializer.class)
-        private Long backupIntervalSec;
 
         private String restorePath;
 

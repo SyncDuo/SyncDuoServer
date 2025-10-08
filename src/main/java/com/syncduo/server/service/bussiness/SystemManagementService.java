@@ -7,6 +7,7 @@ import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.internal.FilesystemEvent;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
+import com.syncduo.server.service.restic.ResticFacadeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ public class SystemManagementService {
 
     private final DebounceService.ModuleDebounceService moduleDebounceService;
 
+    private final ResticFacadeService resticFacadeService;
+
     @Value("${syncduo.server.system.eventDebounceWindowSec}")
     private long DEBOUNCE_WINDOW;
 
@@ -39,11 +42,13 @@ public class SystemManagementService {
             FolderWatcher folderWatcher,
             SyncFlowService syncFlowService,
             RcloneFacadeService rcloneFacadeService,
-            DebounceService debounceService) {
+            DebounceService debounceService,
+            ResticFacadeService resticFacadeService) {
         this.folderWatcher = folderWatcher;
         this.syncFlowService = syncFlowService;
         this.rcloneFacadeService = rcloneFacadeService;
         this.moduleDebounceService = debounceService.forModule("SystemManagementService");
+        this.resticFacadeService = resticFacadeService;
     }
 
     public void copyFile(FilesystemEvent filesystemEvent) {
@@ -87,57 +92,6 @@ public class SystemManagementService {
         }
     }
 
-    public void checkAllSyncFlowStatus() {
-        log.info("System start, check all syncflow status");
-        // 获取全部 syncflow
-        List<SyncFlowEntity> syncFlowEntityList = this.syncFlowService.getAllSyncFlow();
-        if (CollectionUtils.isEmpty(syncFlowEntityList)) {
-            return;
-        }
-        for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
-            // filter pause syncflow
-            if (SyncFlowStatusEnum.PAUSE.name().equals(syncFlowEntity.getSyncStatus())) {
-                continue;
-            }
-            try {
-                // source folder add watcher
-                this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
-                // check status
-                this.checkSyncFlowStatus(syncFlowEntity, 2);
-            } catch (Exception e) {
-                log.error("systemStartUp has error. " +
-                        "sync flow is {}", syncFlowEntity, new BusinessException("systemStartUp has error", e));
-            }
-        }
-    }
-
-    // initial delay 5 minutes, fixDelay 30 minutes. unit is millisecond
-    @Scheduled(
-            initialDelay = 1000 * 60 * 5,
-            fixedDelayString = "${syncduo.server.system.checkSyncflowStatusIntervalMillis:1800000}",
-            scheduler = "systemManagementTaskScheduler"
-    )
-    private void periodicalCheckSyncFlowStatus() {
-        log.info("Periodical Check SyncFlow Status");
-        // 获取全部 syncflow
-        List<SyncFlowEntity> syncFlowEntityList = this.syncFlowService.getAllSyncFlow();
-        if (CollectionUtils.isEmpty(syncFlowEntityList)) {
-            return;
-        }
-        for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
-            // filter out only sync syncflow
-            if (!SyncFlowStatusEnum.SYNC.name().equals(syncFlowEntity.getSyncStatus())) {
-                continue;
-            }
-            try {
-                this.checkSyncFlowStatus(syncFlowEntity, 2);
-            } catch (Exception e) {
-                log.error("periodicalScan failed. " +
-                        "sync flow is {}", syncFlowEntity, new BusinessException("periodicalScan failed.", e));
-            }
-        }
-    }
-
     @Async("generalTaskScheduler")
     public void checkSyncFlowStatus(SyncFlowEntity syncFlowEntity, int retryCheckCount) {
         if (retryCheckCount <= 0) {
@@ -170,6 +124,79 @@ public class SystemManagementService {
                     });
         } catch (Exception e) {
             log.warn("checkSyncFlowStatus failed. SyncFlowEntity is {}", syncFlowEntity, e);
+        }
+    }
+
+    public void checkAllSyncFlowStatus() {
+        log.info("System start, check all syncflow status");
+        // 获取全部 syncflow
+        List<SyncFlowEntity> syncFlowEntityList = this.syncFlowService.getAllSyncFlow();
+        if (CollectionUtils.isEmpty(syncFlowEntityList)) {
+            return;
+        }
+        for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
+            // filter pause syncflow
+            if (SyncFlowStatusEnum.PAUSE.name().equals(syncFlowEntity.getSyncStatus())) {
+                continue;
+            }
+            try {
+                // source folder add watcher
+                this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
+                // check status
+                this.checkSyncFlowStatus(syncFlowEntity, 2);
+            } catch (Exception e) {
+                log.error("systemStartUp has error. " +
+                        "sync flow is {}", syncFlowEntity, new BusinessException("systemStartUp has error", e));
+            }
+        }
+    }
+
+    // initial delay 5 minutes, fixDelay 30 minutes. unit is millisecond
+    @Scheduled(
+            initialDelay = 1000 * 60 * 5,
+            fixedDelayString = "${syncduo.server.system.checkSyncflowStatusIntervalMillis}",
+            scheduler = "systemManagementTaskScheduler"
+    )
+    private void periodicalCheckSyncFlowStatus() {
+        log.info("Periodical Check SyncFlow Status");
+        // 获取全部 syncflow
+        List<SyncFlowEntity> syncFlowEntityList = this.syncFlowService.getAllSyncFlow();
+        if (CollectionUtils.isEmpty(syncFlowEntityList)) {
+            return;
+        }
+        for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
+            // filter out only sync syncflow
+            if (!SyncFlowStatusEnum.SYNC.name().equals(syncFlowEntity.getSyncStatus())) {
+                continue;
+            }
+            try {
+                this.checkSyncFlowStatus(syncFlowEntity, 2);
+            } catch (Exception e) {
+                log.error("periodicalScan failed. " +
+                        "sync flow is {}", syncFlowEntity, new BusinessException("periodicalScan failed.", e));
+            }
+        }
+    }
+
+    // initial delay 5 minutes, fixDelay 4 hours. unit is millisecond
+    @Scheduled(
+            initialDelay = 1000 * 60 * 5,
+            fixedDelayString = "${syncduo.server.system.backupIntervalMillis}",
+            scheduler = "systemManagementTaskScheduler"
+    )
+    private void periodicalBackup() {
+        log.info("Periodical Backup SyncFlow");
+        // 获取全部 syncflow
+        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
+        if (CollectionUtils.isEmpty(allSyncFlow)) {
+            return;
+        }
+        for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
+            try {
+                this.resticFacadeService.backup(syncFlowEntity);
+            } catch (BusinessException e) {
+                log.error("periodicalBackup failed. syncFlowEntity is {}", syncFlowEntity, e);
+            }
         }
     }
 }

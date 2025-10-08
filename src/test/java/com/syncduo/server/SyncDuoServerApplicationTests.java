@@ -192,7 +192,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        this.resticFacadeService.backup(this.syncFlowEntity);
         // 获取 snapshot info
         SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
@@ -244,7 +244,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        this.resticFacadeService.backup(this.syncFlowEntity);
         // 获取 snapshot info
         SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
@@ -284,7 +284,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        this.resticFacadeService.backup(this.syncFlowEntity);
         // 获取 snapshot info
         SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
@@ -326,7 +326,7 @@ class SyncDuoServerApplicationTests {
         assert CollectionUtils.isNotEmpty(allSyncFlowWithSnapshots.getData());
         assert CollectionUtils.isEmpty(allSyncFlowWithSnapshots.getData().get(0).getSnapshotInfoList());
         // 手动触发 backup job
-        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        this.resticFacadeService.backup(this.syncFlowEntity);
         allSyncFlowWithSnapshots = this.snapshotsController.getAllSyncFlowWithSnapshots();
         assert CollectionUtils.isNotEmpty(allSyncFlowWithSnapshots.getData());
     }
@@ -336,7 +336,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        this.resticFacadeService.backup(this.syncFlowEntity);
         // 获取 snapshot info
         SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
@@ -345,7 +345,7 @@ class SyncDuoServerApplicationTests {
         SnapshotInfo snapshotInfo = syncFlowWithSnapshots.getData().getSnapshotInfoList().get(0);
         assert snapshotInfo.getBackupJobStatus().equals(CommonStatus.SUCCESS.name());
         // 再手动触发 backup
-        this.resticFacadeService.manualBackup(syncFlowEntity);
+        this.resticFacadeService.backup(syncFlowEntity);
         syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
         assert ObjectUtils.isNotEmpty(syncFlowWithSnapshots.getData());
@@ -358,7 +358,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.manualBackup(this.syncFlowEntity);
+        this.resticFacadeService.backup(this.syncFlowEntity);
         // 获取 copy job
         List<BackupJobEntity> result = this.backupJobService.getBySyncFlowId(this.syncFlowEntity.getSyncFlowId());
         assert CollectionUtils.isNotEmpty(result);

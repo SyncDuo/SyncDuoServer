@@ -69,7 +69,7 @@ public class SnapshotsController {
             throw new ResourceNotFoundException("backup failed. SyncFlow is deleted");
         }
         // backup
-        this.resticFacadeService.manualBackup(syncFlowEntity);
+        this.resticFacadeService.backup(syncFlowEntity);
         return SyncDuoHttpResponse.success();
     }
 

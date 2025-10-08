@@ -26,18 +26,17 @@ import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -54,10 +53,6 @@ public class ResticFacadeService {
 
     private final BackupJobService backupJobService;
 
-    private final ThreadPoolTaskScheduler systemManagementTaskScheduler;
-
-    private final SyncFlowService syncFlowService;
-
     private final RcloneFacadeService rcloneFacadeService;
 
     private final RestoreJobService restoreJobService;
@@ -66,8 +61,8 @@ public class ResticFacadeService {
     private final Map<String, Map<String, RestoreFileCache>> restoreFileCacheMap =
             new ConcurrentHashMap<>(100);
 
-    @Value("${syncduo.server.restic.backupIntervalSec}")
-    private long RESTIC_BACKUP_INTERVAL;
+    @Value("${syncduo.server.system.backupIntervalMillis}")
+    private long SYSTEM_BACKUP_INTERVAL;
 
     @Value("${syncduo.server.restic.restoreAgeSec}")
     private long RESTIC_RESTORE_AGE_SEC;
@@ -79,25 +74,21 @@ public class ResticFacadeService {
             DebounceService debounceService,
             ResticService resticService,
             BackupJobService backupJobService,
-            ThreadPoolTaskScheduler systemManagementTaskScheduler,
-            SyncFlowService syncFlowService,
             RcloneFacadeService rcloneFacadeService,
             RestoreJobService restoreJobService) {
         this.moduleDebounceService = debounceService.forModule(ResticFacadeService.class.getSimpleName());
         this.resticService = resticService;
         this.backupJobService = backupJobService;
-        this.systemManagementTaskScheduler = systemManagementTaskScheduler;
-        this.syncFlowService = syncFlowService;
         this.rcloneFacadeService = rcloneFacadeService;
         this.restoreJobService = restoreJobService;
     }
 
     public void init() {
         try {
-            if (ObjectUtils.anyNull(RESTIC_BACKUP_INTERVAL, RESTIC_RESTORE_AGE_SEC) ||
-                    RESTIC_BACKUP_INTERVAL < 1 || RESTIC_RESTORE_AGE_SEC < 1) {
+            if (ObjectUtils.anyNull(SYSTEM_BACKUP_INTERVAL, RESTIC_RESTORE_AGE_SEC) ||
+                    SYSTEM_BACKUP_INTERVAL < 1 || RESTIC_RESTORE_AGE_SEC < 1) {
                 throw new ValidationException(
-                        "RESTIC_BACKUP_INTERVAL:%s or ".formatted(RESTIC_BACKUP_INTERVAL) +
+                        "RESTIC_BACKUP_INTERVAL:%s or ".formatted(SYSTEM_BACKUP_INTERVAL) +
                                 "RESTIC_RESTORE_AGE:%s is null.".formatted(RESTIC_RESTORE_AGE_SEC));
             }
             // 检查 restore path 是否存在
@@ -114,35 +105,10 @@ public class ResticFacadeService {
                             initResult.getBusinessException());
                 }
             }
-            // 启动定时备份任务
-            this.systemManagementTaskScheduler.scheduleWithFixedDelay(
-                    this::periodicalBackup,
-                    Instant.now().plus(Duration.ofHours(1)),
-                    Duration.ofSeconds(RESTIC_BACKUP_INTERVAL)
-            );
         } catch (Exception e) {
             throw new BusinessException("Restic init failed", e);
         }
         log.info("restic init success.");
-    }
-
-    public void manualBackup(SyncFlowEntity syncFlowEntity) {
-        EntityValidationUtil.isSyncFlowEntityValid(syncFlowEntity);
-        this.backup(syncFlowEntity);
-    }
-
-    public void periodicalBackup() {
-        List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
-        if (CollectionUtils.isEmpty(allSyncFlow)) {
-            return;
-        }
-        for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
-            try {
-                this.backup(syncFlowEntity);
-            } catch (BusinessException e) {
-                log.error("periodicalBackup failed. syncFlowEntity is {}", syncFlowEntity, e);
-            }
-        }
     }
 
     public Stats getStats() throws BusinessException {
@@ -165,7 +131,7 @@ public class ResticFacadeService {
         return lsResult.getData();
     }
 
-    private void backup(SyncFlowEntity syncFlowEntity) throws DbException, BusinessException {
+    public void backup(SyncFlowEntity syncFlowEntity) throws DbException, BusinessException {
         // SYNC 状态的 syncflow, 才执行backup
         SyncFlowStatusEnum syncFlowStatusEnum = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
         if (!syncFlowStatusEnum.equals(SyncFlowStatusEnum.SYNC)) {
