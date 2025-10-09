@@ -14,7 +14,6 @@ public class CheckRequest {
 
     private String dstFs;
 
-    @JsonProperty("oneway") // known issue in rclone operations/check api
     private boolean oneWay = true;
 
     private boolean combined = false;

@@ -23,52 +23,53 @@ public class BackupJobService
         extends ServiceImpl<BackupJobMapper, BackupJobEntity>
         implements IBackupJobService {
 
-    public void addSuccessBackupJob(
-            long syncFlowId,
-            BackupSummary backupSummary) throws DbException {
+    public BackupJobEntity addBackupJob(long syncFlowId) throws DbException {
         BackupJobEntity backupJobEntity = new BackupJobEntity();
-        backupJobEntity.setBackupJobStatus(CommonStatus.SUCCESS.name());
         backupJobEntity.setSyncFlowId(syncFlowId);
-        backupJobEntity.setSuccessMessage(backupSummary.toString());
-        // snapshot 没有 create, 则直接记录为 success
-        if (StringUtils.isEmpty(backupSummary.getSnapshotId())) {
-            // 保存
-            boolean saved = this.save(backupJobEntity);
-            if (!saved) {
-                throw new DbException("addSuccessBackupJob failed. can't write to database.");
-            }
-            return;
-        }
-        // 设置 snapshot id
-        backupJobEntity.setSnapshotId(backupSummary.getSnapshotId());
-        // 设置时间
-        backupJobEntity.setStartedAt(Timestamp.from(backupSummary.getBackupStart()));
-        backupJobEntity.setFinishedAt(Timestamp.from(backupSummary.getBackupEnd()));
-        // 设置 stats
-        backupJobEntity.setBackupFiles(backupSummary.getTotalFilesProcessed());
-        backupJobEntity.setBackupBytes(backupSummary.getTotalBytesProcessed());
-        // 保存
+        backupJobEntity.setBackupJobStatus(CommonStatus.RUNNING.name());
         boolean saved = this.save(backupJobEntity);
         if (!saved) {
-            throw new DbException("addSuccessBackupJob failed. can't write to database.");
+            throw new DbException("addBackupJob failed. can't write to database.");
+        }
+        return backupJobEntity;
+    }
+
+    public void updateSuccessBackupJob(
+            BackupJobEntity backupJobEntity,
+            BackupSummary backupSummary) throws DbException {
+        backupJobEntity.setBackupJobStatus(CommonStatus.SUCCESS.name());
+        backupJobEntity.setSuccessMessage(backupSummary.toString());
+        // 有 snapshot id 则设置相关信息, 没有则直接更新
+        if (StringUtils.isNotBlank(backupSummary.getSnapshotId())) {
+            // 设置 snapshot id
+            backupJobEntity.setSnapshotId(backupSummary.getSnapshotId());
+            // 设置时间
+            backupJobEntity.setStartedAt(Timestamp.from(backupSummary.getBackupStart()));
+            backupJobEntity.setFinishedAt(Timestamp.from(backupSummary.getBackupEnd()));
+            // 设置 stats
+            backupJobEntity.setBackupFiles(backupSummary.getTotalFilesProcessed());
+            backupJobEntity.setBackupBytes(backupSummary.getTotalBytesProcessed());
+        }
+        // 更新
+        boolean updated = this.updateById(backupJobEntity);
+        if (!updated) {
+            throw new DbException("updateSuccessBackupJob failed. can't write to database.");
         }
     }
 
-    public void addFailBackupJob(
-            long syncFlowId,
+    public void updateFailBackupJob(
+            BackupJobEntity backupJobEntity,
             String errorMessage) throws DbException {
         if (StringUtils.isBlank(errorMessage)) {
             errorMessage = "";
         }
-        BackupJobEntity backupJobEntity = new BackupJobEntity();
         // 设置失败状态和失败日志
-        backupJobEntity.setSyncFlowId(syncFlowId);
         backupJobEntity.setBackupJobStatus(CommonStatus.FAILED.name());
         backupJobEntity.setErrorMessage(errorMessage);
         // 保存
-        boolean saved = this.save(backupJobEntity);
-        if (!saved) {
-            throw new DbException("addFailBackupJob failed. can't write to database.");
+        boolean updated = this.updateById(backupJobEntity);
+        if (!updated) {
+            throw new DbException("updateFailBackupJob failed. can't write to database.");
         }
     }
 

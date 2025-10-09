@@ -15,10 +15,7 @@ import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.api.snapshots.SnapshotInfo;
 import com.syncduo.server.model.api.snapshots.SyncFlowWithSnapshots;
-import com.syncduo.server.model.api.syncflow.ChangeSyncFlowStatusRequest;
-import com.syncduo.server.model.api.syncflow.CreateSyncFlowRequest;
-import com.syncduo.server.model.api.syncflow.DeleteSyncFlowRequest;
-import com.syncduo.server.model.api.syncflow.SyncFlowInfo;
+import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.api.systeminfo.SystemInfo;
 import com.syncduo.server.model.api.systeminfo.SystemSettings;
 import com.syncduo.server.model.entity.BackupJobEntity;
@@ -192,7 +189,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.backup(this.syncFlowEntity);
+        this.backup();
         // 获取 snapshot info
         SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
@@ -244,7 +241,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.backup(this.syncFlowEntity);
+        this.backup();
         // 获取 snapshot info
         SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
@@ -284,7 +281,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.backup(this.syncFlowEntity);
+        this.backup();
         // 获取 snapshot info
         SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
@@ -326,7 +323,7 @@ class SyncDuoServerApplicationTests {
         assert CollectionUtils.isNotEmpty(allSyncFlowWithSnapshots.getData());
         assert CollectionUtils.isEmpty(allSyncFlowWithSnapshots.getData().get(0).getSnapshotInfoList());
         // 手动触发 backup job
-        this.resticFacadeService.backup(this.syncFlowEntity);
+        this.backup();
         allSyncFlowWithSnapshots = this.snapshotsController.getAllSyncFlowWithSnapshots();
         assert CollectionUtils.isNotEmpty(allSyncFlowWithSnapshots.getData());
     }
@@ -336,7 +333,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.backup(this.syncFlowEntity);
+        this.backup();
         // 获取 snapshot info
         SyncDuoHttpResponse<SyncFlowWithSnapshots> syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
@@ -345,7 +342,7 @@ class SyncDuoServerApplicationTests {
         SnapshotInfo snapshotInfo = syncFlowWithSnapshots.getData().getSnapshotInfoList().get(0);
         assert snapshotInfo.getBackupJobStatus().equals(CommonStatus.SUCCESS.name());
         // 再手动触发 backup
-        this.resticFacadeService.backup(syncFlowEntity);
+        this.backup();
         syncFlowWithSnapshots =
                 this.snapshotsController.getSyncFlowWithSnapshots(syncFlowEntity.getSyncFlowId().toString());
         assert ObjectUtils.isNotEmpty(syncFlowWithSnapshots.getData());
@@ -358,7 +355,7 @@ class SyncDuoServerApplicationTests {
         // 创建 syncflow
         createSyncFlow(null);
         // 手动触发 backup job
-        this.resticFacadeService.backup(this.syncFlowEntity);
+        this.backup();
         // 获取 copy job
         List<BackupJobEntity> result = this.backupJobService.getBySyncFlowId(this.syncFlowEntity.getSyncFlowId());
         assert CollectionUtils.isNotEmpty(result);
@@ -424,7 +421,7 @@ class SyncDuoServerApplicationTests {
         FileOperationTestUtil.deleteFile(Path.of(sourceFolderPath), 2);
         // 等待文件处理
         waitSingleFileHandle(sourceFolderPath);
-        // 判断 fileEvent 是否处理正确
+        // 判断 fileEvent 是否处理正确, 即 onewaycheck 的结果是 true
         assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity).get();
     }
 
@@ -437,7 +434,7 @@ class SyncDuoServerApplicationTests {
         FileOperationTestUtil.modifyFile(Path.of(sourceFolderPath), 2);
         // 等待文件处理
         waitSingleFileHandle(sourceFolderPath);
-        // 判断 fileEvent 是否处理正确
+        // 判断 fileEvent 是否处理正确, 即 onewaycheck 的结果是 true
         assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity).get();
     }
 
@@ -450,7 +447,7 @@ class SyncDuoServerApplicationTests {
         FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));
         // 等待文件处理
         waitSingleFileHandle(sourceFolderPath);
-        // 判断 fileEvent 是否处理正确
+        // 判断 fileEvent 是否处理正确, 即 onewaycheck 的结果是 true
         assert this.rcloneFacadeService.oneWayCheck(this.syncFlowEntity).get();
     }
 
@@ -480,6 +477,14 @@ class SyncDuoServerApplicationTests {
         deleteSyncFlowRequest.setSyncFlowId(this.syncFlowEntity.getSyncFlowId().toString());
         SyncDuoHttpResponse<Void> syncFlowResponse1 = this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
         assert syncFlowResponse1.getStatusCode() == 200;
+    }
+
+    void backup() {
+        // 手动触发 backup job
+        ManualBackupRequest manualBackupRequest = new ManualBackupRequest();
+        manualBackupRequest.setSyncFlowId(this.syncFlowEntity.getSyncFlowId().toString());
+        this.snapshotsController.backup(manualBackupRequest);
+        this.waitSec(5);
     }
 
     void createSyncFlow(String filterCriteria) {

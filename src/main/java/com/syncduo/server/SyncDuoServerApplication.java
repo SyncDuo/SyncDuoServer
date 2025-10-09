@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableScheduling
 @EnableTransactionManagement
 @EnableAsync
-// todo: 3. 增加 SYNCED FOLDER 但是没有 SYNC FLOW 的提示 4. restic backup, restore, download 需要异步
+// todo: 3. 增加 SYNCED FOLDER 但是没有 SYNC FLOW 的提示 4. restic restore 需要异步 5. folderWatcher 排查 docker 不生效问题
 public class SyncDuoServerApplication {
 
     public static void main(String[] args) {

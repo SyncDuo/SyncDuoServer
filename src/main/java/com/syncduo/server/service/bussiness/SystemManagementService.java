@@ -142,12 +142,12 @@ public class SystemManagementService {
             try {
                 // source folder add watcher
                 this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
-                // check status
-                this.checkSyncFlowStatus(syncFlowEntity, 2);
             } catch (Exception e) {
-                log.error("systemStartUp has error. " +
-                        "sync flow is {}", syncFlowEntity, new BusinessException("systemStartUp has error", e));
+                log.error("systemStartUp has error, addWatcher failed. sync flow is {}", syncFlowEntity,
+                        new BusinessException("systemStartUp has error", e));
             }
+            // check status
+            this.checkSyncFlowStatus(syncFlowEntity, 2);
         }
     }
 
@@ -169,12 +169,7 @@ public class SystemManagementService {
             if (!SyncFlowStatusEnum.SYNC.name().equals(syncFlowEntity.getSyncStatus())) {
                 continue;
             }
-            try {
-                this.checkSyncFlowStatus(syncFlowEntity, 2);
-            } catch (Exception e) {
-                log.error("periodicalScan failed. " +
-                        "sync flow is {}", syncFlowEntity, new BusinessException("periodicalScan failed.", e));
-            }
+            this.checkSyncFlowStatus(syncFlowEntity, 2);
         }
     }
 

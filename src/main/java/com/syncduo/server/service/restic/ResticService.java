@@ -57,15 +57,14 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<BackupSummary, List<BackupError>> backup(
+    public CompletableFuture<ResticExecResult<BackupSummary, List<BackupError>>> backup(
             String folderPathString) throws BusinessException {
         FilesystemUtil.isFolderPathValid(folderPathString);
         CommandLine commandLine = getDefaultCommandLine();
         commandLine.addArgument("backup");
         commandLine.addArgument(".");
         commandLine.addArgument("--skip-if-unchanged");
-        CompletableFuture<ResticExecResult<BackupSummary, List<BackupError>>> future =
-                ResticParser.executeWithWorkingDirectory(
+        return ResticParser.executeWithWorkingDirectory(
                     RESTIC_PASSWORD,
                     RESTIC_BACKUP_PATH,
                     folderPathString,
@@ -75,11 +74,6 @@ public class ResticService {
                     stderr -> JsonUtil.parseResticJsonLines(
                             stderr, BackupError.getCondition(), BackupError.class)
         );
-        try {
-            return future.get();
-        } catch (Exception e) {
-            throw new BusinessException("backup failed. future get failed. ", e);
-        }
     }
 
     public ResticExecResult<Stats, ExitErrors> stats() throws BusinessException {

@@ -5,6 +5,7 @@ import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.DbException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
+import com.syncduo.server.model.entity.BackupJobEntity;
 import com.syncduo.server.model.entity.RestoreJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.internal.RestoreFileCache;
@@ -32,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +42,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 // Restic 设计为单备份仓库, 单密码
@@ -131,28 +134,25 @@ public class ResticFacadeService {
         return lsResult.getData();
     }
 
+    @Async("generalTaskScheduler")
     public void backup(SyncFlowEntity syncFlowEntity) throws DbException, BusinessException {
         // SYNC 状态的 syncflow, 才执行backup
         SyncFlowStatusEnum syncFlowStatusEnum = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
         if (!syncFlowStatusEnum.equals(SyncFlowStatusEnum.SYNC)) {
             return;
         }
+        BackupJobEntity backupJobEntity = this.backupJobService.addBackupJob(syncFlowEntity.getSyncFlowId());
         // backup
-        ResticExecResult<BackupSummary, List<BackupError>> backupResult = this.resticService.backup(
-                syncFlowEntity.getDestFolderPath()
-        );
-        // 记录 backup job
-        if (backupResult.isSuccess()) {
-            this.backupJobService.addSuccessBackupJob(
-                    syncFlowEntity.getSyncFlowId(),
-                    backupResult.getData()
-            );
-        } else {
-            this.backupJobService.addFailBackupJob(
-                    syncFlowEntity.getSyncFlowId(),
-                    backupResult.getBusinessException().toString()
-            );
-        }
+        this.resticService.backup(syncFlowEntity.getDestFolderPath())
+                .thenCompose(backupResult -> {
+                    if (backupResult.isSuccess()) {
+                        this.backupJobService.updateSuccessBackupJob(backupJobEntity, backupResult.getData());
+                    } else {
+                        BusinessException ex = backupResult.getBusinessException();
+                        this.backupJobService.updateFailBackupJob(backupJobEntity, ex.toString());
+                    }
+                    return CompletableFuture.completedFuture(null);
+                });
     }
 
     public Path restoreFiles(List<SnapshotFileInfo> snapshotFileInfoList) {
@@ -218,6 +218,7 @@ public class ResticFacadeService {
                 },
                 RESTIC_RESTORE_AGE_SEC
         );
+        // 执行 restore
         ResticExecResult<RestoreSummary, List<RestoreError>> restoreResult = this.resticService.restore(
                 snapshotFileInfo.getSnapshotId(),
                 new String[]{snapshotFileInfo.getPath()},
@@ -239,7 +240,7 @@ public class ResticFacadeService {
         );
         Path filePath = FilesystemUtil.getAllFile(Paths.get(restoreTargetPathString)).get(0);
         // 添加缓存
-        addRestoreFileCache(
+        this.addRestoreFileCache(
                 restoreTargetPathString,
                 restoreTargetPathString,
                 filePath.toAbsolutePath().toString(),
