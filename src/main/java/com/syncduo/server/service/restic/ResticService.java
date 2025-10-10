@@ -136,7 +136,7 @@ public class ResticService {
         }
     }
 
-    public ResticExecResult<RestoreSummary, List<RestoreError>> restore(
+    public CompletableFuture<ResticExecResult<RestoreSummary, List<RestoreError>>> restore(
             String snapshotId,
             String[] pathStrings,
             String targetString) throws ValidationException, BusinessException {
@@ -153,7 +153,7 @@ public class ResticService {
         } else {
             buildRestoreMultipleCommandLine(restoreCommandLine, snapshotId, pathStrings, targetString);
         }
-        CompletableFuture<ResticExecResult<RestoreSummary, List<RestoreError>>> future = ResticParser.execute(
+        return ResticParser.execute(
                 RESTIC_PASSWORD,
                 RESTIC_BACKUP_PATH,
                 null,
@@ -164,11 +164,6 @@ public class ResticService {
                 stderr ->
                         JsonUtil.parseResticJsonLines(stderr, RestoreError.getCondition(), RestoreError.class)
         );
-        try {
-            return future.get();
-        } catch (Exception e) {
-            throw new BusinessException("restoreFile failed. future get failed. ", e);
-        }
     }
 
     private static CommandLine getDefaultCommandLine() {

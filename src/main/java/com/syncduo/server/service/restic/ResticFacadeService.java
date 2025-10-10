@@ -1,49 +1,38 @@
 package com.syncduo.server.service.restic;
 
+import com.syncduo.server.enums.CommonStatus;
+import com.syncduo.server.enums.ResticNodeTypeEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
 import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.DbException;
+import com.syncduo.server.exception.ResourceNotFoundException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
 import com.syncduo.server.model.entity.BackupJobEntity;
 import com.syncduo.server.model.entity.RestoreJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.model.internal.RestoreFileCache;
-import com.syncduo.server.model.restic.backup.BackupError;
-import com.syncduo.server.model.restic.backup.BackupSummary;
 import com.syncduo.server.model.restic.cat.CatConfig;
 import com.syncduo.server.model.restic.global.ExitErrors;
 import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.model.restic.init.Init;
 import com.syncduo.server.model.restic.ls.Node;
-import com.syncduo.server.model.restic.restore.RestoreError;
-import com.syncduo.server.model.restic.restore.RestoreSummary;
 import com.syncduo.server.model.restic.stats.Stats;
 import com.syncduo.server.service.bussiness.DebounceService;
 import com.syncduo.server.service.db.impl.BackupJobService;
 import com.syncduo.server.service.db.impl.RestoreJobService;
-import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
-import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 // Restic 设计为单备份仓库, 单密码
 @Slf4j
@@ -59,10 +48,6 @@ public class ResticFacadeService {
     private final RcloneFacadeService rcloneFacadeService;
 
     private final RestoreJobService restoreJobService;
-
-    // <SnapshotId, <File Original Path in Snapshot, RestoreFileCache>
-    private final Map<String, Map<String, RestoreFileCache>> restoreFileCacheMap =
-            new ConcurrentHashMap<>(100);
 
     @Value("${syncduo.server.system.backupIntervalMillis}")
     private long SYSTEM_BACKUP_INTERVAL;
@@ -98,6 +83,8 @@ public class ResticFacadeService {
             this.rcloneFacadeService.isSourceFolderExist(RESTIC_RESTORE_PATH);
             // 删除 restore path 的所有子文件夹
             FilesystemUtil.deleteFolder(RESTIC_RESTORE_PATH, false);
+            // 逻辑删除所有restore记录
+            this.restoreJobService.deleteAllRecord();
             // 检查备份目录是否已经初始化
             ResticExecResult<CatConfig, ExitErrors> catConfigResult = this.resticService.catConfig();
             // 没有初始化则初始化
@@ -155,164 +142,183 @@ public class ResticFacadeService {
                 });
     }
 
-    public Path restoreFiles(List<SnapshotFileInfo> snapshotFileInfoList) {
-        EntityValidationUtil.isSnapshotFileInfoListValid(snapshotFileInfoList);
-        String snapshotId = snapshotFileInfoList.get(0).getSnapshotId();
-        String[] pathStrings = snapshotFileInfoList.stream().map(SnapshotFileInfo::getPath).toArray(String[]::new);
+    public long submitRestoreJob(List<SnapshotFileInfo> snapshotFileInfoList) {
+        SnapshotFileInfo firstSnapshotFileInfo = snapshotFileInfoList.get(0);
+        String snapshotId = firstSnapshotFileInfo.getSnapshotId();
+        // 先查询数据库是否已经 restore
+        RestoreJobEntity dbResult = this.searchRestoreFile(firstSnapshotFileInfo);
+        if (ObjectUtils.isNotEmpty(dbResult)) {
+            return dbResult.getRestoreJobId();
+        }
         // 创建临时目录
-        String restoreTargetPathString = FilesystemUtil.createRandomEnglishFolder(this.RESTIC_RESTORE_PATH);
-        // 添加 restore job
-        RestoreJobEntity restoreJobEntity = this.restoreJobService.addRunningRestoreJob(
-                snapshotId,
-                restoreTargetPathString
-        );
-        // 创建删除 tmp folder 任务
-        this.moduleDebounceService.schedule(
-                () -> FilesystemUtil.deleteFolder(restoreTargetPathString, true),
-                RESTIC_RESTORE_AGE_SEC
-        );
-        ResticExecResult<RestoreSummary, List<RestoreError>> restoreResult = this.resticService.restore(
-                snapshotId,
-                pathStrings,
-                restoreTargetPathString
-        );
-        if (!restoreResult.isSuccess()) {
-            BusinessException restoreException = restoreResult.getBusinessException();
-            this.restoreJobService.updateRestoreJobAsFailed(
-                    restoreJobEntity.getRestoreJobId(),
-                    restoreException.toString()
-            );
-            throw new BusinessException("restoreFiles failed.", restoreResult.getBusinessException());
+        String restoreRootPath = FilesystemUtil.createRandomEnglishFolder(this.RESTIC_RESTORE_PATH);
+        // 判断是否将 origin file path 放入数据库
+        if (snapshotFileInfoList.size() > 1) {
+            RestoreJobEntity restoreJobEntity = this.restoreJobService.addRestoreJob(snapshotId, restoreRootPath);
+            // fire and forget
+            this.restoreFiles(snapshotFileInfoList, restoreJobEntity);
+            return restoreJobEntity.getRestoreJobId();
         }
-        // 记录成功日志
-        this.restoreJobService.updateRestoreJobAsSuccess(
-                restoreJobEntity.getRestoreJobId(),
-                restoreResult.getData()
-        );
-        // snapshot id 前八字符是 shortId
-        return FilesystemUtil.zipAllFile(restoreTargetPathString, "restore-" + snapshotId.substring(0, 9));
+        RestoreJobEntity restoreJobEntity = this.restoreJobService.addRestoreJob(
+                snapshotId,
+                firstSnapshotFileInfo.getPath(),
+                restoreRootPath);
+        // fire and forget
+        if (this.isRestoreAsZipFile(firstSnapshotFileInfo)) {
+            this.restoreFiles(snapshotFileInfoList, restoreJobEntity);
+        } else {
+            this.restoreFile(firstSnapshotFileInfo, restoreJobEntity);
+        }
+        // return restoreJobId
+        return restoreJobEntity.getRestoreJobId();
     }
 
-
-    public Path restoreFile(SnapshotFileInfo snapshotFileInfo) {
-        // 参数检查
-        EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
-        // 查询缓存
-        Path restoreFileCached = isRestoreFileCached(snapshotFileInfo);
-        if (ObjectUtils.isNotEmpty(restoreFileCached)) {
-            return restoreFileCached;
-        }
-        String restoreTargetPathString = FilesystemUtil.createRandomEnglishFolder(this.RESTIC_RESTORE_PATH);
-        // 添加 restore job
-        RestoreJobEntity restoreJobEntity = this.restoreJobService.addRunningRestoreJob(
+    public RestoreJobEntity searchRestoreFile(SnapshotFileInfo snapshotFileInfo) {
+        RestoreJobEntity dbResult = this.restoreJobService.getBySnapshotIdAndOrigFilePath(
                 snapshotFileInfo.getSnapshotId(),
-                restoreTargetPathString
+                snapshotFileInfo.getPath()
         );
-        // 创建删除 tmp folder 任务
-        this.moduleDebounceService.debounce(
-                restoreTargetPathString,
-                () -> {
-                    // 删除文件夹和缓存
-                    FilesystemUtil.deleteFolder(restoreTargetPathString, true);
-                    this.deleteRestoreFileCache(snapshotFileInfo);
-                },
-                RESTIC_RESTORE_AGE_SEC
-        );
-        // 执行 restore
-        ResticExecResult<RestoreSummary, List<RestoreError>> restoreResult = this.resticService.restore(
-                snapshotFileInfo.getSnapshotId(),
-                new String[]{snapshotFileInfo.getPath()},
-                restoreTargetPathString
-        );
-        // 记录失败日志
-        if (!restoreResult.isSuccess() || restoreResult.getData().getFilesRestored().intValue() < 1) {
-            BusinessException restoreException = restoreResult.getBusinessException();
-            this.restoreJobService.updateRestoreJobAsFailed(
-                    restoreJobEntity.getRestoreJobId(),
-                    restoreException.toString()
-            );
-            throw new BusinessException("restoreFile failed.", restoreException);
-        }
-        // 记录成功日志
-        this.restoreJobService.updateRestoreJobAsSuccess(
-                restoreJobEntity.getRestoreJobId(),
-                restoreResult.getData()
-        );
-        Path filePath = FilesystemUtil.getAllFile(Paths.get(restoreTargetPathString)).get(0);
-        // 添加缓存
-        this.addRestoreFileCache(
-                restoreTargetPathString,
-                restoreTargetPathString,
-                filePath.toAbsolutePath().toString(),
-                snapshotFileInfo
-        );
-        return filePath;
-    }
-
-    private Path isRestoreFileCached(SnapshotFileInfo snapshotFileInfo) {
-        if (ObjectUtils.isEmpty(snapshotFileInfo)) {
+        if (ObjectUtils.isEmpty(dbResult)) {
             return null;
         }
-        RestoreFileCache restoreFileCache = this.getRestoreFileCache(snapshotFileInfo);
-        if (ObjectUtils.isEmpty(restoreFileCache)) {
+        CommonStatus restoreJobStatus = CommonStatus.fromName(dbResult.getRestoreJobStatus());
+        if (restoreJobStatus != CommonStatus.SUCCESS) {
             return null;
         }
-        // 检查文件是否还存在
-        String fileFullPathString = restoreFileCache.getFileFullPath();
         try {
-            Path filePath = FilesystemUtil.isFilePathValid(fileFullPathString);
-            // 延长删除任务
-            this.moduleDebounceService.debounce(
-                    restoreFileCache.getDebounceJobKey(),
-                    () -> {
-                        // 删除文件夹和缓存
-                        FilesystemUtil.deleteFolder(restoreFileCache.getFolderFullPath(), true);
-                        this.deleteRestoreFileCache(snapshotFileInfo);
-                    },
-                    RESTIC_RESTORE_AGE_SEC
-            );
-            return filePath;
-        } catch (Exception e) {
-            log.debug("restore file hit cache, but filesystem doesn't exist.", e);
-            // 删除文件缓存
-            this.deleteRestoreFileCache(snapshotFileInfo);
+            FilesystemUtil.isFilePathValid(dbResult.getRestoreFullPath());
+            // 延长 debounce 删除
+            this.delayDeleteRestoreFilesJob(dbResult);
+            return dbResult;
+        } catch (ValidationException | ResourceNotFoundException e) {
+            log.warn("searchRestoreFile failed. RestoreJobEntity:{} valid but restore file not exist.", dbResult);
         }
         return null;
     }
 
-    private void addRestoreFileCache(
-            String debounceJobKey,
-            String folderFullPath,
-            String fileFullPathString,
-            SnapshotFileInfo snapshotFileInfo) {
+    public Path getRestoreFile(long restoreJobId) {
+        RestoreJobEntity dbResult = this.restoreJobService.getByRestoreJobId(restoreJobId);
+        if (ObjectUtils.isEmpty(dbResult)) {
+            throw new BusinessException("getRestoreFile failed. " +
+                    "restore file(restoreJobId:%s) is deleted.".formatted(restoreJobId));
+        }
+        switch (CommonStatus.fromName(dbResult.getRestoreJobStatus())) {
+            case SUCCESS -> {
+                return FilesystemUtil.isFilePathValid(dbResult.getRestoreFullPath());
+            }
+            case FAILED -> throw new BusinessException("getRestoreFile failed. restore failed." +
+                    "restoreJobId is %s, errorMessage is %s".formatted(restoreJobId, dbResult.getErrorMessage()));
+            case UNKNOWN -> throw new BusinessException("getRestoreFile failed. " +
+                    "RestoreJobEntity:%s has UNKNOWN STATUS .".formatted(dbResult));
+            default -> {
+                return null;
+            }
+        }
+    }
+
+    @Async("generalTaskScheduler")
+    protected void restoreFiles(List<SnapshotFileInfo> snapshotFileInfoList, RestoreJobEntity restoreJobEntity) {
+        String snapshotId = snapshotFileInfoList.get(0).getSnapshotId();
+        String[] pathStrings = snapshotFileInfoList.stream().map(SnapshotFileInfo::getPath).toArray(String[]::new);
+        String restoreRootPath = restoreJobEntity.getRestoreRootPath();
+        this.resticService.restore(snapshotId, pathStrings, restoreRootPath)
+                .thenCompose(resticRestoreResult -> {
+                    if (resticRestoreResult.isSuccess()) {
+                        Path restoreFile = FilesystemUtil.zipAllFile(
+                                restoreRootPath,
+                                "restore-" + snapshotId.substring(0, 9)
+                        );
+                        // 记录成功日志
+                        this.restoreJobService.updateRestoreJobAsSuccess(
+                                restoreJobEntity.getRestoreJobId(),
+                                resticRestoreResult.getData(),
+                                restoreFile.toAbsolutePath().toString()
+                        );
+                    } else {
+                        // 记录失败日志
+                        BusinessException restoreException = resticRestoreResult.getBusinessException();
+                        this.restoreJobService.updateRestoreJobAsFailed(
+                                restoreJobEntity.getRestoreJobId(),
+                                restoreException.toString()
+                        );
+                    }
+                    return CompletableFuture.completedFuture(null);
+                })
+                .whenComplete((ignored, ex) -> {
+                    try {
+                        if (ObjectUtils.isNotEmpty(ex)) {
+                            BusinessException businessException = new BusinessException(
+                                    "restoreFile failed. restore files:%s".formatted(snapshotFileInfoList), ex);
+                            this.restoreJobService.updateRestoreJobAsFailed(
+                                    restoreJobEntity.getRestoreJobId(),
+                                    businessException.toString()
+                            );
+                        }
+                    } catch (Exception e) {
+                        log.error("restoreFile failed. restore files:{}", snapshotFileInfoList, ex);
+                    } finally {
+                        this.delayDeleteRestoreFilesJob(restoreJobEntity);
+                    }
+                });
+    }
+
+    @Async("generalTaskScheduler")
+    protected void restoreFile(SnapshotFileInfo snapshotFileInfo, RestoreJobEntity restoreJobEntity) {
         String snapshotId = snapshotFileInfo.getSnapshotId();
-        RestoreFileCache restoreFileCache = new RestoreFileCache(
-                debounceJobKey,
-                folderFullPath,
-                snapshotId,
-                fileFullPathString
-        );
-        Map<String, RestoreFileCache> snapshotCache = this.restoreFileCacheMap.getOrDefault(
-                snapshotId,
-                new ConcurrentHashMap<>()
-        );
-        snapshotCache.put(snapshotFileInfo.getPath(), restoreFileCache);
-        this.restoreFileCacheMap.put(snapshotId, snapshotCache);
+        String[] pathStrings = new String[]{snapshotFileInfo.getPath()};
+        String restoreRootPath = restoreJobEntity.getRestoreRootPath();
+        this.resticService.restore(snapshotId, pathStrings, restoreRootPath)
+                .thenCompose(resticRestoreResult -> {
+                    if (resticRestoreResult.isSuccess()) {
+                        Path restoreFile = FilesystemUtil.getAllFile(Paths.get(restoreRootPath)).get(0);
+                        // 记录成功日志
+                        this.restoreJobService.updateRestoreJobAsSuccess(
+                                restoreJobEntity.getRestoreJobId(),
+                                resticRestoreResult.getData(),
+                                restoreFile.toAbsolutePath().toString()
+                        );
+                    } else {
+                        // 记录失败日志
+                        BusinessException restoreException = resticRestoreResult.getBusinessException();
+                        this.restoreJobService.updateRestoreJobAsFailed(
+                                restoreJobEntity.getRestoreJobId(),
+                                restoreException.toString()
+                        );
+                    }
+                    return CompletableFuture.completedFuture(null);
+                })
+                .whenComplete((ignored, ex) -> {
+                    try {
+                        if (ObjectUtils.isNotEmpty(ex)) {
+                            BusinessException businessException = new BusinessException(
+                                    "restoreFile failed. restore file:%s".formatted(snapshotFileInfo), ex);
+                            this.restoreJobService.updateRestoreJobAsFailed(
+                                    restoreJobEntity.getRestoreJobId(),
+                                    businessException.toString()
+                            );
+                        }
+                    } catch (Exception e) {
+                        log.error("restoreFile failed. restore file:{}", snapshotFileInfo, ex);
+                    } finally {
+                        this.delayDeleteRestoreFilesJob(restoreJobEntity);
+                    }
+                });
     }
 
-    private RestoreFileCache getRestoreFileCache(SnapshotFileInfo snapshotFileInfo) {
-        Map<String, RestoreFileCache> snapshotCache = this.restoreFileCacheMap.get(snapshotFileInfo.getSnapshotId());
-        if (MapUtils.isEmpty(snapshotCache)) {
-            return null;
-        }
-        return snapshotCache.get(snapshotFileInfo.getPath());
+    private void delayDeleteRestoreFilesJob(RestoreJobEntity restoreJobEntity) {
+        this.moduleDebounceService.debounce(
+                "RestoreJobId::%s::delete".formatted(restoreJobEntity.getRestoreJobId()),
+                () -> FilesystemUtil.deleteFolder(restoreJobEntity.getRestoreRootPath(), true),
+                RESTIC_RESTORE_AGE_SEC
+        );
     }
 
-    private void deleteRestoreFileCache(SnapshotFileInfo snapshotFileInfo) {
-        Map<String, RestoreFileCache> snapshotCache = this.restoreFileCacheMap.get(snapshotFileInfo.getSnapshotId());
-        if (MapUtils.isEmpty(snapshotCache)) {
-            return;
+    private boolean isRestoreAsZipFile(SnapshotFileInfo snapshotFileInfo) {
+        ResticNodeTypeEnum resticNodeType = ResticNodeTypeEnum.fromString(snapshotFileInfo.getType());
+        if (resticNodeType == ResticNodeTypeEnum.UNKNOWN) {
+            throw new BusinessException("isRestoreAsZipFile failed. " +
+                    "snapshotFileInfo:%s has UNKNOWN type".formatted(snapshotFileInfo));
         }
-        snapshotCache.remove(snapshotFileInfo.getPath());
+        return resticNodeType == ResticNodeTypeEnum.DIRECTORY;
     }
 }

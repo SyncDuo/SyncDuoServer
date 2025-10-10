@@ -7,6 +7,8 @@ import lombok.Data;
 @Data
 public class RestoreFileCache {
 
+    private long restoreJobId;
+
     private String debounceJobKey;
 
     private String snapshotId;

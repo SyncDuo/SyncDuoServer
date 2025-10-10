@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -152,62 +151,56 @@ public class SnapshotsController {
         return SyncDuoHttpResponse.success(combineSyncFlowWithSnapshotInfo(syncFlowEntity));
     }
 
-    @PostMapping("/download-snapshot-files")
-    public ResponseEntity<Resource> downloadSnapshotFiles(
-            @RequestBody List<SnapshotFileInfo> snapshotFileInfoList) {
+    @PostMapping("/submit-download-job")
+    public SyncDuoHttpResponse<String> submitDownloadJob(@RequestBody List<SnapshotFileInfo> snapshotFileInfoList) {
         EntityValidationUtil.isSnapshotFileInfoListValid(snapshotFileInfoList);
-        Path zipFile = this.resticFacadeService.restoreFiles(snapshotFileInfoList);
-        try {
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + zipFile.getFileName() + "\"")
-                    .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(new UrlResource(zipFile.toUri()));
-        } catch (MalformedURLException e) {
-            throw new BusinessException("zipFile:%s can't convert to url.".formatted(zipFile), e);
-        }
+        long restoreJobId = this.resticFacadeService.submitRestoreJob(snapshotFileInfoList);
+        return SyncDuoHttpResponse.success(Long.toString(restoreJobId));
     }
 
-    @PostMapping("/download-snapshot-file")
-    public ResponseEntity<Resource> downloadSnapshotFile(@RequestBody SnapshotFileInfo snapshotFileInfo) {
-        EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
-        if (!ResticNodeTypeEnum.FILE.getType().equals(snapshotFileInfo.getType())) {
-            throw new ValidationException("downloadSnapshotFile failed. snapshotFileInfo is not a file.");
+    @GetMapping("/get-download-files")
+    public ResponseEntity<Resource> getDownloadFiles(
+            @RequestParam("restoreJobId") String restoreJobId,
+            @RequestParam("isPreview") Boolean isPreview) {
+        if (StringUtils.isBlank(restoreJobId)) {
+            throw new ValidationException("getDownloadFiles failed. restoreJobId is blank");
         }
-        Path restoreFile = this.resticFacadeService.restoreFile(snapshotFileInfo);
+        long id;
         try {
+            id = Long.parseLong(restoreJobId);
+        } catch (Exception e) {
+            throw new ValidationException("getDownloadFiles failed. restoreJobId can't convert to long");
+        }
+        Path restoreFile = this.resticFacadeService.getRestoreFile(id);
+        if (ObjectUtils.isEmpty(restoreFile)) {
+            return ResponseEntity.noContent().build();
+        }
+        UrlResource urlResource;
+        try {
+            urlResource = new UrlResource(restoreFile.toUri());
+        } catch (MalformedURLException e) {
+            throw new BusinessException(("getDownloadFiles failed. " +
+                    "restoreFile:%s can't convert to url.").formatted(restoreFile), e);
+        }
+        String fileName = restoreFile.getFileName().toString();
+        // 不是 preview 则直接返回文件
+        if (!isPreview) {
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + snapshotFileInfo.getFileName() + "\"")
+                            "attachment; filename=\"" + fileName + "\"")
                     .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(new UrlResource(restoreFile.toUri()));
-        } catch (MalformedURLException e) {
-            throw new BusinessException("zipFile:%s can't convert to url.".formatted(restoreFile), e);
+                    .body(urlResource);
         }
-    }
-
-    @PostMapping("/preview-file")
-    public ResponseEntity<Resource> previewFile(@RequestBody SnapshotFileInfo snapshotFileInfo) {
-        EntityValidationUtil.isSnapshotFileInfoListValid(Collections.singletonList(snapshotFileInfo));
-        if (!ResticNodeTypeEnum.FILE.getType().equals(snapshotFileInfo.getType())) {
-            throw new ValidationException("downloadSnapshotFile failed. snapshotFileInfo is not a file.");
-        }
-        String fileName = snapshotFileInfo.getFileName();
+        // 是预览则判断 media type 并返回二进制流
         MediaType mediaType = determineContentType(fileName);
         if (ObjectUtils.isEmpty(mediaType)) {
             throw new BusinessException("previewFile failed. fileType not supported.");
         }
-        Path file = this.resticFacadeService.restoreFile(snapshotFileInfo);
-        try {
-            return ResponseEntity.ok()
-                    .contentType(mediaType)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
-                    .body(new UrlResource(file.toUri()));
-        } catch (MalformedURLException e) {
-            throw new BusinessException("previewFile failed. file convert to url resource failed.", e);
-        }
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+                .body(urlResource);
     }
 
     private MediaType determineContentType(String filename) {

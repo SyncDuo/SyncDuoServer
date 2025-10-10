@@ -21,7 +21,11 @@ public class RestoreJobEntity extends BaseEntity {
 
     private BigInteger secondsElapsed;
 
+    private String originFilePath; // 当一次 restore 多个文件时, 这个字段为空
+
     private String restoreRootPath;
+
+    private String restoreFullPath;
 
     private BigInteger restoreFiles;
 

@@ -1,6 +1,5 @@
 package com.syncduo.server;
 
-import com.syncduo.server.bus.FilesystemEventHandler;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.controller.FileSystemAccessController;
 import com.syncduo.server.controller.SnapshotsController;
@@ -49,6 +48,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -120,7 +120,6 @@ class SyncDuoServerApplicationTests {
             SnapshotsController snapshotsController,
             SystemInfoController systemInfoController,
             FileSystemAccessController fileSystemAccessController,
-            FilesystemEventHandler filesystemEventHandler,
             RslsyncService rslsyncService) {
         this.syncFlowController = syncFlowController;
         this.syncFlowService = syncFlowService;
@@ -203,7 +202,8 @@ class SyncDuoServerApplicationTests {
         // 下载文件
         for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoResponse.getData()) {
             if (snapshotFileInfo.getType().equals(ResticNodeTypeEnum.FILE.getType())) {
-                ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFile(snapshotFileInfo);
+                ResponseEntity<Resource> response =
+                        this.downloadSnapshotFiles(Collections.singletonList(snapshotFileInfo));
                 assert response.getStatusCode() == HttpStatus.OK;
                 assert ObjectUtils.isNotEmpty(response.getBody());
                 assert response.getBody().contentLength() > 0;
@@ -222,7 +222,8 @@ class SyncDuoServerApplicationTests {
         // 再次下载文件
         for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoResponse.getData()) {
             if (snapshotFileInfo.getType().equals(ResticNodeTypeEnum.FILE.getType())) {
-                ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFile(snapshotFileInfo);
+                ResponseEntity<Resource> response =
+                        this.downloadSnapshotFiles(Collections.singletonList(snapshotFileInfo));
                 assert response.getStatusCode() == HttpStatus.OK;
                 assert ObjectUtils.isNotEmpty(response.getBody());
                 assert response.getBody().contentLength() > 0;
@@ -255,7 +256,8 @@ class SyncDuoServerApplicationTests {
         // 下载文件
         for (SnapshotFileInfo snapshotFileInfo : snapshotFileInfoResponse.getData()) {
             if (snapshotFileInfo.getType().equals(ResticNodeTypeEnum.FILE.getType())) {
-                ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFile(snapshotFileInfo);
+                ResponseEntity<Resource> response =
+                        this.downloadSnapshotFiles(Collections.singletonList(snapshotFileInfo));
                 assert response.getStatusCode() == HttpStatus.OK;
                 assert ObjectUtils.isNotEmpty(response.getBody());
                 assert response.getBody().contentLength() > 0;
@@ -293,9 +295,7 @@ class SyncDuoServerApplicationTests {
                 "/"
         );
         // 下载多个文件
-        ResponseEntity<Resource> response = this.snapshotsController.downloadSnapshotFiles(
-                snapshotFileInfoResponse.getData()
-        );
+        ResponseEntity<Resource> response = this.downloadSnapshotFiles(snapshotFileInfoResponse.getData());
         assert response.getStatusCode() == HttpStatus.OK;
         assert ObjectUtils.isNotEmpty(response.getBody());
         assert response.getBody().contentLength() > 0;
@@ -477,6 +477,19 @@ class SyncDuoServerApplicationTests {
         deleteSyncFlowRequest.setSyncFlowId(this.syncFlowEntity.getSyncFlowId().toString());
         SyncDuoHttpResponse<Void> syncFlowResponse1 = this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
         assert syncFlowResponse1.getStatusCode() == 200;
+    }
+
+    ResponseEntity<Resource> downloadSnapshotFiles(List<SnapshotFileInfo> snapshotFileInfoList) {
+        SyncDuoHttpResponse<String> response = this.snapshotsController.submitDownloadJob(snapshotFileInfoList);
+        for (int i = 0; i < 3; i++) {
+            ResponseEntity<Resource> resource =
+                    this.snapshotsController.getDownloadFiles(response.getData(), false);
+            if (resource.getStatusCode() == HttpStatus.OK) {
+                return resource;
+            }
+            this.waitSec(5);
+        }
+        return this.snapshotsController.getDownloadFiles(response.getData(), false);
     }
 
     void backup() {

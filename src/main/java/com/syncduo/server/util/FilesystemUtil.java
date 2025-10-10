@@ -180,6 +180,7 @@ public class FilesystemUtil {
         }
     }
 
+    // 获取 folderPathString 下所有的文件, 并压缩到同样路径下的 zip file
     public static Path zipAllFile(String folderPathString, String prefix)
             throws ValidationException, ResourceNotFoundException, FileOperationException {
         // 检查参数

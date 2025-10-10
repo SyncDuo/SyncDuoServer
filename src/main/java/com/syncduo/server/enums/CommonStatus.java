@@ -12,7 +12,18 @@ public enum CommonStatus implements Status{
     FAILED("FAILED"),
 
     RUNNING("RUNNING"),
+
+    UNKNOWN("UNKNOWN")
     ;
 
     private final String name;
+
+    public static CommonStatus fromName(String name) {
+        for (CommonStatus value : values()) {
+            if (value.name.equals(name)) {
+                return value;
+            }
+        }
+        return UNKNOWN;
+    }
 }
