@@ -44,6 +44,7 @@ public class FilesystemEventHandler {
                 try {
                     // 从 queue 取 filesystem event
                     FilesystemEvent filesystemEvent = this.filesystemEventQueue.take();
+                    log.debug("receive fileEvent: {}", filesystemEvent);
                     // 错误的 filesystem event 过滤
                     if (ObjectUtils.anyNull(
                             filesystemEvent,
@@ -63,6 +64,7 @@ public class FilesystemEventHandler {
                             () -> this.systemManagementService.copyFile(filesystemEvent),
                             DEBOUNCE_WINDOW
                     );
+                    log.debug("debounced fileEvent: {}", filesystemEvent);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt(); // good practice
                 }

@@ -59,6 +59,7 @@ public class SystemManagementService {
     }
 
     public void copyFile(FilesystemEvent filesystemEvent) {
+        log.debug("system management receive fileEvent: {}", filesystemEvent);
         String sourceFolderPath = filesystemEvent.getFolder().toAbsolutePath().toString();
         String fileName = filesystemEvent.getFile().getFileName().toString();
         // 根据 filesystem event 的 folder 查询下游 syncflow entity
