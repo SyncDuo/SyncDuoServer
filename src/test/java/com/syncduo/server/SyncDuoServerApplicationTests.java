@@ -27,7 +27,7 @@ import com.syncduo.server.service.db.impl.RestoreJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
-import com.syncduo.server.service.rslsync.RslsyncService;
+import com.syncduo.server.service.rslsync.RslSyncFacadeService;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -82,7 +82,7 @@ class SyncDuoServerApplicationTests {
 
     private final FileSystemAccessController fileSystemAccessController;
 
-    private final RslsyncService rslsyncService;
+    private final RslSyncFacadeService rslSyncFacadeService;
 
     private SyncFlowEntity syncFlowEntity;
 
@@ -120,7 +120,7 @@ class SyncDuoServerApplicationTests {
             SnapshotsController snapshotsController,
             SystemInfoController systemInfoController,
             FileSystemAccessController fileSystemAccessController,
-            RslsyncService rslsyncService) {
+            RslSyncFacadeService rslSyncFacadeService) {
         this.syncFlowController = syncFlowController;
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
@@ -132,7 +132,16 @@ class SyncDuoServerApplicationTests {
         this.snapshotsController = snapshotsController;
         this.systemInfoController = systemInfoController;
         this.fileSystemAccessController = fileSystemAccessController;
-        this.rslsyncService = rslsyncService;
+        this.rslSyncFacadeService = rslSyncFacadeService;
+    }
+
+    @Test
+    void ShouldReturnTrueWhenGettingPendingSourceFolder() {
+        List<String> pendingSourceFolderPathList = this.rslSyncFacadeService.getPendingSourceFolder();
+        assert CollectionUtils.isNotEmpty(pendingSourceFolderPathList);
+        for (String sourceFolderPath : pendingSourceFolderPathList) {
+            FilesystemUtil.isFolderPathValid(sourceFolderPath);
+        }
     }
 
     @Test

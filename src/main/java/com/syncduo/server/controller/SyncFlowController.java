@@ -11,6 +11,7 @@ import com.syncduo.server.service.bussiness.DebounceService;
 import com.syncduo.server.service.bussiness.SystemManagementService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
+import com.syncduo.server.service.rslsync.RslSyncFacadeService;
 import com.syncduo.server.util.EntityValidationUtil;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,8 @@ public class SyncFlowController {
 
     private final SystemManagementService systemManagementService;
 
+    private final RslSyncFacadeService rslSyncFacadeService;
+
     @Value("${syncduo.server.system.syncflowDelayDeleteSec}")
     private long delayDeleteSec;
 
@@ -50,12 +53,19 @@ public class SyncFlowController {
             SyncFlowService syncFlowService,
             FolderWatcher folderWatcher,
             RcloneFacadeService rcloneFacadeService,
-            SystemManagementService systemManagementService) {
+            SystemManagementService systemManagementService,
+            RslSyncFacadeService rslSyncFacadeService) {
         this.moduleDebounceService = debounceService.forModule(SyncFlowController.class.getSimpleName());
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
         this.systemManagementService = systemManagementService;
+        this.rslSyncFacadeService = rslSyncFacadeService;
+    }
+
+    @GetMapping("/get-pending-source-folder")
+    public SyncDuoHttpResponse<List<String>> getPendingSourceFolder() {
+        return SyncDuoHttpResponse.success(this.rslSyncFacadeService.getPendingSourceFolder());
     }
 
     @PostMapping("/update-filter-criteria")

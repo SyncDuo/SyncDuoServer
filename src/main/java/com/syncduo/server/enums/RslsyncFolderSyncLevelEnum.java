@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public enum RslsyncFolderSyncLevel {
+public enum RslsyncFolderSyncLevelEnum {
     DISCONNECT(0),
 
     SELECTIVE_SYNC(1),
@@ -18,8 +18,8 @@ public enum RslsyncFolderSyncLevel {
 
     private final int syncLevel;
 
-    public static RslsyncFolderSyncLevel fromCode(int syncLevel) {
-        for (RslsyncFolderSyncLevel value : values()) {
+    public static RslsyncFolderSyncLevelEnum fromCode(int syncLevel) {
+        for (RslsyncFolderSyncLevelEnum value : values()) {
             if (value.syncLevel == syncLevel) {
                 return value;
             }

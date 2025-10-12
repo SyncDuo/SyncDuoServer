@@ -8,7 +8,7 @@ import java.util.List;
 public class FolderInfoResponse {
 
     // 先不对 status 检查, 即默认 status == "200"
-    private String status;
+    private int status;
 
     private List<FolderInfo> folders;
 }

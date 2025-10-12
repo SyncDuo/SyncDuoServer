@@ -53,5 +53,7 @@ public class SystemSettings {
     @Data
     public static class Rslsync {
         private String httpBaseUrl;
+
+        private String folderHostPath;
     }
 }

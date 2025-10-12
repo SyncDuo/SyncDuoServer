@@ -1,11 +1,10 @@
 package com.syncduo.server.service.rslsync;
 
 import com.syncduo.server.exception.BusinessException;
-import com.syncduo.server.model.rslsync.folder.FolderInfo;
 import com.syncduo.server.model.rslsync.folder.FolderInfoResponse;
 import com.syncduo.server.model.rslsync.global.RslsyncResponse;
+import com.syncduo.server.model.rslsync.settings.FolderStoragePath;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -25,6 +24,10 @@ public class RslsyncService {
 
     public RslsyncService(RestClient rslsyncRestClient) {
         this.rslsyncRestClient = rslsyncRestClient;
+    }
+
+    public RslsyncResponse<FolderStoragePath> getFolderStoragePath() {
+        return this.get("getfoldersstoragepath", FolderStoragePath.class);
     }
 
     public RslsyncResponse<FolderInfoResponse> getSyncFolderInfo() {
