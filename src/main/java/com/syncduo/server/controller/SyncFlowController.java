@@ -93,9 +93,9 @@ public class SyncFlowController {
         if (ObjectUtils.isEmpty(syncFlowEntity)) {
             return SyncDuoHttpResponse.success(null, "sync flow is deleted");
         }
-        SyncFlowStatusEnum from = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
-        if (SyncFlowStatusEnum.TransitionProhibit(from, to)) {
-            throw new ValidationException("change status from %s to %s is not valid".formatted(from, to));
+        String syncStatus = syncFlowEntity.getSyncStatus();
+        if (SyncFlowStatusEnum.isTransitionProhibit(syncStatus, to)) {
+            throw new ValidationException("change syncStatus:%s to %s is not valid".formatted(syncStatus, to));
         }
         // 更改状态
         this.changeSyncFlowStatusInner(syncFlowEntity, to);
@@ -116,8 +116,7 @@ public class SyncFlowController {
         SyncFlowStatusEnum to = changeSyncFlowStatusRequest.getSyncFlowStatusEnum();
         for (SyncFlowEntity syncFlowEntity : allSyncFlow) {
             try {
-                SyncFlowStatusEnum from = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
-                if (SyncFlowStatusEnum.TransitionProhibit(from, to)) {
+                if (SyncFlowStatusEnum.isTransitionProhibit(syncFlowEntity.getSyncStatus(), to)) {
                     continue;
                 }
                 this.changeSyncFlowStatusInner(syncFlowEntity, to);
@@ -142,7 +141,7 @@ public class SyncFlowController {
                 break;
             }
             case RESCAN, RESUME: {
-                this.systemManagementService.checkSyncFlowStatus(syncFlowEntity, 2);
+                this.systemManagementService.checkSyncFlowStatusAsync(syncFlowEntity);
                 break;
             }
         }
@@ -154,10 +153,10 @@ public class SyncFlowController {
         this.isCreateSyncFlowRequestValid(createSyncFlowRequest);
         // 创建 syncflow
         SyncFlowEntity syncFlowEntity = this.syncFlowService.createSyncFlow(createSyncFlowRequest);
-        // 创建 watcher
+        // 添加 watcher
         this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
-        // 初始化, 因为 source 和 dest 肯定不一样, 肯定会触发一次 sync copy
-        this.systemManagementService.checkSyncFlowStatus(syncFlowEntity, 2);
+        // 开始扫描
+        this.systemManagementService.checkSyncFlowStatusAsync(syncFlowEntity);
         // 返回 syncflow info
         SyncFlowInfo result = new SyncFlowInfo(syncFlowEntity);
         return SyncDuoHttpResponse.success(result);

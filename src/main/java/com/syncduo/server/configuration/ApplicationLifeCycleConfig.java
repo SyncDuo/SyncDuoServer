@@ -44,7 +44,7 @@ public class ApplicationLifeCycleConfig {
         this.rcloneFacadeService.init();
         this.resticFacadeService.init();
         // 系统启动扫描
-        this.systemManagementService.checkAllSyncFlowStatus();
+        this.systemManagementService.rescanAllSyncFlow();
         // 启动 handler
         filesystemEventHandler.startHandle();
     }

@@ -53,7 +53,7 @@ public class SyncFlowService
         syncFlowEntity.setSyncFlowName(syncFlowName);
         syncFlowEntity.setSourceFolderPath(sourceFolderPath);
         syncFlowEntity.setDestFolderPath(destFolderPath);
-        syncFlowEntity.setSyncStatus(SyncFlowStatusEnum.RUNNING.name());
+        syncFlowEntity.setSyncStatus(SyncFlowStatusEnum.RESCAN.name());
         syncFlowEntity.setLastSyncTime(null);
         syncFlowEntity.setFilterCriteria(createSyncFlowRequest.getFilterCriteria());
         this.save(syncFlowEntity);
@@ -78,18 +78,6 @@ public class SyncFlowService
         queryWrapper.eq(SyncFlowEntity::getSyncFlowName, syncFlowName);
         queryWrapper.eq(SyncFlowEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
         return this.getOne(queryWrapper);
-    }
-
-    public List<SyncFlowEntity> getBySyncFlowStatus(
-            SyncFlowStatusEnum syncFlowStatusEnum) throws ValidationException {
-        if (ObjectUtils.isEmpty(syncFlowStatusEnum)) {
-            throw new ValidationException("syncFlowStatusEnum 为空");
-        }
-        LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SyncFlowEntity::getSyncStatus, syncFlowStatusEnum.name());
-        queryWrapper.eq(SyncFlowEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
-        List<SyncFlowEntity> dbResult = this.list(queryWrapper);
-        return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
     }
 
     public List<SyncFlowEntity> getAllSyncFlow() {
@@ -148,9 +136,7 @@ public class SyncFlowService
         return dbResult.get(0);
     }
 
-    public List<SyncFlowEntity> getBySourceFolderPath(
-            String sourceFolderPath,
-            boolean ignorePausedSyncFlow) throws ValidationException {
+    public List<SyncFlowEntity> getBySourceFolderPath(String sourceFolderPath) throws ValidationException {
         if (StringUtils.isAnyBlank(sourceFolderPath)) {
             throw new ValidationException("getBySourceFolderPath failed." +
                     "sourceFolderPath:%s is null.".formatted(sourceFolderPath));
@@ -158,9 +144,6 @@ public class SyncFlowService
         LambdaQueryWrapper<SyncFlowEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SyncFlowEntity::getSourceFolderPath, sourceFolderPath);
         queryWrapper.eq(SyncFlowEntity::getRecordDeleted, DeletedEnum.NOT_DELETED.getCode());
-        if (ignorePausedSyncFlow) {
-            queryWrapper.in(SyncFlowEntity::getSyncStatus, SyncFlowStatusEnum.getNotPauseStatus());
-        }
         List<SyncFlowEntity> dbResult = this.list(queryWrapper);
         if (CollectionUtils.isEmpty(dbResult)) {
             return Collections.emptyList();

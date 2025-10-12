@@ -206,13 +206,13 @@ public class ResticFacadeService {
             case SUCCESS -> {
                 return FilesystemUtil.isFilePathValid(dbResult.getRestoreFullPath());
             }
-            case FAILED -> throw new BusinessException("getRestoreFile failed. restore failed." +
-                    "restoreJobId is %s, errorMessage is %s".formatted(restoreJobId, dbResult.getErrorMessage()));
-            case UNKNOWN -> throw new BusinessException("getRestoreFile failed. " +
-                    "RestoreJobEntity:%s has UNKNOWN STATUS .".formatted(dbResult));
-            default -> {
+            case RUNNING -> {
                 return null;
             }
+            case FAILED -> throw new BusinessException("getRestoreFile failed. restore failed." +
+                    "restoreJobId is %s, errorMessage is %s".formatted(restoreJobId, dbResult.getErrorMessage()));
+            default -> throw new BusinessException("getRestoreFile failed. " +
+                    "RestoreJobEntity:%s has UNKNOWN STATUS .".formatted(dbResult));
         }
     }
 

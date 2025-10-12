@@ -481,7 +481,7 @@ class SyncDuoServerApplicationTests {
 
     ResponseEntity<Resource> downloadSnapshotFiles(List<SnapshotFileInfo> snapshotFileInfoList) {
         SyncDuoHttpResponse<String> response = this.snapshotsController.submitDownloadJob(snapshotFileInfoList);
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 4; i++) {
             ResponseEntity<Resource> resource =
                     this.snapshotsController.getDownloadFiles(response.getData(), false);
             if (resource.getStatusCode() == HttpStatus.OK) {
@@ -510,7 +510,7 @@ class SyncDuoServerApplicationTests {
         }
         SyncDuoHttpResponse<SyncFlowInfo> syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
         assert syncFlowResponse.getStatusCode() == 200;
-        // 至多重试一次, 直到syncflow status 是 SYNC
+        // 至多重试二次, 直到syncflow status 是 SYNC
         for (int i = 0; i < 2; i++) {
             waitAllFileHandle();
             this.syncFlowEntity = this.syncFlowService.getById(

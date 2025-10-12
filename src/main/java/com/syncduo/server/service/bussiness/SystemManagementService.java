@@ -17,7 +17,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 
 
 @Service
@@ -33,6 +37,9 @@ public class SystemManagementService {
     private final DebounceService.ModuleDebounceService moduleDebounceService;
 
     private final ResticFacadeService resticFacadeService;
+
+    // SyncFlowId:int, > 0 表示有 reader, < 0 表示有 writer. 支持跨线程释放
+    private final Map<Long, AtomicInteger> syncFLowLockMap = new ConcurrentHashMap<>(10);
 
     @Value("${syncduo.server.system.eventDebounceWindowSec}")
     private long DEBOUNCE_WINDOW;
@@ -54,101 +61,104 @@ public class SystemManagementService {
     public void copyFile(FilesystemEvent filesystemEvent) {
         String sourceFolderPath = filesystemEvent.getFolder().toAbsolutePath().toString();
         String fileName = filesystemEvent.getFile().getFileName().toString();
-        // 根据 filesystem event 的 folder 查询下游 syncflow entity, 过滤 PAUSE 的记录
+        // 根据 filesystem event 的 folder 查询下游 syncflow entity
         List<SyncFlowEntity> downstreamSyncFlowEntityList =
-                this.syncFlowService.getBySourceFolderPath(sourceFolderPath, true);
+                this.syncFlowService.getBySourceFolderPath(sourceFolderPath);
         if (CollectionUtils.isEmpty(downstreamSyncFlowEntityList)) {
             log.info("filesystem event {} handled. there is no syncflow related", filesystemEvent);
             return;
         }
         for (SyncFlowEntity syncFlowEntity : downstreamSyncFlowEntityList) {
+            if (SyncFlowStatusEnum.isTransitionProhibit(syncFlowEntity.getSyncStatus(), SyncFlowStatusEnum.RUNNING)) {
+                continue;
+            }
             // 手动 filter, 因为 rclone 设计 copyfile api 不支持 filter
             if (this.rcloneFacadeService.isFileFiltered(fileName, syncFlowEntity)) {
                 continue;
             }
-            // syncflow status 修改为 RUNNING
-            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RUNNING);
-            // 发起 copy file 的请求
-            log.info("SyncFlowEntity: {} handle FilesystemEvent:{}", syncFlowEntity, filesystemEvent);
-            this.rcloneFacadeService.copyFile(syncFlowEntity, filesystemEvent)
-                    // copy file 成功后, 获取 copy file 的详细数据
-                    .thenCompose(this.rcloneFacadeService::updateCopyJobStat)
-                    // 获取详细数据之后, 发起 debounce 的 checkSyncFlowStatus
-                    .thenRun(() -> this.moduleDebounceService.debounce(
-                            "SyncFlowId::%s".formatted(syncFlowEntity.getSyncFlowId()),
-                            () -> this.checkSyncFlowStatus(syncFlowEntity, 2),
-                            DEBOUNCE_WINDOW
-                    ))
-                    .exceptionally(ex -> {
-                        log.error("copy file error. SyncFlowEntity is {}, FilesystemEvent is {}",
-                                syncFlowEntity, filesystemEvent, ex);
-                        try {
-                            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.FAILED);
-                        } catch (Exception e) {
-                            log.error("copy file error. updateSyncFlowStatus failed.", e);
-                        }
-                        return null;
-                    });
+            this.copyFileAsync(syncFlowEntity, filesystemEvent);
         }
     }
 
     @Async("generalTaskScheduler")
-    public void checkSyncFlowStatus(SyncFlowEntity syncFlowEntity, int retryCheckCount) {
-        if (retryCheckCount <= 0) {
-            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.FAILED);
-            log.error("checkSyncFlowStatus failed. exceed max retry.");
+    protected void copyFileAsync(SyncFlowEntity syncFlowEntity, FilesystemEvent filesystemEvent) {
+        // 获取 syncflow entity 的锁
+        this.readLock(syncFlowEntity);
+        try {
+            // syncflow status 修改为 RUNNING
+            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RUNNING);
+        } catch (Exception ex){
+            log.error("copyFileAsync failed. updateSyncFlowStatus failed. syncFlow:{}", syncFlowEntity, ex);
+            this.readUnlock(syncFlowEntity);
             return;
         }
-        try {
-            // 设置为 RUNNING
-            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RUNNING);
-            // 检查
-            this.rcloneFacadeService.oneWayCheck(syncFlowEntity)
-                    .thenCompose(isSync -> {
-                        // 如果同步则更新状态为 SYNC, 然后退出
-                        if (isSync) {
-                            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
-                            return CompletableFuture.completedFuture(null);
-                        } else {
-                            return this.rcloneFacadeService.syncCopy(syncFlowEntity)
-                                    .thenCompose(this.rcloneFacadeService::updateCopyJobStat)
-                                    .thenRun(() -> this.checkSyncFlowStatus(
-                                            syncFlowEntity,
-                                            retryCheckCount - 1));
-                        }
-                    })
-                    .exceptionally(ex -> {
-                        this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.FAILED);
-                        log.error("checkSyncFlowStatus failed. SyncFlowEntity is {}", syncFlowEntity, ex);
-                        return null;
-                    });
-        } catch (Exception e) {
-            log.warn("checkSyncFlowStatus failed. SyncFlowEntity is {}", syncFlowEntity, e);
-        }
+        // 发起 copy file 的请求
+        log.info("SyncFlowEntity: {} handle FilesystemEvent:{}", syncFlowEntity, filesystemEvent);
+        this.rcloneFacadeService.copyFile(syncFlowEntity, filesystemEvent)
+                .thenCompose(copyJobEntity -> {
+                    this.readUnlock(syncFlowEntity);
+                    // copy file 成功后, 发起一个 delay 的 syncflow check, 用于削峰
+                    this.moduleDebounceService.debounce(
+                            "SyncFlowId::%s::checkStatus".formatted(syncFlowEntity.getSyncFlowId()),
+                            () -> this.checkSyncFlowStatusAsync(syncFlowEntity),
+                            DEBOUNCE_WINDOW
+                    );
+                    // copy file 成功后, 获取 copy file 的详细数据
+                    return this.rcloneFacadeService.updateCopyJobStat(copyJobEntity);
+                })
+                .exceptionally(ex -> {
+                    this.readUnlock(syncFlowEntity);
+                    // copy file 失败, 记录日志和数据库
+                    log.error("copy file failed. SyncFlowEntity is {}, FilesystemEvent is {}",
+                            syncFlowEntity, filesystemEvent, ex);
+                    this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.FAILED);
+                    return null;
+                });
     }
 
-    public void checkAllSyncFlowStatus() {
-        log.info("System start, check all syncflow status");
-        // 获取全部 syncflow
-        List<SyncFlowEntity> syncFlowEntityList = this.syncFlowService.getAllSyncFlow();
-        if (CollectionUtils.isEmpty(syncFlowEntityList)) {
+    @Async("generalTaskScheduler")
+    public void checkSyncFlowStatusAsync(SyncFlowEntity syncFlowEntity) {
+        // 获取 syncflow 的锁
+        this.writeLock(syncFlowEntity);
+        log.debug("required lock. syncflow:{}", syncFlowEntity);
+        try {
+            // 设置 SyncFlowStatus 为 RESCAN
+            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RESCAN);
+        } catch (Exception ex) {
+            log.error("checkSyncFlowStatus failed. updateSyncFlowStatus failed. syncFlow:{}", syncFlowEntity, ex);
+            // 释放锁
+            this.writeUnlock(syncFlowEntity);
             return;
         }
-        for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
-            // filter pause syncflow
-            if (SyncFlowStatusEnum.PAUSE.name().equals(syncFlowEntity.getSyncStatus())) {
-                continue;
-            }
-            try {
-                // source folder add watcher
-                this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
-            } catch (Exception e) {
-                log.error("systemStartUp has error, addWatcher failed. sync flow is {}", syncFlowEntity,
-                        new BusinessException("systemStartUp has error", e));
-            }
-            // check status
-            this.checkSyncFlowStatus(syncFlowEntity, 2);
-        }
+        // 检查
+        this.rcloneFacadeService.oneWayCheck(syncFlowEntity)
+                .thenCompose(isSync -> {
+                    if (isSync) {
+                        // 释放锁
+                        this.writeUnlock(syncFlowEntity);
+                        // 如果同步则更新状态为 SYNC, 然后退出
+                        this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
+                        return CompletableFuture.completedFuture(null);
+                    }
+                    // 不同步则执行 syncCopy
+                    return this.rcloneFacadeService.syncCopy(syncFlowEntity)
+                            .thenCompose(copyJobEntity -> {
+                                // 释放锁
+                                this.writeUnlock(syncFlowEntity);
+                                // sync copy 成功, 则认为两个文件夹同步
+                                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.SYNC);
+                                // 记录 sync copy 的数据
+                                return this.rcloneFacadeService.updateCopyJobStat(copyJobEntity);
+                            });
+                })
+                .exceptionally(ex -> {
+                    // 释放锁
+                    this.writeUnlock(syncFlowEntity);
+                    // sync copy 失败, 则认为两个文件夹没有同步
+                    this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.FAILED);
+                    log.error("checkSyncFlowStatus failed. syncFlow:{}", syncFlowEntity, ex);
+                    return null;
+                });
     }
 
     // initial delay 5 minutes, fixDelay 30 minutes. unit is millisecond
@@ -157,19 +167,26 @@ public class SystemManagementService {
             fixedDelayString = "${syncduo.server.system.checkSyncflowStatusIntervalMillis}",
             scheduler = "systemManagementTaskScheduler"
     )
-    protected void periodicalCheckSyncFlowStatus() {
-        log.info("Periodical Check SyncFlow Status");
+    public void rescanAllSyncFlow() {
+        log.info("Rescan All SyncFlow");
         // 获取全部 syncflow
         List<SyncFlowEntity> syncFlowEntityList = this.syncFlowService.getAllSyncFlow();
         if (CollectionUtils.isEmpty(syncFlowEntityList)) {
             return;
         }
         for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
-            // filter out only sync syncflow
-            if (!SyncFlowStatusEnum.SYNC.name().equals(syncFlowEntity.getSyncStatus())) {
+            // check status flow valid
+            if (SyncFlowStatusEnum.isTransitionProhibit(syncFlowEntity.getSyncStatus(), SyncFlowStatusEnum.RESCAN)) {
                 continue;
             }
-            this.checkSyncFlowStatus(syncFlowEntity, 2);
+            try {
+                // 建立 watcher, 并发起 scan
+                this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
+                this.checkSyncFlowStatusAsync(syncFlowEntity);
+            } catch (Exception e) {
+                log.error("rescanAllSyncFlow has error. initialScan failed. sync flow is {}", syncFlowEntity,
+                        new BusinessException("systemStartUp has error", e));
+            }
         }
     }
 
@@ -193,5 +210,43 @@ public class SystemManagementService {
                 log.error("periodicalBackup failed. syncFlowEntity is {}", syncFlowEntity, e);
             }
         }
+    }
+
+    private void readLock(SyncFlowEntity syncFlowEntity) {
+        while (true) {
+            AtomicInteger counter = this.getCounter(syncFlowEntity);
+            if (counter.get() >= 0) {
+                counter.incrementAndGet();
+                return;
+            } else {
+                LockSupport.parkNanos(15L * 1000000000); // 等待 15 秒后再获取
+            }
+        }
+    }
+
+    private void readUnlock(SyncFlowEntity syncFlowEntity) {
+        this.getCounter(syncFlowEntity).decrementAndGet();
+    }
+
+    private void writeLock(SyncFlowEntity syncFlowEntity) {
+        while (true) {
+            AtomicInteger counter = this.getCounter(syncFlowEntity);
+            if (counter.get() == 0) {
+                counter.set(-1);
+                return;
+            } else {
+                LockSupport.parkNanos(5L * 1000000000); // 等待 15 秒后再获取
+            }
+        }
+    }
+
+    private void writeUnlock(SyncFlowEntity syncFlowEntity) {
+        this.getCounter(syncFlowEntity).set(0);
+    }
+
+    private AtomicInteger getCounter(SyncFlowEntity syncFlowEntity) {
+        Long syncFlowId = syncFlowEntity.getSyncFlowId();
+        this.syncFLowLockMap.putIfAbsent(syncFlowId, new AtomicInteger(0));
+        return this.syncFLowLockMap.get(syncFlowId);
     }
 }

@@ -5,8 +5,6 @@ import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,32 +20,42 @@ public enum SyncFlowStatusEnum implements Status {
 
     PAUSE("PAUSE"),
 
+    RESCAN("RESCAN"),
+
     RESUME("RESUME"), // RESUME DOES NOT STORE IN DB, BUT CONVERT TO RESUME OPERATION
 
-    RESCAN("RESCAN"); // RESCAN DOES NOT STORE IN DB, BUT CONVERT TO RESCAN OPERATION
+    UNKNOWN("UNKNOWN"), // UNKNOWN DOES NOT STORE IN DB, BUT CONVERT TO BUSINESS LOGIC
+
+    ;
 
     private final String name;
 
     private static final Map<SyncFlowStatusEnum, Set<SyncFlowStatusEnum>> VALID_TRANSITIONS = Map.of(
-            RUNNING, Set.of(RUNNING, SYNC, PAUSE),
-            SYNC, Set.of(SYNC, RUNNING, PAUSE, RESCAN),
+            FAILED, Set.of(RESCAN),
+            RUNNING, Set.of(RUNNING, SYNC, PAUSE, FAILED),
+            SYNC, Set.of(SYNC, RUNNING, PAUSE, RESCAN, FAILED),
             PAUSE, Set.of(PAUSE, RESUME),
-            FAILED, Set.of(RESCAN)
+            RESCAN, Set.of(SYNC, FAILED, PAUSE)
     );
 
-    public static boolean TransitionProhibit(
-            SyncFlowStatusEnum from, SyncFlowStatusEnum to) {
-        if (ObjectUtils.anyNull(from, to)) {
+    public static boolean isTransitionProhibit(
+            String name, SyncFlowStatusEnum to) {
+        if (ObjectUtils.anyNull(name, to)) {
             return true;
         }
-        Set<SyncFlowStatusEnum> validNextStatus = VALID_TRANSITIONS.get(from);
+        Set<SyncFlowStatusEnum> validNextStatus = VALID_TRANSITIONS.get(fromName(name));
         if (CollectionUtils.isEmpty(validNextStatus)) {
             return true;
         }
         return !validNextStatus.contains(to);
     }
 
-    public static List<String> getNotPauseStatus() {
-        return Arrays.asList(RUNNING.name(), SYNC.name());
+    private static SyncFlowStatusEnum fromName(String name) {
+        for (SyncFlowStatusEnum value : values()) {
+            if (value.getName().equals(name)) {
+                return value;
+            }
+        }
+        return UNKNOWN;
     }
 }
