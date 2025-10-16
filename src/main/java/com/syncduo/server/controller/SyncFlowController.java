@@ -141,19 +141,17 @@ public class SyncFlowController {
     private void changeSyncFlowStatusInner(SyncFlowEntity syncFlowEntity, SyncFlowStatusEnum to)
     throws ValidationException, DbException {
         switch (to) {
-            // sync 和 running 忽略, 因为这两个状态不应从前端传回
-            case SYNC, RUNNING: {
-                break;
-            }
             case PAUSE: {
                 // 更新状态
                 this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.PAUSE);
                 break;
             }
             case RESCAN, RESUME: {
-                this.systemManagementService.checkSyncFlowStatusAsync(syncFlowEntity);
+                this.systemManagementService.checkSyncFlowStatusAsync(syncFlowEntity, false);
                 break;
             }
+            // 除了上述三个, 其他操作都不应该从前端传回
+            default: break;
         }
     }
 
@@ -166,7 +164,7 @@ public class SyncFlowController {
         // 添加 watcher
         this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
         // 开始扫描
-        this.systemManagementService.checkSyncFlowStatusAsync(syncFlowEntity);
+        this.systemManagementService.checkSyncFlowStatusAsync(syncFlowEntity, true);
         // 返回 syncflow info
         SyncFlowInfo result = new SyncFlowInfo(syncFlowEntity);
         return SyncDuoHttpResponse.success(result);
@@ -251,8 +249,12 @@ public class SyncFlowController {
         }
     }
 
+    // todo: 考虑转移到 systemManagementService
     private SyncFlowInfo getSyncFlowInfo(SyncFlowEntity syncFlowEntity)
             throws ValidationException, ResourceNotFoundException, FileOperationException {
+        if (syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.INITIAL_SCAN.name())) {
+            return new SyncFlowInfo(syncFlowEntity);
+        }
         // 本地获取 folderStat
         List<Long> folderInfo = FilesystemUtil.getFolderInfo(syncFlowEntity.getDestFolderPath());
         FolderStats folderStats = new FolderStats(folderInfo.get(0), folderInfo.get(1), folderInfo.get(2));

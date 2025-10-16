@@ -70,7 +70,10 @@ public class SystemManagementService {
             return;
         }
         for (SyncFlowEntity syncFlowEntity : downstreamSyncFlowEntityList) {
-            if (SyncFlowStatusEnum.isTransitionProhibit(syncFlowEntity.getSyncStatus(), SyncFlowStatusEnum.RUNNING)) {
+            // todo: 是否要做状态流转判断, 过滤的 COPY FILE 怎么补回? 什么情况会 invalid?
+            if (SyncFlowStatusEnum.isTransitionProhibit(
+                    syncFlowEntity.getSyncStatus(),
+                    SyncFlowStatusEnum.COPY_FILE)) {
                 continue;
             }
             // 手动 filter, 因为 rclone 设计 copyfile api 不支持 filter
@@ -87,7 +90,7 @@ public class SystemManagementService {
         this.readLock(syncFlowEntity);
         try {
             // syncflow status 修改为 RUNNING
-            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RUNNING);
+            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.COPY_FILE);
         } catch (Exception ex){
             log.error("copyFileAsync failed. updateSyncFlowStatus failed. syncFlow:{}", syncFlowEntity, ex);
             this.readUnlock(syncFlowEntity);
@@ -101,7 +104,7 @@ public class SystemManagementService {
                     // copy file 成功后, 发起一个 delay 的 syncflow check, 用于削峰
                     this.moduleDebounceService.debounce(
                             "SyncFlowId::%s::checkStatus".formatted(syncFlowEntity.getSyncFlowId()),
-                            () -> this.checkSyncFlowStatusAsync(syncFlowEntity),
+                            () -> this.checkSyncFlowStatusAsync(syncFlowEntity, false),
                             DEBOUNCE_WINDOW
                     );
                     // copy file 成功后, 获取 copy file 的详细数据
@@ -118,13 +121,17 @@ public class SystemManagementService {
     }
 
     @Async("generalTaskScheduler")
-    public void checkSyncFlowStatusAsync(SyncFlowEntity syncFlowEntity) {
+    public void checkSyncFlowStatusAsync(SyncFlowEntity syncFlowEntity, boolean isInitialScan) {
         // 获取 syncflow 的锁
         this.writeLock(syncFlowEntity);
         log.debug("required lock. syncflow:{}", syncFlowEntity);
         try {
-            // 设置 SyncFlowStatus 为 RESCAN
-            this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RESCAN);
+            // 设置 SyncFlowStatus 为 RESCAN or INITIAL_SCAN
+            if (isInitialScan) {
+                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.INITIAL_SCAN);
+            } else {
+                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RESCAN);
+            }
         } catch (Exception ex) {
             log.error("checkSyncFlowStatus failed. updateSyncFlowStatus failed. syncFlow:{}", syncFlowEntity, ex);
             // 释放锁
@@ -177,13 +184,16 @@ public class SystemManagementService {
         }
         for (SyncFlowEntity syncFlowEntity : syncFlowEntityList) {
             // check status flow valid
-            if (SyncFlowStatusEnum.isTransitionProhibit(syncFlowEntity.getSyncStatus(), SyncFlowStatusEnum.RESCAN)) {
+            if (SyncFlowStatusEnum.isTransitionProhibit(
+                    syncFlowEntity.getSyncStatus(),
+                    SyncFlowStatusEnum.RESCAN)
+            ) {
                 continue;
             }
             try {
                 // 建立 watcher, 并发起 scan
                 this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
-                this.checkSyncFlowStatusAsync(syncFlowEntity);
+                this.checkSyncFlowStatusAsync(syncFlowEntity, false);
             } catch (Exception e) {
                 log.error("rescanAllSyncFlow has error. initialScan failed. sync flow is {}", syncFlowEntity,
                         new BusinessException("systemStartUp has error", e));

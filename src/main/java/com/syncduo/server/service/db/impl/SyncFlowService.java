@@ -53,7 +53,7 @@ public class SyncFlowService
         syncFlowEntity.setSyncFlowName(syncFlowName);
         syncFlowEntity.setSourceFolderPath(sourceFolderPath);
         syncFlowEntity.setDestFolderPath(destFolderPath);
-        syncFlowEntity.setSyncStatus(SyncFlowStatusEnum.RESCAN.name());
+        syncFlowEntity.setSyncStatus(SyncFlowStatusEnum.INITIAL_SCAN.name());
         syncFlowEntity.setLastSyncTime(null);
         syncFlowEntity.setFilterCriteria(createSyncFlowRequest.getFilterCriteria());
         this.save(syncFlowEntity);

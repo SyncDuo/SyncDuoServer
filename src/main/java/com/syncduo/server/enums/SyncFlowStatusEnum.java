@@ -14,15 +14,17 @@ public enum SyncFlowStatusEnum implements Status {
 
     FAILED(CommonStatus.FAILED.getName()),
 
-    RUNNING(CommonStatus.RUNNING.getName()),
-
     SYNC("SYNC"),
 
     PAUSE("PAUSE"),
 
+    COPY_FILE("COPY_FILE"),
+
+    INITIAL_SCAN("INIT_SCAN"),
+
     RESCAN("RESCAN"),
 
-    RESUME("RESUME"), // RESUME DOES NOT STORE IN DB, BUT CONVERT TO RESUME OPERATION
+    RESUME("RESUME"), // RESUME DOES NOT STORE IN DB, BUT CONVERT TO BUSINESS LOGIC
 
     UNKNOWN("UNKNOWN"), // UNKNOWN DOES NOT STORE IN DB, BUT CONVERT TO BUSINESS LOGIC
 
@@ -31,11 +33,13 @@ public enum SyncFlowStatusEnum implements Status {
     private final String name;
 
     private static final Map<SyncFlowStatusEnum, Set<SyncFlowStatusEnum>> VALID_TRANSITIONS = Map.of(
-            FAILED, Set.of(RESCAN),
-            RUNNING, Set.of(RUNNING, SYNC, PAUSE, FAILED),
-            SYNC, Set.of(SYNC, RUNNING, PAUSE, RESCAN, FAILED),
+            FAILED, Set.of(FAILED, RESCAN),
+            SYNC, Set.of(SYNC, PAUSE, RESCAN, FAILED, COPY_FILE),
             PAUSE, Set.of(PAUSE, RESUME),
-            RESCAN, Set.of(SYNC, FAILED, PAUSE)
+            COPY_FILE, Set.of(COPY_FILE, SYNC, PAUSE, FAILED),
+            INITIAL_SCAN, Set.of(INITIAL_SCAN, SYNC, FAILED, PAUSE),
+            RESCAN, Set.of(RESCAN, SYNC, FAILED, PAUSE),
+            RESUME, Set.of(RESUME, RESCAN)
     );
 
     public static boolean isTransitionProhibit(
