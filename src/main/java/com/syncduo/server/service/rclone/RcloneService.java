@@ -1,5 +1,6 @@
 package com.syncduo.server.service.rclone;
 
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsRequest;
 import com.syncduo.server.model.rclone.core.stat.CoreStatsResponse;
@@ -78,7 +79,7 @@ public class RcloneService {
 
     // 获得全部Job聚合的stat
     protected RcloneResponse<CoreStatsResponse> getCoreStats() {
-        CoreStatsRequest coreStatsRequest = new CoreStatsRequest("");
+        CoreStatsRequest coreStatsRequest = new CoreStatsRequest();
         return this.post(
                 "/core/stats",
                 coreStatsRequest,
@@ -186,7 +187,8 @@ public class RcloneService {
             });
         } catch (Exception e) {
             // 处理其他异常
-            return RcloneResponse.error(e);
+            return RcloneResponse.error(
+                    new BusinessException("request is %s".formatted(requestBodySpec.toString()), e));
         }
     }
 }

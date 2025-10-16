@@ -1,9 +1,11 @@
 package com.syncduo.server.configuration;
 
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
@@ -14,6 +16,7 @@ import javax.net.ssl.X509TrustManager;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 
 @Configuration
 public class RestClientConfig {
@@ -27,6 +30,12 @@ public class RestClientConfig {
                 .defaultHeaders(headers -> {
                     headers.setBasicAuth(user, password);
                     headers.setContentType(MediaType.APPLICATION_JSON);
+                })
+                .requestFactory(new HttpComponentsClientHttpRequestFactory(){
+                    @Override
+                    public void setConnectTimeout(@NonNull Duration connectTimeout) {
+                        super.setConnectTimeout(Duration.ofSeconds(15L)); // 15 秒超时
+                    }
                 })
                 .build();
     }

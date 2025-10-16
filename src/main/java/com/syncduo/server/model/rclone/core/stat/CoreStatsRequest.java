@@ -6,15 +6,11 @@ import lombok.Data;
 public class CoreStatsRequest {
     private String group;
 
-    public void setGroup(long jobId) {
+    public CoreStatsRequest(long jobId) {
         this.group = "job/%s".formatted(jobId);
     }
 
-    public CoreStatsRequest(String group) {
-        this.group = group;
-    }
-
-    public CoreStatsRequest(long jobId) {
-        this.setGroup(jobId);
+    public CoreStatsRequest() {
+        this.group = "";
     }
 }
