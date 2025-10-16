@@ -70,13 +70,12 @@ public class SystemManagementService {
             return;
         }
         for (SyncFlowEntity syncFlowEntity : downstreamSyncFlowEntityList) {
-            // todo: 是否要做状态流转判断, 过滤的 COPY FILE 怎么补回?
             if (SyncFlowStatusEnum.isTransitionProhibit(
                     syncFlowEntity.getSyncStatus(),
                     SyncFlowStatusEnum.COPY_FILE)) {
+                // 不允许的 copy file 的状态(FAILED, PAUSE), 则继续保持原样, 等待下一次 rescan
                 continue;
             }
-            // 手动 filter, 因为 rclone 设计 copyfile api 不支持 filter
             if (this.rcloneFacadeService.isFileFiltered(fileName, syncFlowEntity)) {
                 continue;
             }

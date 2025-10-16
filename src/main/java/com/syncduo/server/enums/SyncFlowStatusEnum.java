@@ -36,9 +36,9 @@ public enum SyncFlowStatusEnum implements Status {
             FAILED, Set.of(FAILED, RESCAN),
             SYNC, Set.of(SYNC, PAUSE, RESCAN, FAILED, COPY_FILE),
             PAUSE, Set.of(PAUSE, RESUME),
-            COPY_FILE, Set.of(COPY_FILE, SYNC, PAUSE, FAILED),
-            INITIAL_SCAN, Set.of(INITIAL_SCAN, SYNC, FAILED, PAUSE),
-            RESCAN, Set.of(RESCAN, SYNC, FAILED, PAUSE),
+            COPY_FILE, Set.of(COPY_FILE, SYNC, PAUSE, FAILED, RESCAN, INITIAL_SCAN),
+            INITIAL_SCAN, Set.of(INITIAL_SCAN, SYNC, FAILED, COPY_FILE, PAUSE),
+            RESCAN, Set.of(RESCAN, SYNC, FAILED, COPY_FILE, PAUSE),
             RESUME, Set.of(RESUME, RESCAN)
     );
 
