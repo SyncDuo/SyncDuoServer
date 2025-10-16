@@ -60,6 +60,7 @@ public class FilesystemUtil {
         }
     }
 
+    // [0] = 文件数量, [1] = 文件夹数量, [2] = 总大小
     public static List<Long> getFolderInfo(String path)
             throws ValidationException, ResourceNotFoundException, FileOperationException {
         // 参数检查

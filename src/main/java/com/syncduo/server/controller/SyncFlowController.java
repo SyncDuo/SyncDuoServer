@@ -249,7 +249,6 @@ public class SyncFlowController {
         }
     }
 
-    // todo: 考虑转移到 systemManagementService
     private SyncFlowInfo getSyncFlowInfo(SyncFlowEntity syncFlowEntity)
             throws ValidationException, ResourceNotFoundException, FileOperationException {
         if (syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.INITIAL_SCAN.name())) {

@@ -70,7 +70,7 @@ public class SystemManagementService {
             return;
         }
         for (SyncFlowEntity syncFlowEntity : downstreamSyncFlowEntityList) {
-            // todo: 是否要做状态流转判断, 过滤的 COPY FILE 怎么补回? 什么情况会 invalid?
+            // todo: 是否要做状态流转判断, 过滤的 COPY FILE 怎么补回?
             if (SyncFlowStatusEnum.isTransitionProhibit(
                     syncFlowEntity.getSyncStatus(),
                     SyncFlowStatusEnum.COPY_FILE)) {
@@ -224,13 +224,19 @@ public class SystemManagementService {
     }
 
     private void readLock(SyncFlowEntity syncFlowEntity) {
+        int waitCount = 0;
         while (true) {
             AtomicInteger counter = this.getCounter(syncFlowEntity);
             if (counter.get() >= 0) {
                 counter.incrementAndGet();
                 return;
             } else {
+                // read lock 大于 15 分钟
+                if (waitCount >= 60) {
+                    log.warn("readLock acquire exceed 15 minutes");
+                }
                 LockSupport.parkNanos(15L * 1000000000); // 等待 15 秒后再获取
+                waitCount++;
             }
         }
     }
@@ -240,13 +246,19 @@ public class SystemManagementService {
     }
 
     private void writeLock(SyncFlowEntity syncFlowEntity) {
+        int waitCount = 0;
         while (true) {
             AtomicInteger counter = this.getCounter(syncFlowEntity);
             if (counter.get() == 0) {
                 counter.set(-1);
                 return;
             } else {
-                LockSupport.parkNanos(5L * 1000000000); // 等待 15 秒后再获取
+                // write lock 大于 15 分钟
+                if (waitCount >= 180) {
+                    log.warn("readLock acquire exceed 15 minutes");
+                }
+                LockSupport.parkNanos(5L * 1000000000); // 等待 5 秒后再获取
+                waitCount++;
             }
         }
     }
