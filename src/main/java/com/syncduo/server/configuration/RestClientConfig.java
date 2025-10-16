@@ -4,8 +4,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
@@ -30,7 +28,6 @@ public class RestClientConfig {
                     headers.setBasicAuth(user, password);
                     headers.setContentType(MediaType.APPLICATION_JSON);
                 })
-                .requestFactory(getClientHttpRequestFactory())
                 .build();
     }
 
@@ -91,12 +88,5 @@ public class RestClientConfig {
 
         // Set the default hostname verifier to allow all hostnames
         HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-    }
-
-    private ClientHttpRequestFactory getClientHttpRequestFactory() {
-        HttpComponentsClientHttpRequestFactory clientHttpRequestFactory = new HttpComponentsClientHttpRequestFactory();
-        clientHttpRequestFactory.setConnectTimeout(15); // 15 秒超时
-        clientHttpRequestFactory.setConnectionRequestTimeout(15); // 15 秒超时
-        return clientHttpRequestFactory;
     }
 }
