@@ -86,4 +86,4 @@ EXPOSE 10000
 EXPOSE 5572
 
 # 设置容器运行的入口点
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "/app/app.jar"]
