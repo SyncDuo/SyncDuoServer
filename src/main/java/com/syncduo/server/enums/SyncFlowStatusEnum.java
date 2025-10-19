@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.Set;
@@ -55,6 +56,14 @@ public enum SyncFlowStatusEnum implements Status {
             return true;
         }
         return !validNextStatus.contains(to);
+    }
+
+    public static boolean isBackupProhibit(String name) {
+        if (StringUtils.isBlank(name)) {
+            return true;
+        }
+        SyncFlowStatusEnum syncFlowStatusEnum = fromName(name);
+        return !(syncFlowStatusEnum == SYNC || syncFlowStatusEnum == BACKUP_ONLY_SYNC);
     }
 
     private static SyncFlowStatusEnum fromName(String name) {

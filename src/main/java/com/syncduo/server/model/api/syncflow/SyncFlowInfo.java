@@ -28,6 +28,15 @@ public class SyncFlowInfo {
 
     public SyncFlowInfo(SyncFlowEntity syncFlowEntity) {
         this.syncFlowId = syncFlowEntity.getSyncFlowId().toString();
+        this.syncFlowName = syncFlowEntity.getSyncFlowName();
+        this.sourceFolderPath = syncFlowEntity.getSourceFolderPath();
+        this.destFolderPath = syncFlowEntity.getDestFolderPath();
+        this.syncStatus = syncFlowEntity.getSyncStatus();
+        this.filterCriteria = syncFlowEntity.getFilterCriteria();
+        if (ObjectUtils.isNotEmpty(syncFlowEntity.getLastSyncTime())) {
+            this.lastSyncTimeStamp = syncFlowEntity.getLastSyncTime().toString();
+        }
+        this.syncFlowType = syncFlowEntity.getSyncFlowType();
     }
 
     public SyncFlowInfo(SyncFlowEntity syncFlowEntity, FolderStats folderStats) {

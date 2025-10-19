@@ -123,9 +123,8 @@ public class ResticFacadeService {
 
     @Async("generalTaskScheduler")
     public void backup(SyncFlowEntity syncFlowEntity) throws DbException, BusinessException {
-        // SYNC 状态的 syncflow, 才执行backup
-        SyncFlowStatusEnum syncFlowStatusEnum = SyncFlowStatusEnum.valueOf(syncFlowEntity.getSyncStatus());
-        if (!syncFlowStatusEnum.equals(SyncFlowStatusEnum.SYNC)) {
+        // 判断是否允许 backup
+        if (SyncFlowStatusEnum.isBackupProhibit(syncFlowEntity.getSyncStatus())) {
             return;
         }
         BackupJobEntity backupJobEntity = this.backupJobService.addBackupJob(syncFlowEntity.getSyncFlowId());
