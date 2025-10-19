@@ -125,11 +125,16 @@ public class SystemManagementService {
         this.writeLock(syncFlowEntity);
         log.debug("required lock. syncflow:{}", syncFlowEntity);
         try {
-            // 设置 SyncFlowStatus 为 RESCAN or INITIAL_SCAN
-            if (isInitialScan) {
-                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.INITIAL_SCAN);
+            // 设置 SyncFlowStatus 为 RESCAN or INITIAL_SCAN, 这是一个 fall back 的处理逻辑
+            String from = syncFlowEntity.getSyncStatus();
+            SyncFlowStatusEnum to = isInitialScan ? SyncFlowStatusEnum.INITIAL_SCAN : SyncFlowStatusEnum.RESCAN;
+            if (SyncFlowStatusEnum.isTransitionProhibit(from, to)) {
+                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, to);
             } else {
-                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.RESCAN);
+                this.writeUnlock(syncFlowEntity);
+                log.warn("checkSyncFlowStatusAsync failed. syncFlow:{} status {} to {} not allow",
+                        syncFlowEntity, from ,to);
+                return;
             }
         } catch (Exception ex) {
             log.error("checkSyncFlowStatus failed. updateSyncFlowStatus failed. syncFlow:{}", syncFlowEntity, ex);

@@ -24,6 +24,8 @@ public enum SyncFlowStatusEnum implements Status {
 
     RESCAN("RESCAN"),
 
+    BACKUP_ONLY_SYNC("BACKUP_ONLY_SYNC"), // 仅备份的 syncflow status 永远是 BACKUP_ONLY_SYNC
+
     RESUME("RESUME"), // RESUME DOES NOT STORE IN DB, BUT CONVERT TO BUSINESS LOGIC
 
     UNKNOWN("UNKNOWN"), // UNKNOWN DOES NOT STORE IN DB, BUT CONVERT TO BUSINESS LOGIC
@@ -33,11 +35,12 @@ public enum SyncFlowStatusEnum implements Status {
     private final String name;
 
     private static final Map<SyncFlowStatusEnum, Set<SyncFlowStatusEnum>> VALID_TRANSITIONS = Map.of(
-            FAILED, Set.of(FAILED, RESCAN),
+            FAILED, Set.of(FAILED, RESCAN, PAUSE),
             SYNC, Set.of(SYNC, PAUSE, RESCAN, FAILED, COPY_FILE),
             PAUSE, Set.of(PAUSE, RESUME),
             COPY_FILE, Set.of(COPY_FILE, SYNC, PAUSE, FAILED, RESCAN, INITIAL_SCAN),
             INITIAL_SCAN, Set.of(INITIAL_SCAN, SYNC, FAILED, COPY_FILE, PAUSE),
+            BACKUP_ONLY_SYNC, Set.of(BACKUP_ONLY_SYNC, PAUSE),
             RESCAN, Set.of(RESCAN, SYNC, FAILED, COPY_FILE, PAUSE),
             RESUME, Set.of(RESUME, RESCAN)
     );

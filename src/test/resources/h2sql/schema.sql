@@ -12,6 +12,7 @@ CREATE TABLE sync_flow (
                            sync_status varchar(255),
                            last_sync_time timestamp,
                            filter_criteria text,
+                           sync_flow_type varchar(255),
 -- select one of the defined columns as the Primary Key
                            CONSTRAINT sync_flow_pk PRIMARY KEY (sync_flow_id)
 );

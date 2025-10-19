@@ -1,6 +1,7 @@
 package com.syncduo.server.util;
 
 import com.syncduo.server.enums.SyncFlowStatusEnum;
+import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.exception.JsonException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
@@ -53,16 +54,51 @@ public class EntityValidationUtil {
                             createSyncFlowRequest.getSourceFolderFullPath(),
                             createSyncFlowRequest.getDestFolderFullPath()));
         }
+        // 检查 sync flow type
+        if (StringUtils.isBlank(createSyncFlowRequest.getSyncFlowType())) {
+            throw new ValidationException("isCreateSyncFlowRequestValid failed. " +
+                    "syncFlowType is null");
+        }
+        SyncFlowTypeEnum syncFlowTypeEnum =
+                SyncFlowTypeEnum.fromTypeString(createSyncFlowRequest.getSyncFlowType());
+        switch (syncFlowTypeEnum) {
+            case REACTIVE_SYNC -> isReactiveSyncFlowValid(createSyncFlowRequest);
+            case BACKUP_ONLY -> isBackupOnlySyncFlowValid(createSyncFlowRequest);
+            default -> throw new ValidationException("isCreateSyncFlowRequestValid failed. " +
+                    "syncFlowType:%s invalid.".formatted(syncFlowTypeEnum));
+        }
+    }
+
+    private static void isBackupOnlySyncFlowValid(CreateSyncFlowRequest createSyncFlowRequest)
+            throws ValidationException {
+        if (!createSyncFlowRequest.getSourceFolderFullPath().equals(
+                createSyncFlowRequest.getDestFolderFullPath()
+        )) {
+            throw new ValidationException("isBackupSyncFlowValid failed. " +
+                    "source and dest path not equal.");
+        }
+        createSyncFlowRequest.setFilterCriteria(JsonUtil.serializeListToString(new ArrayList<>()));
+    }
+
+    private static void isReactiveSyncFlowValid(CreateSyncFlowRequest createSyncFlowRequest)
+            throws ValidationException {
+        if (createSyncFlowRequest.getSourceFolderFullPath().equals(
+                createSyncFlowRequest.getDestFolderFullPath()
+        )) {
+            throw new ValidationException("isBackupSyncFlowValid failed. " +
+                    "source and dest path are equal.");
+        }
         // 检查过滤条件
         String filterCriteria = createSyncFlowRequest.getFilterCriteria();
         try {
             if (StringUtils.isBlank(filterCriteria)) {
+                // 设置默认值
                 createSyncFlowRequest.setFilterCriteria(JsonUtil.serializeListToString(new ArrayList<>()));
             } else {
                 JsonUtil.deserializeStringToList(filterCriteria);
             }
         } catch (JsonException e) {
-            throw new ValidationException("isCreateSyncFlowRequestValid failed. " +
+            throw new ValidationException("isReactiveSyncFlowValid failed. " +
                     "filterCriteria:%s can't deserialize to list<String>".formatted(filterCriteria));
         }
     }

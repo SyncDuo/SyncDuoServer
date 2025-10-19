@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
+import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.exception.DbException;
 import com.syncduo.server.exception.JsonException;
 import com.syncduo.server.exception.ValidationException;
@@ -30,9 +31,7 @@ public class SyncFlowService
         extends ServiceImpl<SyncFlowMapper, SyncFlowEntity>
         implements ISyncFlowService {
 
-    public SyncFlowEntity createSyncFlow(
-            CreateSyncFlowRequest createSyncFlowRequest)
-            throws DbException {
+    public SyncFlowEntity createSyncFlow(CreateSyncFlowRequest createSyncFlowRequest) throws DbException {
         // 检查是否重名
         String syncFlowName = createSyncFlowRequest.getSyncFlowName();
         SyncFlowEntity dbResult = this.getBySyncFlowName(syncFlowName);
@@ -53,9 +52,16 @@ public class SyncFlowService
         syncFlowEntity.setSyncFlowName(syncFlowName);
         syncFlowEntity.setSourceFolderPath(sourceFolderPath);
         syncFlowEntity.setDestFolderPath(destFolderPath);
-        syncFlowEntity.setSyncStatus(SyncFlowStatusEnum.INITIAL_SCAN.name());
-        syncFlowEntity.setLastSyncTime(null);
+        // 如果是 backup only, 则状态永远都是 SYNC
+        if (createSyncFlowRequest.getSyncFlowType().equals(SyncFlowTypeEnum.BACKUP_ONLY.getType())) {
+            syncFlowEntity.setSyncStatus(SyncFlowStatusEnum.BACKUP_ONLY_SYNC.name());
+            syncFlowEntity.setLastSyncTime(Timestamp.from(Instant.now()));
+        } else {
+            syncFlowEntity.setSyncStatus(SyncFlowStatusEnum.INITIAL_SCAN.name());
+            syncFlowEntity.setLastSyncTime(null);
+        }
         syncFlowEntity.setFilterCriteria(createSyncFlowRequest.getFilterCriteria());
+        syncFlowEntity.setSyncFlowType(createSyncFlowRequest.getSyncFlowType());
         this.save(syncFlowEntity);
         return syncFlowEntity;
     }

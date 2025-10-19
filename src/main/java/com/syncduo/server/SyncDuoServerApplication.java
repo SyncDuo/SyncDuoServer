@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableScheduling
 @EnableTransactionManagement
 @EnableAsync
+// todo: 2. 3-2-1 备份功能(3份数据, 一冷一热一异地)
 public class SyncDuoServerApplication {
 
     public static void main(String[] args) {

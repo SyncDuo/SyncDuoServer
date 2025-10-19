@@ -8,6 +8,7 @@ import com.syncduo.server.controller.SystemInfoController;
 import com.syncduo.server.enums.CommonStatus;
 import com.syncduo.server.enums.ResticNodeTypeEnum;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
+import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.model.api.filesystem.Folder;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
@@ -480,11 +481,18 @@ class SyncDuoServerApplicationTests {
 
     @Test
     void ShouldReturnTrueWhenCreateAndDeleteSyncFlow() {
+        // reactive syncflow
         createSyncFlow(null);
-
+        // 删除 syncflow
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
         deleteSyncFlowRequest.setSyncFlowId(this.syncFlowEntity.getSyncFlowId().toString());
         SyncDuoHttpResponse<Void> syncFlowResponse1 = this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
+        assert syncFlowResponse1.getStatusCode() == 200;
+        // backup only syncflow
+        createBackupOnlySyncFlow();
+        // 删除 syncflow
+        deleteSyncFlowRequest.setSyncFlowId(this.syncFlowEntity.getSyncFlowId().toString());
+        syncFlowResponse1 = this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
         assert syncFlowResponse1.getStatusCode() == 200;
     }
 
@@ -513,7 +521,8 @@ class SyncDuoServerApplicationTests {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
         createSyncFlowRequest.setDestFolderFullPath(contentFolderParentPath + "/random1");
-        createSyncFlowRequest.setSyncFlowName("test");
+        createSyncFlowRequest.setSyncFlowName("reactive_syncflow");
+        createSyncFlowRequest.setSyncFlowType(SyncFlowTypeEnum.REACTIVE_SYNC.getType());
         if (StringUtils.isNotBlank(filterCriteria)) {
             createSyncFlowRequest.setFilterCriteria(filterCriteria);
         }
@@ -530,6 +539,21 @@ class SyncDuoServerApplicationTests {
             }
         }
         assert this.syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.SYNC.name());
+    }
+
+    void createBackupOnlySyncFlow() {
+        CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
+        createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
+        createSyncFlowRequest.setDestFolderFullPath(sourceFolderPath);
+        createSyncFlowRequest.setSyncFlowName("backup_only_syncflow");
+        createSyncFlowRequest.setSyncFlowType(SyncFlowTypeEnum.BACKUP_ONLY.getType());
+        SyncDuoHttpResponse<SyncFlowInfo> syncFlowResponse = this.syncFlowController.addSyncFlow(createSyncFlowRequest);
+        assert syncFlowResponse.getStatusCode() == 200;
+        this.syncFlowEntity = this.syncFlowService.getById(
+                Long.valueOf(syncFlowResponse.getData().getSyncFlowId())
+        );
+        assert this.syncFlowEntity.getSyncStatus().equals(SyncFlowStatusEnum.BACKUP_ONLY_SYNC.name());
+        assert this.syncFlowEntity.getSyncFlowType().equals(SyncFlowTypeEnum.BACKUP_ONLY.getType());
     }
 
     void waitAllFileHandle() {

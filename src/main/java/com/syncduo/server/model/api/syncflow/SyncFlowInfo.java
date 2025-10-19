@@ -24,6 +24,8 @@ public class SyncFlowInfo {
 
     private FolderStats destFolderStats;
 
+    private String syncFlowType;
+
     public SyncFlowInfo(SyncFlowEntity syncFlowEntity) {
         this.syncFlowId = syncFlowEntity.getSyncFlowId().toString();
     }
@@ -39,6 +41,7 @@ public class SyncFlowInfo {
         }
         this.filterCriteria = syncFlowEntity.getFilterCriteria();
         this.destFolderStats = folderStats;
+        this.syncFlowType = syncFlowEntity.getSyncFlowType();
     }
 }
 

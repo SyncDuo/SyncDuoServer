@@ -12,4 +12,6 @@ public class CreateSyncFlowRequest {
     private String filterCriteria;
 
     private String syncFlowName;
+
+    private String syncFlowType;
 }

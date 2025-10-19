@@ -2,6 +2,7 @@ package com.syncduo.server.controller;
 
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
+import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.exception.*;
 import com.syncduo.server.model.api.global.FolderStats;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
@@ -161,10 +162,14 @@ public class SyncFlowController {
         this.isCreateSyncFlowRequestValid(createSyncFlowRequest);
         // 创建 syncflow
         SyncFlowEntity syncFlowEntity = this.syncFlowService.createSyncFlow(createSyncFlowRequest);
-        // 添加 watcher
-        this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
-        // 开始扫描
-        this.systemManagementService.checkSyncFlowStatusAsync(syncFlowEntity, true);
+        SyncFlowTypeEnum syncFlowTypeEnum =
+                SyncFlowTypeEnum.fromTypeString(createSyncFlowRequest.getSyncFlowType());
+        if (syncFlowTypeEnum == SyncFlowTypeEnum.REACTIVE_SYNC) {
+            // 添加 watcher
+            this.folderWatcher.addWatcher(syncFlowEntity.getSourceFolderPath());
+            // 开始扫描
+            this.systemManagementService.checkSyncFlowStatusAsync(syncFlowEntity, true);
+        }
         // 返回 syncflow info
         SyncFlowInfo result = new SyncFlowInfo(syncFlowEntity);
         return SyncDuoHttpResponse.success(result);
@@ -180,11 +185,12 @@ public class SyncFlowController {
         if (ObjectUtils.isEmpty(dbResult)) {
             return SyncDuoHttpResponse.success(null, "删除 syncFlow 成功. syncflow 不存在");
         }
+        if (SyncFlowStatusEnum.isTransitionProhibit(dbResult.getSyncStatus(), SyncFlowStatusEnum.PAUSE)) {
+            throw new BusinessException("deleteSyncFlow failed. " +
+                    "syncflow status %s to PAUSE not allow".formatted(dbResult.getSyncStatus()));
+        }
         // pause
-        this.syncFlowService.updateSyncFlowStatus(
-                dbResult,
-                SyncFlowStatusEnum.PAUSE
-        );
+        this.syncFlowService.updateSyncFlowStatus(dbResult, SyncFlowStatusEnum.PAUSE);
         // delay and delete
         this.moduleDebounceService.schedule(
                 () -> {
