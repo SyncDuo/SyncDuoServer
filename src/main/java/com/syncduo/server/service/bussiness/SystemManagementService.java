@@ -129,12 +129,12 @@ public class SystemManagementService {
             String from = syncFlowEntity.getSyncStatus();
             SyncFlowStatusEnum to = isInitialScan ? SyncFlowStatusEnum.INITIAL_SCAN : SyncFlowStatusEnum.RESCAN;
             if (SyncFlowStatusEnum.isTransitionProhibit(from, to)) {
-                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, to);
-            } else {
                 this.writeUnlock(syncFlowEntity);
                 log.warn("checkSyncFlowStatusAsync failed. syncFlow:{} status {} to {} not allow",
                         syncFlowEntity, from ,to);
                 return;
+            } else {
+                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, to);
             }
         } catch (Exception ex) {
             log.error("checkSyncFlowStatus failed. updateSyncFlowStatus failed. syncFlow:{}", syncFlowEntity, ex);
