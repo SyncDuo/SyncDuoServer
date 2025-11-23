@@ -87,9 +87,6 @@ class SyncDuoServerApplicationTests {
 
     private SyncFlowEntity syncFlowEntity;
 
-    @Value("${syncduo.server.system.syncflowDelayDeleteSec}")
-    private long delayDeleteSec;
-
     @Value("${syncduo.server.test.sourceFolder}")
     private String sourceFolderPath;
 
@@ -411,7 +408,7 @@ class SyncDuoServerApplicationTests {
         DeleteSyncFlowRequest deleteSyncFlowRequest = new DeleteSyncFlowRequest();
         deleteSyncFlowRequest.setSyncFlowId(syncFlowEntity.getSyncFlowId().toString());
         this.syncFlowController.deleteSyncFlow(deleteSyncFlowRequest);
-        waitSec(delayDeleteSec * 2);
+        waitSec(5 * 2);
         assert ObjectUtils.isEmpty(this.syncFlowService.getBySyncFlowId(syncFlowEntity.getSyncFlowId()));
         // 源文件夹创建文件
         FileOperationTestUtil.createTxtAndBinFile(Path.of(sourceFolderPath));

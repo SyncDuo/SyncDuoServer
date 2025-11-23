@@ -2,6 +2,7 @@ package com.syncduo.server.service.bussiness;
 
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.enums.SyncFlowStatusEnum;
+import com.syncduo.server.enums.SyncFlowTypeEnum;
 import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.model.entity.SyncFlowEntity;
 import com.syncduo.server.model.internal.FilesystemEvent;
@@ -56,6 +57,25 @@ public class SystemManagementService {
         this.rcloneFacadeService = rcloneFacadeService;
         this.moduleDebounceService = debounceService.forModule("SystemManagementService");
         this.resticFacadeService = resticFacadeService;
+    }
+
+    @Async("generalTaskScheduler")
+    public void deleteSyncFlow(SyncFlowEntity syncFlowEntity) {
+        // 如果是 Reactive Sync, 则获取锁
+        SyncFlowTypeEnum syncFlowTypeEnum = SyncFlowTypeEnum.fromTypeString(syncFlowEntity.getSyncFlowType());
+        if (syncFlowTypeEnum == SyncFlowTypeEnum.REACTIVE_SYNC) {
+            this.writeLock(syncFlowEntity);
+        }
+        try {
+            // 删除 syncflow
+            this.syncFlowService.deleteSyncFlow(syncFlowEntity);
+        } catch (Exception ex) {
+            log.error("deleteSyncFlow failed. syncFlow:{}", syncFlowEntity, ex);
+        } finally {
+            if (syncFlowTypeEnum == SyncFlowTypeEnum.REACTIVE_SYNC) {
+                this.writeUnlock(syncFlowEntity);
+            }
+        }
     }
 
     public void copyFile(FilesystemEvent filesystemEvent) {

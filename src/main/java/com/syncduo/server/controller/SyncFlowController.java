@@ -8,7 +8,6 @@ import com.syncduo.server.model.api.global.FolderStats;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.entity.SyncFlowEntity;
-import com.syncduo.server.service.bussiness.DebounceService;
 import com.syncduo.server.service.bussiness.SystemManagementService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
@@ -20,7 +19,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -33,8 +31,6 @@ import java.util.List;
 @CrossOrigin(originPatterns = "*")
 public class SyncFlowController {
 
-    private final DebounceService.ModuleDebounceService moduleDebounceService;
-
     private final SyncFlowService syncFlowService;
 
     private final FolderWatcher folderWatcher;
@@ -45,18 +41,13 @@ public class SyncFlowController {
 
     private final RslSyncFacadeService rslSyncFacadeService;
 
-    @Value("${syncduo.server.system.syncflowDelayDeleteSec}")
-    private long delayDeleteSec;
-
     @Autowired
     public SyncFlowController(
-            DebounceService debounceService,
             SyncFlowService syncFlowService,
             FolderWatcher folderWatcher,
             RcloneFacadeService rcloneFacadeService,
             SystemManagementService systemManagementService,
             RslSyncFacadeService rslSyncFacadeService) {
-        this.moduleDebounceService = debounceService.forModule(SyncFlowController.class.getSimpleName());
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
@@ -144,10 +135,11 @@ public class SyncFlowController {
         switch (to) {
             case PAUSE: {
                 // 更新状态
-                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, SyncFlowStatusEnum.PAUSE);
+                this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, to);
                 break;
             }
             case RESCAN, RESUME: {
+                syncFlowEntity = this.syncFlowService.updateSyncFlowStatus(syncFlowEntity, to);
                 this.systemManagementService.checkSyncFlowStatusAsync(syncFlowEntity, false);
                 break;
             }
@@ -185,24 +177,7 @@ public class SyncFlowController {
         if (ObjectUtils.isEmpty(dbResult)) {
             return SyncDuoHttpResponse.success(null, "删除 syncFlow 成功. syncflow 不存在");
         }
-        if (SyncFlowStatusEnum.isTransitionProhibit(dbResult.getSyncStatus(), SyncFlowStatusEnum.PAUSE)) {
-            throw new BusinessException("deleteSyncFlow failed. " +
-                    "syncflow status %s to PAUSE not allow".formatted(dbResult.getSyncStatus()));
-        }
-        // pause
-        this.syncFlowService.updateSyncFlowStatus(dbResult, SyncFlowStatusEnum.PAUSE);
-        // delay and delete
-        this.moduleDebounceService.schedule(
-                () -> {
-                    try {
-                        this.syncFlowService.deleteSyncFlow(dbResult);
-                    } catch (Exception e) {
-                        log.error("deleteSyncFlow failed.",
-                                new BusinessException("deleteSyncFlow failed", e));
-                    }
-                },
-                delayDeleteSec
-        );
+        this.systemManagementService.deleteSyncFlow(dbResult);
         return SyncDuoHttpResponse.success();
     }
 

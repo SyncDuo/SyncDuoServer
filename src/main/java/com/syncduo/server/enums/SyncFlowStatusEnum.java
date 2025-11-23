@@ -21,13 +21,13 @@ public enum SyncFlowStatusEnum implements Status {
 
     COPY_FILE("COPY_FILE"),
 
-    INITIAL_SCAN("INIT_SCAN"),
+    INITIAL_SCAN("INITIAL_SCAN"),
 
     RESCAN("RESCAN"),
 
-    BACKUP_ONLY_SYNC("BACKUP_ONLY_SYNC"), // 仅备份的 syncflow status 永远是 BACKUP_ONLY_SYNC
+    RESUME("RESUME"),
 
-    RESUME("RESUME"), // RESUME DOES NOT STORE IN DB, BUT CONVERT TO BUSINESS LOGIC
+    BACKUP_ONLY_SYNC("BACKUP_ONLY_SYNC"), // 仅备份的 syncflow status 永远是 BACKUP_ONLY_SYNC
 
     UNKNOWN("UNKNOWN"), // UNKNOWN DOES NOT STORE IN DB, BUT CONVERT TO BUSINESS LOGIC
 
@@ -39,11 +39,11 @@ public enum SyncFlowStatusEnum implements Status {
             FAILED, Set.of(FAILED, RESCAN, PAUSE),
             SYNC, Set.of(SYNC, PAUSE, RESCAN, FAILED, COPY_FILE),
             PAUSE, Set.of(PAUSE, RESUME),
+            RESUME, Set.of(RESUME, RESCAN),
             COPY_FILE, Set.of(COPY_FILE, SYNC, PAUSE, FAILED, RESCAN, INITIAL_SCAN),
             INITIAL_SCAN, Set.of(INITIAL_SCAN, SYNC, FAILED, COPY_FILE, PAUSE),
             BACKUP_ONLY_SYNC, Set.of(BACKUP_ONLY_SYNC, PAUSE),
-            RESCAN, Set.of(RESCAN, SYNC, FAILED, COPY_FILE, PAUSE),
-            RESUME, Set.of(RESUME, RESCAN)
+            RESCAN, Set.of(RESCAN, SYNC, FAILED, COPY_FILE, PAUSE)
     );
 
     public static boolean isTransitionProhibit(

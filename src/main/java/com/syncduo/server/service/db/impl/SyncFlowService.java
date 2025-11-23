@@ -93,25 +93,16 @@ public class SyncFlowService
         return CollectionUtils.isEmpty(dbResult) ? Collections.emptyList() : dbResult;
     }
 
-    public void updateSyncFlowStatus(
+    public SyncFlowEntity updateSyncFlowStatus(
             SyncFlowEntity syncFlowEntity,
             SyncFlowStatusEnum syncFlowStatusEnum)
             throws ValidationException, DbException {
         if (ObjectUtils.anyNull(syncFlowEntity, syncFlowStatusEnum)) {
             throw new ValidationException("syncFlowEntity 或 syncFlowStatusEnum 为空");
         }
-        this.updateSyncFlowStatus(syncFlowEntity.getSyncFlowId(), syncFlowStatusEnum);
-    }
-
-    public void updateSyncFlowStatus(
-            Long syncFlowId,
-            SyncFlowStatusEnum syncFlowStatusEnum) throws ValidationException, DbException {
-        if (ObjectUtils.anyNull(syncFlowId, syncFlowStatusEnum)) {
-            throw new ValidationException("syncFlowId 或 syncFlowStatusEnum 为空");
-        }
-        SyncFlowEntity dbResult = this.getBySyncFlowId(syncFlowId);
+        SyncFlowEntity dbResult = this.getBySyncFlowId(syncFlowEntity.getSyncFlowId());
         if (ObjectUtils.isEmpty(dbResult)) {
-            return;
+            return null;
         }
         dbResult.setSyncStatus(syncFlowStatusEnum.name());
         if (syncFlowStatusEnum == SyncFlowStatusEnum.SYNC) {
@@ -121,6 +112,7 @@ public class SyncFlowService
         if (!updated) {
             throw new DbException("更新失败. dbResult 为 %s".formatted(dbResult));
         }
+        return dbResult;
     }
 
     public SyncFlowEntity getBySourceAndDestFolderPath(
