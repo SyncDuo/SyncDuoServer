@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -204,7 +205,7 @@ public class SyncFlowController {
     public SyncDuoHttpResponse<List<SyncFlowInfo>> getAllSyncFlowInfo() {
         List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
         if (ObjectUtils.isEmpty(allSyncFlow)) {
-            return SyncDuoHttpResponse.success(null, "no sync flow found");
+            return SyncDuoHttpResponse.success(Collections.emptyList(), "no sync flow found");
         }
         List<SyncFlowInfo> result = new ArrayList<>(allSyncFlow.size());
         for (SyncFlowEntity syncFlowEntity : allSyncFlow) {

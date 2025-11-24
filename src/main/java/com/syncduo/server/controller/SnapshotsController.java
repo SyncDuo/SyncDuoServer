@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -128,7 +129,7 @@ public class SnapshotsController {
         // 获取全部 syncflow
         List<SyncFlowEntity> allSyncFlow = this.syncFlowService.getAllSyncFlow();
         if (CollectionUtils.isEmpty(allSyncFlow)) {
-            return SyncDuoHttpResponse.success(null, "no snapshots");
+            return SyncDuoHttpResponse.success(Collections.emptyList(), "no snapshots");
         }
         // 每个 syncflow 获取所有 snapshots
         List<SyncFlowWithSnapshots> result = new ArrayList<>();
