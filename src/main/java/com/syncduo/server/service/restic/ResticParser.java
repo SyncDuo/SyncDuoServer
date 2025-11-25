@@ -87,8 +87,8 @@ public class ResticParser {
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         PumpStreamHandler streamHandler = new PumpStreamHandler(stdout, stderr);
         executor.setStreamHandler(streamHandler);
-        // 3. 设置超时
-        ExecuteWatchdog watchdog = ExecuteWatchdog.builder().setTimeout(Duration.ofSeconds(60)).get();
+        // 3. 设置超时. 计算公式 = 50G 文件备份 / 30MB/s 机械硬盘速度 / 60 ~= 30 分钟
+        ExecuteWatchdog watchdog = ExecuteWatchdog.builder().setTimeout(Duration.ofMinutes(30L)).get();
         executor.setWatchdog(watchdog);
         // 4. 非阻塞执行
         Map<String, String> env = getEnv(resticPassword, resticRepository, extraEnvMap);
