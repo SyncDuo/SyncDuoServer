@@ -19,8 +19,6 @@ public class SystemSettings {
 
     private Restic restic;
 
-    private Rslsync rslsync;
-
     @Data
     public static class System {
         @JsonSerialize(using = ToStringSerializer.class)
@@ -48,12 +46,5 @@ public class SystemSettings {
 
         @JsonSerialize(using = ToStringSerializer.class)
         private Long restoreAgeSec;
-    }
-
-    @Data
-    public static class Rslsync {
-        private String httpBaseUrl;
-
-        private String folderHostPath;
     }
 }

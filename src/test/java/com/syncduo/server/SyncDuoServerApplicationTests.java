@@ -28,7 +28,6 @@ import com.syncduo.server.service.db.impl.RestoreJobService;
 import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
-import com.syncduo.server.service.rslsync.RslSyncFacadeService;
 import com.syncduo.server.util.FilesystemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -83,8 +82,6 @@ class SyncDuoServerApplicationTests {
 
     private final FileSystemAccessController fileSystemAccessController;
 
-    private final RslSyncFacadeService rslSyncFacadeService;
-
     private SyncFlowEntity syncFlowEntity;
 
     @Value("${syncduo.server.test.sourceFolder}")
@@ -117,8 +114,7 @@ class SyncDuoServerApplicationTests {
             RestoreJobService restoreJobService,
             SnapshotsController snapshotsController,
             SystemInfoController systemInfoController,
-            FileSystemAccessController fileSystemAccessController,
-            RslSyncFacadeService rslSyncFacadeService) {
+            FileSystemAccessController fileSystemAccessController) {
         this.syncFlowController = syncFlowController;
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
@@ -130,16 +126,6 @@ class SyncDuoServerApplicationTests {
         this.snapshotsController = snapshotsController;
         this.systemInfoController = systemInfoController;
         this.fileSystemAccessController = fileSystemAccessController;
-        this.rslSyncFacadeService = rslSyncFacadeService;
-    }
-
-    @Test
-    void ShouldReturnTrueWhenGettingPendingSourceFolder() {
-        List<String> pendingSourceFolderPathList = this.rslSyncFacadeService.getPendingSourceFolder();
-        assert CollectionUtils.isNotEmpty(pendingSourceFolderPathList);
-        for (String sourceFolderPath : pendingSourceFolderPathList) {
-            FilesystemUtil.isFolderPathValid(sourceFolderPath);
-        }
     }
 
     @Test
