@@ -58,7 +58,7 @@ public class ResticExecResult<SR, FR> {
         return result;
     }
 
-    public BusinessException getBusinessException() {
+    public BusinessException msg() {
         if (this.success) return null;
         if (ObjectUtils.isNotEmpty(error)) {
             return new BusinessException("restic command failed. " +

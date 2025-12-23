@@ -1,15 +1,16 @@
 package com.syncduo.server;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.controller.FileSystemAccessController;
 import com.syncduo.server.controller.SnapshotsController;
 import com.syncduo.server.controller.SyncFlowController;
 import com.syncduo.server.controller.SystemInfoController;
-import com.syncduo.server.enums.CommonStatus;
-import com.syncduo.server.enums.ResticNodeTypeEnum;
-import com.syncduo.server.enums.SyncFlowStatusEnum;
-import com.syncduo.server.enums.SyncFlowTypeEnum;
+import com.syncduo.server.enums.*;
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.model.api.filesystem.Folder;
 import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
 import com.syncduo.server.model.api.snapshots.SnapshotFileInfo;
@@ -19,9 +20,9 @@ import com.syncduo.server.model.api.syncflow.*;
 import com.syncduo.server.model.api.systeminfo.SystemInfo;
 import com.syncduo.server.model.api.systeminfo.SystemSettings;
 import com.syncduo.server.model.entity.BackupJobEntity;
-import com.syncduo.server.model.entity.CopyJobEntity;
 import com.syncduo.server.model.entity.RestoreJobEntity;
 import com.syncduo.server.model.entity.SyncFlowEntity;
+import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.service.db.impl.BackupJobService;
 import com.syncduo.server.service.db.impl.CopyJobService;
 import com.syncduo.server.service.db.impl.RestoreJobService;
@@ -29,6 +30,23 @@ import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.rclone.RcloneFacadeService;
 import com.syncduo.server.service.restic.ResticFacadeService;
 import com.syncduo.server.util.FilesystemUtil;
+import com.syncduo.server.util.JsonUtil;
+import com.syncduo.server.workflow.controller.FlowEditorController;
+import com.syncduo.server.workflow.controller.FlowInfoController;
+import com.syncduo.server.workflow.core.engine.FlowEngine;
+import com.syncduo.server.workflow.core.enums.ParamSourceType;
+import com.syncduo.server.workflow.core.model.definition.FlowDefinition;
+import com.syncduo.server.workflow.core.model.definition.FlowNode;
+import com.syncduo.server.workflow.core.model.definition.ParamValue;
+import com.syncduo.server.workflow.mapper.FlowDefinitionMapper;
+import com.syncduo.server.workflow.mapper.FlowExecutionMapper;
+import com.syncduo.server.workflow.mapper.NodeExecutionMapper;
+import com.syncduo.server.workflow.model.api.editor.CreateFlowRequest;
+import com.syncduo.server.workflow.model.api.editor.FieldSchemaDTO;
+import com.syncduo.server.workflow.model.api.global.FlowResponse;
+import com.syncduo.server.workflow.model.api.info.FlowInfoDTO;
+import com.syncduo.server.workflow.model.db.FlowDefinitionEntity;
+import com.syncduo.server.workflow.node.registry.FieldRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -48,10 +66,12 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @SpringBootTest
@@ -61,6 +81,10 @@ import java.util.stream.Collectors;
 class SyncDuoServerApplicationTests {
 
     private final SyncFlowController syncFlowController;
+
+    private final FlowEditorController flowEditorController;
+
+    private final FlowInfoController flowInfoController;
 
     private final SyncFlowService syncFlowService;
 
@@ -82,7 +106,19 @@ class SyncDuoServerApplicationTests {
 
     private final FileSystemAccessController fileSystemAccessController;
 
+    private final FlowExecutionMapper flowExecutionMapper;
+
+    private final NodeExecutionMapper nodeExecutionMapper;
+
+    private final FlowDefinitionMapper flowDefinitionMapper;
+
     private SyncFlowEntity syncFlowEntity;
+
+    private List<FlowNode> nodeList;
+
+    private List<FieldSchemaDTO> fieldSchemaDTOList;
+
+    private final FlowEngine flowEngine;
 
     @Value("${syncduo.server.test.sourceFolder}")
     private String sourceFolderPath;
@@ -103,8 +139,10 @@ class SyncDuoServerApplicationTests {
     private static final int DELAY_UNIT = 18;
 
     @Autowired
-    SyncDuoServerApplicationTests(
+    public SyncDuoServerApplicationTests(
             SyncFlowController syncFlowController,
+            FlowEditorController flowEditorController,
+            FlowInfoController flowInfoController,
             SyncFlowService syncFlowService,
             FolderWatcher folderWatcher,
             RcloneFacadeService rcloneFacadeService,
@@ -114,8 +152,14 @@ class SyncDuoServerApplicationTests {
             RestoreJobService restoreJobService,
             SnapshotsController snapshotsController,
             SystemInfoController systemInfoController,
-            FileSystemAccessController fileSystemAccessController) {
+            FileSystemAccessController fileSystemAccessController,
+            FlowExecutionMapper flowExecutionMapper,
+            NodeExecutionMapper nodeExecutionMapper,
+            FlowDefinitionMapper flowDefinitionMapper,
+            FlowEngine flowEngine) {
         this.syncFlowController = syncFlowController;
+        this.flowEditorController = flowEditorController;
+        this.flowInfoController = flowInfoController;
         this.syncFlowService = syncFlowService;
         this.folderWatcher = folderWatcher;
         this.rcloneFacadeService = rcloneFacadeService;
@@ -126,6 +170,175 @@ class SyncDuoServerApplicationTests {
         this.snapshotsController = snapshotsController;
         this.systemInfoController = systemInfoController;
         this.fileSystemAccessController = fileSystemAccessController;
+        this.flowExecutionMapper = flowExecutionMapper;
+        this.nodeExecutionMapper = nodeExecutionMapper;
+        this.flowDefinitionMapper = flowDefinitionMapper;
+        this.flowEngine = flowEngine;
+    }
+
+    @Test
+    void CreateDataInDB() {
+        for (int i = 0; i < 4; i++) {
+            FlowResponse<FlowDefinitionEntity> response = this.flowEditorController.createFlow(new CreateFlowRequest(
+                    "tmp" + i,
+                    "0 0 18 * * MON-FRI",
+                    "tmp" + i,
+                    this.nodeList,
+                    this.fieldSchemaDTOList
+            ));
+            FlowDefinition definition = response.getData().getDefinition();
+            Future<?> task = this.flowEngine.execute(response.getData().getFlowDefinitionId(), definition);
+            while (!task.isDone()) {
+                waitSec(5);
+            }
+        }
+    }
+
+    @Test
+    void ShouldReturnTrueWhenGetFlowInfo() {
+        FlowResponse<FlowDefinitionEntity> response = this.flowEditorController.createFlow(new CreateFlowRequest(
+                "tmp",
+                "0 0 18 * * MON-FRI",
+                "tmp",
+                this.nodeList,
+                this.fieldSchemaDTOList
+        ));
+        assertEquals(response.getStatusCode(), 200);
+        FlowResponse<List<FlowInfoDTO>> response1 = this.flowInfoController.getAllFlowInfo();
+        assertEquals(response1.getStatusCode(), 200);
+        List<FlowInfoDTO> flowInfoDTOList = response1.getData();
+        assertEquals(flowInfoDTOList.size(), 1);
+        FlowInfoDTO flowInfoDTO = flowInfoDTOList.get(0);
+        FlowDefinitionEntity entity = response.getData();
+        assertEquals(flowInfoDTO.getFlowDefinitionId(), entity.getFlowDefinitionId());
+        assertEquals(flowInfoDTO.getFlowName(), entity.getName());
+        assertEquals(flowInfoDTO.getCronConfig(), entity.getCronConfig());
+    }
+
+    @Test
+    void ShouldReturnTrueWhenCronInvalid() {
+        assertThrows(ValidationException.class, () -> this.flowEditorController.createFlow(new CreateFlowRequest(
+                "tmp",
+                "0 0 18 * *",
+                "tmp",
+                this.nodeList,
+                this.fieldSchemaDTOList
+        )));
+    }
+
+    @Test
+    void ShouldReturnTrueWhenFlowNameDuplicate() {
+        FlowResponse<FlowDefinitionEntity> response = this.flowEditorController.createFlow(new CreateFlowRequest(
+                "tmp",
+                "0 0 18 * * MON-FRI",
+                "tmp",
+                this.nodeList,
+                this.fieldSchemaDTOList
+        ));
+        assertEquals(response.getStatusCode(), 200);
+        assertThrows(BusinessException.class, () -> this.flowEditorController.createFlow(new CreateFlowRequest(
+                "tmp",
+                "0 0 18 * * MON-FRI",
+                "tmp",
+                this.nodeList,
+                this.fieldSchemaDTOList
+        )));
+    }
+
+
+    @Test
+    void ShouldReturnTrueWhenNodeDuplicateId() {
+        FlowResponse<Void> response = this.flowEditorController.validNodes(this.nodeList);
+        assertEquals(response.getStatusCode(), 200);
+        this.nodeList.get(0).setNodeId(this.nodeList.get(1).getNodeId());
+        assertThrows(ValidationException.class, () -> this.flowEditorController.validNodes(nodeList));
+    }
+
+    @Test
+    void ShouldReturnTrueWhenNodeCyclic() {
+        FlowResponse<Void> response = this.flowEditorController.validNodes(this.nodeList);
+        assertEquals(response.getStatusCode(), 200);
+        this.nodeList.get(1).setNextNodeIds(List.of("1"));
+        assertThrows(ValidationException.class, () -> this.flowEditorController.validNodes(nodeList));
+    }
+
+    @Test
+    void ShouldReturnTrueWhenNodeNotImpl() {
+        FlowResponse<Void> response = this.flowEditorController.validNodes(this.nodeList);
+        assertEquals(response.getStatusCode(), 200);
+        this.nodeList.get(0).setName("aaa");
+        assertThrows(ValidationException.class, () -> this.flowEditorController.validNodes(nodeList));
+    }
+
+    @Test
+    void ShouldReturnTrueWhenGetParam() throws JsonProcessingException {
+        FlowResponse<List<FieldSchemaDTO>> response = this.flowEditorController.getFieldSchema(this.nodeList);
+        assertEquals(response.getStatusCode(), 200);
+        List<FieldSchemaDTO> fieldSchemaDTOList = response.getData();
+        assertEquals(fieldSchemaDTOList.size(), this.fieldSchemaDTOList.size());
+        Map<String, FieldSchemaDTO> map = fieldSchemaDTOList.stream()
+                .collect(Collectors.toMap(FieldSchemaDTO::getNodeId, n -> n));
+        for (FieldSchemaDTO fieldSchemaDTO : this.fieldSchemaDTOList) {
+            String nodeId = fieldSchemaDTO.getNodeId();
+            compareFieldSchemaDTO(fieldSchemaDTO, map.get(nodeId));
+            map.remove(nodeId);
+        }
+        assertEquals(map.size(), 0);
+    }
+
+    @Test
+    void ShouldReturnTrueWhenValidParamSimpleType() {
+        this.fieldSchemaDTOList.get(0).addFieldSchema(
+                FieldRegistry.SOURCE_DIRECTORY,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.SOURCE_DIRECTORY),
+                123
+        );
+        assertThrows(ValidationException.class, () -> this.flowEditorController.validFieldSchema(this.fieldSchemaDTOList));
+    }
+
+    @Test
+    void ShouldReturnTrueWhenValidParamPojo() {
+        this.fieldSchemaDTOList.get(0).addFieldSchema(
+                FieldRegistry.RESTIC_BACKUP_RESULT,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.RESTIC_BACKUP_RESULT),
+                ResticExecResult.success(ResticExitCodeEnum.SUCCESS, "456")
+        );
+        assertThrows(ValidationException.class, () -> this.flowEditorController.validFieldSchema(this.fieldSchemaDTOList));
+        this.fieldSchemaDTOList.get(0).addFieldSchema(
+                FieldRegistry.RESTIC_BACKUP_RESULT,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.RESTIC_BACKUP_RESULT),
+                ResticExecResult.failed(ResticExitCodeEnum.SUCCESS, "789")
+        );
+        assertThrows(ValidationException.class, () -> this.flowEditorController.validFieldSchema(this.fieldSchemaDTOList));
+    }
+
+    @Test
+    void ShouldReturnTrueWhenValidParamCollections() {
+        this.fieldSchemaDTOList.get(0).addFieldSchema(
+                FieldRegistry.DEDUPLICATE_FILES,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.DEDUPLICATE_FILES),
+                List.of(123, 456)
+        );
+        assertThrows(ValidationException.class, () -> this.flowEditorController.validFieldSchema(this.fieldSchemaDTOList));
+
+    }
+
+    private static void compareFieldSchemaDTO(
+            FieldSchemaDTO src,
+            FieldSchemaDTO target) {
+        assertEquals(src.getNodeId(), target.getNodeId());
+        assertEquals(src.getNodeName(), target.getNodeName());
+        assertEquals(src.getFieldSchemaMap().size(), target.getFieldSchemaMap().size());
+        src.getFieldSchemaMap().forEach((k, v) -> {
+            FieldSchemaDTO.FieldSchema fieldSchema = target.getFieldSchema(k);
+            assertNotNull(fieldSchema);
+            assertEquals(v.sourceType(), fieldSchema.sourceType());
+            assertEquals(v.typeReference(), fieldSchema.typeReference());
+        });
     }
 
     @Test
@@ -500,6 +713,54 @@ class SyncDuoServerApplicationTests {
         this.waitSec(5);
     }
 
+    @BeforeEach
+    void createFlowDefinition() {
+        FlowNode node1 = new FlowNode(
+                "1",
+                "deduplicate",
+                Map.of(FieldRegistry.SOURCE_DIRECTORY, new ParamValue(this.sourceFolderPath, ParamSourceType.MANUAL)),
+                List.of("2")
+        );
+        FlowNode node2 = new FlowNode(
+                "2",
+                "backup",
+                Map.of(
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.SOURCE_DIRECTORY, new ParamValue(this.sourceFolderPath, ParamSourceType.MANUAL)
+                ),
+                List.of()
+        );
+        this.nodeList = List.of(node1, node2);
+        FieldSchemaDTO node1Schema = new FieldSchemaDTO(node1);
+        node1Schema.addFieldSchema(
+                FieldRegistry.SOURCE_DIRECTORY,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.SOURCE_DIRECTORY),
+                this.sourceFolderPath
+        );
+        FieldSchemaDTO node2Schema = new FieldSchemaDTO(node2);
+        node2Schema.addFieldSchema(
+                FieldRegistry.RESTIC_BACKUP_REPOSITORY,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.RESTIC_BACKUP_REPOSITORY),
+                this.backupPath
+        );
+        node2Schema.addFieldSchema(
+                FieldRegistry.RESTIC_PASSWORD,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.RESTIC_PASSWORD),
+                "0608"
+        );
+        node2Schema.addFieldSchema(
+                FieldRegistry.SOURCE_DIRECTORY,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.SOURCE_DIRECTORY),
+                this.sourceFolderPath
+        );
+        this.fieldSchemaDTOList = List.of(node1Schema, node2Schema);
+    }
+
     void createSyncFlow(String filterCriteria) {
         CreateSyncFlowRequest createSyncFlowRequest = new CreateSyncFlowRequest();
         createSyncFlowRequest.setSourceFolderFullPath(sourceFolderPath);
@@ -614,33 +875,19 @@ class SyncDuoServerApplicationTests {
 
     void truncateAllTable() {
         // sync flow truncate
-        List<SyncFlowEntity> syncFlowEntities = this.syncFlowService.list();
-        if (CollectionUtils.isNotEmpty(syncFlowEntities)) {
-            this.syncFlowService.removeBatchByIds(
-                    syncFlowEntities.stream().map(SyncFlowEntity::getSyncFlowId).collect(Collectors.toList())
-            );
-        }
+        this.syncFlowService.remove(new QueryWrapper<>());
         // copy job truncate
-        List<CopyJobEntity> copyJobEntities = this.copyJobService.list();
-        if (CollectionUtils.isNotEmpty(copyJobEntities)) {
-            this.copyJobService.removeBatchByIds(
-                    copyJobEntities.stream().map(CopyJobEntity::getCopyJobId).collect(Collectors.toList())
-            );
-        }
+        this.copyJobService.remove(new QueryWrapper<>());
         // backup job truncate
-        List<BackupJobEntity> backupJobEntities = this.backupJobService.list();
-        if (CollectionUtils.isNotEmpty(backupJobEntities)) {
-            this.backupJobService.removeBatchByIds(
-                    backupJobEntities.stream().map(BackupJobEntity::getBackupJobId).collect(Collectors.toList())
-            );
-        }
+        this.backupJobService.remove(new QueryWrapper<>());
         // restore job truncate
-        List<RestoreJobEntity> restoreJobEntities = this.restoreJobService.list();
-        if (CollectionUtils.isNotEmpty(restoreJobEntities)) {
-            this.restoreJobService.removeBatchByIds(
-                    restoreJobEntities.stream().map(RestoreJobEntity::getRestoreJobId).collect(Collectors.toList())
-            );
-        }
+        this.restoreJobService.remove(new QueryWrapper<>());
+        // flow definition truncate
+        this.flowDefinitionMapper.delete(new QueryWrapper<>());
+        // flow execution truncate
+        this.flowExecutionMapper.delete(new QueryWrapper<>());
+        // node execution truncate
+        this.nodeExecutionMapper.delete(new QueryWrapper<>());
         log.info("truncate all table");
     }
 

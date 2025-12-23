@@ -1,57 +1,70 @@
 # 设计文档
+## 基本用户故事
+### 新建Flow -- 完成
+1. 点击 "新建Flow" 按钮
+2. 展示Json编辑器, 编排 "Node"
+   1. 前端校验 json 完整性
+   2. 后端校验 json 正确性(是否有序号, node是否定义存在)
+3. 点击下一步, 配置所有 "Node" 需要的参数
+   1. 后端返回依赖分析, 哪些参数需要配置, 哪些参数"由前置node提供". 前置node提供的参数预填充, 用户可以覆盖
+4. 点击下一步, 设置 "Flow"的名字和运行的频率
+   1. every x seconds/minutes/hours, 精确小数点后一位
+   2. flow name 全局唯一, 需要查重
+5. 点击保存
 
-`该文档是 SyncDuoServer 项目的设计文档,包含了典型的用户旅程和前端接口`
+### 查看Flow -- 完成
+1. 点击dashboard的Workflow目录
+2. 展示workflow列表,包含 id, name, corn, status, next_run_date 四列. 详情,编辑,删除三个按钮
 
-## 设计背景
-syncthing 加强版. syncthing 是一款开源的多终端文件同步工具,以文件夹为颗粒度,在多个终端间保持版本一致. 但是 syncthing 不支持 "忽略删除文件"
-的操作(etc: A 终端空间不足删除了文件, 希望在 B 终端保留该文件), 如果用户需要备份功能, 
-需要再集成单独的备份软件.
+### 查看Flow详情 -- 未实现
+1. 点击"详情"按钮
+2. 展示flowchart 静态图
+   1. 每个节点展示参数
+   2. 一句话总结展示任务流的作用(AI?)
+3. 支持在 flowchart 上直接修改参数, 但不能修改节点连接
+4. 支持在 flowchart 上直接修改 cron, 但不能修改节点连接
 
-为了解决 syncthing 的局限性, SyncDuoServer 出现了. 关键特性是支持 "忽略删除文件" 特性.
-更好地管理多个终端间的数据.
+### 删除Flow -- 完成
+1. 点击"删除"按钮
+2. 弹出"modal", 是否确认删除
+3. 点击"确认"按钮
+4. 删除Flow
 
-当前 SyncDuoServer 只能管理"本机"的数据,多终端间的同步依赖用户通过 syncthing 手动创建同步流, 后续会集成 syncthing 
-和数据备份软件,在用户体验上做到一致.
+### Flow Schedule -- 完成
+1. 从 db 获取所有 flowDefinitionEntity definition
+2. 解析 cron 表达式
+3. 提交 cron 调度任务
+   1. 判断当前是否有 Flow 正在进行. 是则 continue, 否则 -> Flow 执行
 
-## 核心流程
-### NAS的文件夹监控
-watcher -> filesystem event -> copyFile -> copyJob event -> copyJobStatus event -> copyJobStats event
-### 定时器
-syncflow list -> checkAndCopy -> copyJobEvent -> copyJobStatus event -> copyJobStats event
-### 创建流
+### Flow执行 -- 完成
+1. 获得 "Flow Definition"
+2. 解析 Nodes, 对 Nodes 排序, 获得 List<Nodes> 有序列表. 
+3. by 每个 node, 取出 inputsParam, 放入 context, 执行 node
+   1. 每个 flow 执行前, 新建 context, mq 发出 "flow 执行"
+   2. 每个 node 执行前, 取出 inputsParam, 放入 context, mq 发出 "node 执行"
+   3. 每个 node 执行后
+      1. 正常结束, 则取出 outputsParam, 放入 context, mq 发出 "node 成功"
+      2. 异常结束, mq 发出 "node 失败" 和 "flow 失败", 终止 flow
+   4. flow 结束后, 发出 "flow 成功"
 
-## 用户旅程
-1. 创建流: 用户登录 SyncDuoServer 管理界面, 选择"备份"/"转换"等多种同步模式, 选择源文件夹和目的文件夹, 点击确定后即可完成创建.
-2. 查看流: 用户登录 SyncDuoServer 管理界面, 可以看到所有流的状态和统计数据.
-3. 管理流: 用户登录 SyncDuoServer 管理界面, 可以对流进行重命名/停止/删除/修改过滤条件的动作.
-4. 修改系统信息: 用户登录 SyncDuoServer 管理界面, 可以修改系统的各种参数,例如备份频率,备份存储地址等.
+## 功能用户故事
+### RESTIC 备份 -- 完成
+1. 定义一个 backup 节点
+2. 接收 source_directory, backup_repository 和 backup_password 三个参数
+3. 成功则输出/聚合 json, 存储在 context_data 中
+### RESTIC 备份信息表
+1. 定义一个 json extract 节点
+2. 从 flow execution 的 context data 中增量获取 json result
+3. mapping 到数据库表中(动态建表?)
+### 云盘备份
+1. 定义一个 云盘备份节点
+2. 从 restic 备份表中获取未上传的备份信息
+3. 上传
+### RCLONE 文件夹同步
+1. 定义一个 copy 节点
+2. 接收 source_directory, dest_directory 两个参数
+3. 成功则输出/聚合 json, 存储在 context data 中
 
-## 前端 API
-### 创建流
-#### 使用场景
-创建流
-#### Endpoint
- `/syncflow/add-syncflow`
-#### 结果(JSON)
 
-### 文件夹路径搜索联想 API
-#### 使用场景
-创建流. 用户在输入框中输入任意字符, 格式符合 Linux 文件系统路径规范, 则系统给出文件夹路径联想结果, 支持用户选择联想结果作为文件夹路径.
-#### Endpoint
-`/filesystem/get-subfolders`
-#### 参数
-http 请求参数(RequestParam), 名称为 path, 类型为字符串
-#### 结果(JSON)
-```json
-{
-  "code": 200,
-  "message": "xxxx",
-  "hostName": "xxxx",
-  "folderList": [
-    {
-      "folderName": "xxx",
-      "folderFullPath": "xxx"
-    }
-  ]
-}
-```
+## DAG 引擎用户故事
+### NODE 执行日志

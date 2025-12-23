@@ -1,4 +1,4 @@
-package com.syncduo.server.configuration;
+package com.syncduo.server.configuration.mybatisplus;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.syncduo.server.enums.DeletedEnum;
@@ -39,7 +39,6 @@ public class CustomMetaObjectHandler implements MetaObjectHandler {
     }
 
     private Timestamp getUTCTimestamp() {
-        Instant now = Instant.now();
-        return Timestamp.from(now);
+        return Timestamp.from(Instant.now());
     }
 }

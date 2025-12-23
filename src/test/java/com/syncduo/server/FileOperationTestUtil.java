@@ -106,20 +106,45 @@ public class FileOperationTestUtil {
         if (!Files.exists(txtFile)) {
             Files.createFile(txtFile);
         }
-
         // Write numbers 1 to 10 to the .txt file
         Files.write(txtFile, generateNumbers(), StandardOpenOption.WRITE);
-
         // Create .bin file with the naming convention
         Path binFile = folderPath.resolve("justBinary" + ".bin");
         if (!Files.exists(binFile)) {
             Files.createFile(binFile);
         }
-
         // Write random binary data to the .bin file
         writeRandomBinaryData(binFile);
-
         return new ImmutablePair<>(txtFile, binFile);
+    }
+
+    public static void createDuplicateFiles(Path folderPath) throws IOException {
+        int chunkSize = 1024 * 1024; // 1 MB
+        int totalChunks = 5; // 5 MB
+        byte[] buffer = new byte[chunkSize];
+        random.nextBytes(buffer);
+        for (int i = 0; i < 10; i++) {
+            // Create duplicate .txt file
+            Path txtFile = folderPath.resolve("justText" + i + ".txt");
+            if (!Files.exists(txtFile)) {
+                Files.createFile(txtFile);
+            }
+            Files.write(txtFile, "12345678910".getBytes(), StandardOpenOption.WRITE);
+            // Create duplicate .bin file
+            Path binFile = folderPath.resolve("justBinary" + i + ".bin");
+            if (!Files.exists(binFile)) {
+                Files.createFile(binFile);
+            }
+            // Write binary data to the .bin file
+            try (var out = Files.newOutputStream(
+                    binFile,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING)) {
+                for (int j = 0; j < totalChunks; j++) {
+                    out.write(buffer);
+                }
+            }
+        }
     }
 
     public static List<Path> modifyFile(Path folderPath, int number) throws IOException, SyncDuoException {

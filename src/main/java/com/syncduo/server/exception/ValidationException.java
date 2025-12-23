@@ -9,4 +9,8 @@ public class ValidationException extends SyncDuoException {
     public ValidationException(String message) {
         super(HttpStatus.BAD_REQUEST, message);
     }
+
+    public ValidationException(String message, Throwable cause) {
+        super(HttpStatus.BAD_REQUEST, message, cause);
+    }
 }

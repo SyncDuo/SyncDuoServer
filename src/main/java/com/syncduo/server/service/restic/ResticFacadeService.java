@@ -92,7 +92,7 @@ public class ResticFacadeService {
                 ResticExecResult<Init, ExitErrors> initResult = this.resticService.init();
                 if (!initResult.isSuccess()) {
                     throw new BusinessException("execute restic init method failed",
-                            initResult.getBusinessException());
+                            initResult.msg());
                 }
             }
         } catch (Exception e) {
@@ -104,7 +104,7 @@ public class ResticFacadeService {
     public Stats getStats() throws BusinessException {
         ResticExecResult<Stats, ExitErrors> statsResult = this.resticService.stats();
         if (!statsResult.isSuccess()) {
-            throw new BusinessException("getStats failed. ", statsResult.getBusinessException());
+            throw new BusinessException("getStats failed. ", statsResult.msg());
         }
         return statsResult.getData();
     }
@@ -116,7 +116,7 @@ public class ResticFacadeService {
         }
         ResticExecResult<List<Node>, ExitErrors> lsResult = this.resticService.ls(snapshotId, pathString);
         if (!lsResult.isSuccess()) {
-            throw new BusinessException("getSnapshotFileInfo failed.", lsResult.getBusinessException());
+            throw new BusinessException("getSnapshotFileInfo failed.", lsResult.msg());
         }
         return lsResult.getData();
     }
@@ -134,7 +134,7 @@ public class ResticFacadeService {
                     if (backupResult.isSuccess()) {
                         this.backupJobService.updateSuccessBackupJob(backupJobEntity, backupResult.getData());
                     } else {
-                        BusinessException ex = backupResult.getBusinessException();
+                        BusinessException ex = backupResult.msg();
                         this.backupJobService.updateFailBackupJob(backupJobEntity, ex.toString());
                     }
                     return CompletableFuture.completedFuture(null);
@@ -235,7 +235,7 @@ public class ResticFacadeService {
                         );
                     } else {
                         // 记录失败日志
-                        BusinessException restoreException = resticRestoreResult.getBusinessException();
+                        BusinessException restoreException = resticRestoreResult.msg();
                         this.restoreJobService.updateRestoreJobAsFailed(
                                 restoreJobEntity.getRestoreJobId(),
                                 restoreException.toString()
@@ -278,7 +278,7 @@ public class ResticFacadeService {
                         );
                     } else {
                         // 记录失败日志
-                        BusinessException restoreException = resticRestoreResult.getBusinessException();
+                        BusinessException restoreException = resticRestoreResult.msg();
                         this.restoreJobService.updateRestoreJobAsFailed(
                                 restoreJobEntity.getRestoreJobId(),
                                 restoreException.toString()
