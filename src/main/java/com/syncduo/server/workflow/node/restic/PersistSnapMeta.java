@@ -62,7 +62,7 @@ public class PersistSnapMeta extends BaseNode {
         }
         List<Snapshot> snapshots = JsonUtil.deserToList(jsonOutput, Snapshot.class);
         List<SnapshotMeta> snapshotMetaList = createFromSnapshot(snapshots, resticBackupRepository);
-        // todo
+        // todo: 以 snapshot id 为主键, 插入或更新
         List<BatchResult> insertResult = this.snapshotMetaMapper.insert(snapshotMetaList);
         if (insertResult.size() != snapshotMetaList.size()) {
             return NodeResult.failed("插入 db 失败");
