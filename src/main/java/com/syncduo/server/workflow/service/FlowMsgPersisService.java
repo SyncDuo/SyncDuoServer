@@ -133,9 +133,10 @@ public class FlowMsgPersisService implements SmartLifecycle {
                 .setFlowDefinitionId(flowExecution.getFlowDefinitionId())
                 .setFlowExecutionId(flowExecution.getFlowExecutionId())
                 .setNodeId(msg.node().getNodeId())
+                .setNodeName(msg.node().getName())
                 .setExecutionStatus(msg.execStatus().name())
                 .setInputData(this.getNodeData(msg.node(), msg.data(), true))
-                .setNodeExecutionLog("");
+                .setNodeExecutionLog(msg.errorMessage());
     }
 
     private NodeExecutionEntity getNodeExecutionByUuidV4(UUID uuidV4) {

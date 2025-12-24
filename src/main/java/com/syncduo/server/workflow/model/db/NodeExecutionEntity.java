@@ -43,10 +43,16 @@ public class NodeExecutionEntity extends BaseEntity {
     private Long flowExecutionId;
 
     /**
-     * 节点名称
+     * 节点在 DAG 中的唯一ID
      */
     @TableField("node_id")
     private String nodeId;
+
+    /**
+     * 节点名称
+     */
+    @TableField("node_name")
+    private String nodeName;
 
     /**
      * 执行状态（pending, running, success, failed, cancelled）
