@@ -7,13 +7,14 @@ import com.syncduo.server.workflow.core.model.base.BaseNode;
 import com.syncduo.server.workflow.core.model.execution.FlowContext;
 import com.syncduo.server.workflow.core.model.execution.NodeResult;
 import com.syncduo.server.workflow.mapper.SnapshotMetaMapper;
-import com.syncduo.server.workflow.model.db.SnapshotMeta;
+import com.syncduo.server.workflow.model.db.SnapshotMetaEntity;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
 import com.syncduo.server.workflow.node.restic.model.ResticCommandResult;
 import com.syncduo.server.workflow.node.restic.model.Snapshot;
 import com.syncduo.server.workflow.node.restic.utils.ResticUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.executor.BatchResult;
@@ -22,6 +23,7 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Node(
         name = "persist_snap_meta",
@@ -61,20 +63,31 @@ public class PersistSnapMeta extends BaseNode {
             return NodeResult.success();
         }
         List<Snapshot> snapshots = JsonUtil.deserToList(jsonOutput, Snapshot.class);
-        List<SnapshotMeta> snapshotMetaList = createFromSnapshot(snapshots, resticBackupRepository);
-        // todo: 以 snapshot id 为主键, 插入或更新
-        List<BatchResult> insertResult = this.snapshotMetaMapper.insert(snapshotMetaList);
-        if (insertResult.size() != snapshotMetaList.size()) {
+        if (CollectionUtils.isEmpty(snapshots)) {
+            return NodeResult.success();
+        }
+        // 找出不在 DB 的 snapshot id
+        String snapshotIdsJson = JsonUtil.serializeToString(snapshots.stream().map(Snapshot::getId).toList());
+        Set<String> missingSnapshotIds = this.snapshotMetaMapper.findMissingSnapshotIds(snapshotIdsJson);
+        if (CollectionUtils.isEmpty(missingSnapshotIds)) {
+            return NodeResult.success();
+        }
+        List<SnapshotMetaEntity> snapshotMetaEntityList = createFromSnapshot(
+                snapshots.stream().filter(snapshot -> missingSnapshotIds.contains(snapshot.getId())).toList(),
+                resticBackupRepository
+        );
+        List<BatchResult> insertResult = this.snapshotMetaMapper.insert(snapshotMetaEntityList);
+        if (insertResult.size() != snapshotMetaEntityList.size()) {
             return NodeResult.failed("插入 db 失败");
         }
         return NodeResult.success();
     }
 
-    private List<SnapshotMeta> createFromSnapshot(List<Snapshot> snapshots, String backupRepository) {
-        ArrayList<SnapshotMeta> result = new ArrayList<>();
+    private List<SnapshotMetaEntity> createFromSnapshot(List<Snapshot> snapshots, String backupRepository) {
+        ArrayList<SnapshotMetaEntity> result = new ArrayList<>();
         for (Snapshot snapshot : snapshots) {
             SnapshotSummary summary = snapshot.getSummary();
-            SnapshotMeta snapshotMeta = new SnapshotMeta()
+            SnapshotMetaEntity snapshotMetaEntity = new SnapshotMetaEntity()
                     .setSourceDirectory(snapshot.getPaths().get(0))
                     .setBackupRepository(backupRepository)
                     .setCreatedAt(Timestamp.from(snapshot.getTime().toInstant()))
@@ -86,7 +99,7 @@ public class PersistSnapMeta extends BaseNode {
                     .setSnapshotSizeBytes(summary.getTotalBytesProcessed())
                     .setHostname(snapshot.getHostname())
                     .setUsername(snapshot.getUsername());
-            result.add(snapshotMeta);
+            result.add(snapshotMetaEntity);
         }
         return result;
     }

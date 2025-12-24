@@ -16,7 +16,7 @@ import java.sql.Timestamp;
 @Data
 @Accessors(chain = true)
 @TableName("snapshot_meta")
-public class SnapshotMeta extends BaseEntity {
+public class SnapshotMetaEntity extends BaseEntity {
     /**
      * 快照元数据ID，主键
      */

@@ -40,11 +40,13 @@ import com.syncduo.server.workflow.core.model.definition.ParamValue;
 import com.syncduo.server.workflow.mapper.FlowDefinitionMapper;
 import com.syncduo.server.workflow.mapper.FlowExecutionMapper;
 import com.syncduo.server.workflow.mapper.NodeExecutionMapper;
+import com.syncduo.server.workflow.mapper.SnapshotMetaMapper;
 import com.syncduo.server.workflow.model.api.editor.CreateFlowRequest;
 import com.syncduo.server.workflow.model.api.editor.FieldSchemaDTO;
 import com.syncduo.server.workflow.model.api.global.FlowResponse;
 import com.syncduo.server.workflow.model.api.info.FlowInfoDTO;
 import com.syncduo.server.workflow.model.db.FlowDefinitionEntity;
+import com.syncduo.server.workflow.model.db.SnapshotMetaEntity;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -111,6 +113,8 @@ class SyncDuoServerApplicationTests {
 
     private final FlowDefinitionMapper flowDefinitionMapper;
 
+    private final SnapshotMetaMapper snapshotMetaMapper;
+
     private SyncFlowEntity syncFlowEntity;
 
     private List<FlowNode> nodeList;
@@ -155,6 +159,7 @@ class SyncDuoServerApplicationTests {
             FlowExecutionMapper flowExecutionMapper,
             NodeExecutionMapper nodeExecutionMapper,
             FlowDefinitionMapper flowDefinitionMapper,
+            SnapshotMetaMapper snapshotMetaMapper,
             FlowEngine flowEngine) {
         this.syncFlowController = syncFlowController;
         this.flowEditorController = flowEditorController;
@@ -172,11 +177,12 @@ class SyncDuoServerApplicationTests {
         this.flowExecutionMapper = flowExecutionMapper;
         this.nodeExecutionMapper = nodeExecutionMapper;
         this.flowDefinitionMapper = flowDefinitionMapper;
+        this.snapshotMetaMapper = snapshotMetaMapper;
         this.flowEngine = flowEngine;
     }
 
     @Test
-    void NodeTest() {
+    void PersistSnapDataNodeTest() {
         FlowNode node1 = new FlowNode(
                 "1",
                 "backup",
@@ -196,9 +202,20 @@ class SyncDuoServerApplicationTests {
                 ),
                 Collections.emptyList()
         );
-        FlowDefinition tmp = new FlowDefinition("tmp", List.of(node1, node2));
+        FlowNode node3 = new FlowNode(
+                "3",
+                "persist_snap_meta",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL)
+                ),
+                Collections.emptyList()
+        );
+        FlowDefinition tmp = new FlowDefinition("tmp", List.of(node1, node2, node3));
         this.flowEngine.execute(1L, tmp);
-        waitSec(1000L);
+        waitSec(15);
+        List<SnapshotMetaEntity> allResult = this.snapshotMetaMapper.selectList(new QueryWrapper<>());
+        assertEquals(1, allResult.size());
     }
 
     @Test
@@ -296,7 +313,7 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenGetParam() throws JsonProcessingException {
+    void ShouldReturnTrueWhenGetParam() {
         FlowResponse<List<FieldSchemaDTO>> response = this.flowEditorController.getFieldSchema(this.nodeList);
         assertEquals(200, response.getStatusCode());
         List<FieldSchemaDTO> fieldSchemaDTOList = response.getData();
@@ -871,31 +888,16 @@ class SyncDuoServerApplicationTests {
         log.info("initial finish");
     }
 
-    void deleteFolder() {
-        try {
-            // delete source folder
-            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
-        } catch (IOException e) {
-            log.warn("删除source文件夹失败.", e);
-        }
-        try {
-            // delete dest folder
-            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(contentFolderParentPath));
-        } catch (IOException e) {
-            log.error("删除dest文件夹失败.", e);
-        }
-        try {
-            // delete backup folder
-            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(backupPath));
-        } catch (IOException e) {
-            log.error("删除backup文件夹失败.", e);
-        }
-        try {
-            // delete restore folder
-            FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(restorePath));
-        } catch (IOException e) {
-            log.error("删除restore文件夹失败.", e);
-        }
+    void deleteFolder() throws IOException {
+        // delete source folder
+        FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(sourceFolderPath));
+        // delete dest folder
+        FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(contentFolderParentPath));
+        // delete backup folder
+        FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(backupPath));
+        // delete restore folder
+        FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(restorePath));
+        log.info("delete all folder");
     }
 
     void truncateAllTable() {
@@ -913,6 +915,8 @@ class SyncDuoServerApplicationTests {
         this.flowExecutionMapper.delete(new QueryWrapper<>());
         // node execution truncate
         this.nodeExecutionMapper.delete(new QueryWrapper<>());
+        // snapshot meta truncate
+        this.snapshotMetaMapper.delete(new QueryWrapper<>());
         log.info("truncate all table");
     }
 

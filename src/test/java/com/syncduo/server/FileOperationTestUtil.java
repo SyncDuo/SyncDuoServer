@@ -1,7 +1,6 @@
 package com.syncduo.server;
 
 import com.syncduo.server.exception.SyncDuoException;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -14,7 +13,6 @@ import java.util.Random;
 
 import static com.syncduo.server.util.FilesystemUtil.getAllFile;
 
-@Slf4j
 public class FileOperationTestUtil {
 
     private static final Random random = new Random();
@@ -27,8 +25,7 @@ public class FileOperationTestUtil {
 
     public static void deleteAllFoldersLeaveItSelf(Path path) throws IOException {
         if (!Files.exists(path)) {
-            log.error("The specified path does not exist.");
-            return;
+            throw new IOException("The specified path does not exist.");
         }
 
         // Use walkFileTree to recursively delete files and directories
@@ -48,7 +45,6 @@ public class FileOperationTestUtil {
                 return FileVisitResult.CONTINUE;
             }
         });
-        log.info("All folders and files have been deleted successfully.");
     }
 
     private static void createFoldersRecursive(
