@@ -32,7 +32,7 @@ import java.util.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class FlowMsgPersisService implements SmartLifecycle {
+public class FlowMsgPersistService implements SmartLifecycle {
     private final Thread msgHandleThread = new Thread(this::persisMsg, "FlowMsg-Persis-Thread");
     private final ChannelService channel;
     private final FlowDefinitionMapper flowDefinitionMapper;

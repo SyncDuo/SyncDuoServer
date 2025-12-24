@@ -176,6 +176,32 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
+    void NodeTest() {
+        FlowNode node1 = new FlowNode(
+                "1",
+                "backup",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL),
+                        FieldRegistry.SOURCE_DIRECTORY, new ParamValue(this.sourceFolderPath, ParamSourceType.MANUAL)
+                ),
+                List.of("2")
+        );
+        FlowNode node2 = new FlowNode(
+                "2",
+                "persist_snap_meta",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL)
+                ),
+                Collections.emptyList()
+        );
+        FlowDefinition tmp = new FlowDefinition("tmp", List.of(node1, node2));
+        this.flowEngine.execute(1L, tmp);
+        waitSec(1000L);
+    }
+
+    @Test
     void CreateDataInDB() {
         for (int i = 0; i < 4; i++) {
             FlowResponse<FlowDefinitionEntity> response = this.flowEditorController.createFlow(new CreateFlowRequest(
@@ -202,11 +228,11 @@ class SyncDuoServerApplicationTests {
                 this.nodeList,
                 this.fieldSchemaDTOList
         ));
-        assertEquals(response.getStatusCode(), 200);
+        assertEquals(200, response.getStatusCode());
         FlowResponse<List<FlowInfoDTO>> response1 = this.flowInfoController.getAllFlowInfo();
-        assertEquals(response1.getStatusCode(), 200);
+        assertEquals(200, response1.getStatusCode());
         List<FlowInfoDTO> flowInfoDTOList = response1.getData();
-        assertEquals(flowInfoDTOList.size(), 1);
+        assertEquals(1, flowInfoDTOList.size());
         FlowInfoDTO flowInfoDTO = flowInfoDTOList.get(0);
         FlowDefinitionEntity entity = response.getData();
         assertEquals(flowInfoDTO.getFlowDefinitionId(), entity.getFlowDefinitionId());
@@ -234,7 +260,7 @@ class SyncDuoServerApplicationTests {
                 this.nodeList,
                 this.fieldSchemaDTOList
         ));
-        assertEquals(response.getStatusCode(), 200);
+        assertEquals(200, response.getStatusCode());
         assertThrows(BusinessException.class, () -> this.flowEditorController.createFlow(new CreateFlowRequest(
                 "tmp",
                 "0 0 18 * * MON-FRI",
@@ -248,7 +274,7 @@ class SyncDuoServerApplicationTests {
     @Test
     void ShouldReturnTrueWhenNodeDuplicateId() {
         FlowResponse<Void> response = this.flowEditorController.validNodes(this.nodeList);
-        assertEquals(response.getStatusCode(), 200);
+        assertEquals(200, response.getStatusCode());
         this.nodeList.get(0).setNodeId(this.nodeList.get(1).getNodeId());
         assertThrows(ValidationException.class, () -> this.flowEditorController.validNodes(nodeList));
     }
@@ -256,7 +282,7 @@ class SyncDuoServerApplicationTests {
     @Test
     void ShouldReturnTrueWhenNodeCyclic() {
         FlowResponse<Void> response = this.flowEditorController.validNodes(this.nodeList);
-        assertEquals(response.getStatusCode(), 200);
+        assertEquals(200, response.getStatusCode());
         this.nodeList.get(1).setNextNodeIds(List.of("1"));
         assertThrows(ValidationException.class, () -> this.flowEditorController.validNodes(nodeList));
     }
@@ -264,7 +290,7 @@ class SyncDuoServerApplicationTests {
     @Test
     void ShouldReturnTrueWhenNodeNotImpl() {
         FlowResponse<Void> response = this.flowEditorController.validNodes(this.nodeList);
-        assertEquals(response.getStatusCode(), 200);
+        assertEquals(200, response.getStatusCode());
         this.nodeList.get(0).setName("aaa");
         assertThrows(ValidationException.class, () -> this.flowEditorController.validNodes(nodeList));
     }
@@ -272,7 +298,7 @@ class SyncDuoServerApplicationTests {
     @Test
     void ShouldReturnTrueWhenGetParam() throws JsonProcessingException {
         FlowResponse<List<FieldSchemaDTO>> response = this.flowEditorController.getFieldSchema(this.nodeList);
-        assertEquals(response.getStatusCode(), 200);
+        assertEquals(200, response.getStatusCode());
         List<FieldSchemaDTO> fieldSchemaDTOList = response.getData();
         assertEquals(fieldSchemaDTOList.size(), this.fieldSchemaDTOList.size());
         Map<String, FieldSchemaDTO> map = fieldSchemaDTOList.stream()
@@ -282,7 +308,7 @@ class SyncDuoServerApplicationTests {
             compareFieldSchemaDTO(fieldSchemaDTO, map.get(nodeId));
             map.remove(nodeId);
         }
-        assertEquals(map.size(), 0);
+        assertEquals(0, map.size());
     }
 
     @Test

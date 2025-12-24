@@ -80,6 +80,7 @@ public class FlowEngine {
                         e
                 );
                 this.mq.sendFlowMessage(flowContext, ExecStatus.FAILED, e);
+                return;
             }
         }
         this.mq.sendFlowMessage(flowContext, ExecStatus.SUCCESS);

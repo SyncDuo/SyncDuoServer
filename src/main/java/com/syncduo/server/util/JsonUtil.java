@@ -275,6 +275,17 @@ public class JsonUtil {
         }
     }
 
+    public static <T> List<T> deserToList(String jsonString, Class<T> elementType) {
+        try {
+            return objectMapper.readValue(
+                    jsonString,
+                    typeFactory.constructCollectionType(List.class, elementType)
+            );
+        } catch (JsonProcessingException e) {
+            throw new JsonException("deserToList failed", e);
+        }
+    }
+
     public static String serializeListToString(List<String> list) throws JsonException {
         try {
             return objectMapper.writeValueAsString(list);

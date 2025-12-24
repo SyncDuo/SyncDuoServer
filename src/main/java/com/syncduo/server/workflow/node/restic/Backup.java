@@ -1,12 +1,10 @@
 package com.syncduo.server.workflow.node.restic;
 
-import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.util.FilesystemUtil;
-import com.syncduo.server.util.JsonUtil;
 import com.syncduo.server.workflow.core.annotaion.Node;
 import com.syncduo.server.workflow.core.model.base.BaseNode;
-import com.syncduo.server.workflow.core.model.execution.NodeResult;
 import com.syncduo.server.workflow.core.model.execution.FlowContext;
+import com.syncduo.server.workflow.core.model.execution.NodeResult;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
 import com.syncduo.server.workflow.node.restic.model.ResticCommandResult;
 import com.syncduo.server.workflow.node.restic.utils.ResticUtil;
@@ -39,7 +37,7 @@ public class Backup extends BaseNode {
         FilesystemUtil.isFolderPathValid(sourceDirectory);
         FilesystemUtil.isFolderPathValid(resticBackupRepository);
         if (StringUtils.isBlank(resticPassword)) {
-            throw new BusinessException("empty restic password");
+            return NodeResult.failed("empty restic password");
         }
         // 生成 command line
         CommandLine commandLine = new CommandLine("restic");
@@ -54,13 +52,8 @@ public class Backup extends BaseNode {
                 sourceDirectory,
                 commandLine
         );
-        if (result.isSuccess()) {
-            // 只保留 "summary" 对象. https://restic.readthedocs.io/en/stable/075_scripting.html#backup
-            String summary = JsonUtil.getResticJsonLinesByMsgType(result.getJsonOutput(), "summary").get(0);
-            result.setJsonOutput(summary);
-            return NodeResult.success(Map.of(FieldRegistry.RESTIC_BACKUP_RESULT, result));
-        } else {
-            return NodeResult.failed(result.getErrorOutput());
-        }
+        return result.isSuccess() ?
+                NodeResult.success(Map.of(FieldRegistry.RESTIC_BACKUP_RESULT, result)) :
+                NodeResult.failed(result.getErrorOutput());
     }
 }

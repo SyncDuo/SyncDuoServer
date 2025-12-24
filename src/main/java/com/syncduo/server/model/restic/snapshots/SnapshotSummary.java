@@ -1,80 +1,97 @@
 package com.syncduo.server.model.restic.snapshots;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @Data
+@NoArgsConstructor
 public class SnapshotSummary {
     /**
-     * Time at which the backup was started
+     * 备份开始时间
      */
-    private Instant backupStart;
+    @JsonProperty("backup_start")
+    private OffsetDateTime backupStart;
 
     /**
-     * Time at which the backup was completed
+     * 备份结束时间
      */
-    private Instant backupEnd;
+    @JsonProperty("backup_end")
+    private OffsetDateTime backupEnd;
 
     /**
-     * Number of new files (uint64)
+     * 新文件数量
      */
+    @JsonProperty("files_new")
     private BigInteger filesNew;
 
     /**
-     * Number of files that changed (uint64)
+     * 已更改文件数量
      */
+    @JsonProperty("files_changed")
     private BigInteger filesChanged;
 
     /**
-     * Number of files that did not change (uint64)
+     * 未修改文件数量
      */
+    @JsonProperty("files_unmodified")
     private BigInteger filesUnmodified;
 
     /**
-     * Number of new directories (uint64)
+     * 新目录数量
      */
+    @JsonProperty("dirs_new")
     private BigInteger dirsNew;
 
     /**
-     * Number of directories that changed (uint64)
+     * 已更改目录数量
      */
+    @JsonProperty("dirs_changed")
     private BigInteger dirsChanged;
 
     /**
-     * Number of directories that did not change (uint64)
+     * 未修改目录数量
      */
+    @JsonProperty("dirs_unmodified")
     private BigInteger dirsUnmodified;
 
     /**
-     * Number of data blobs added (int64)
+     * 添加的数据块数量
      */
-    private long dataBlobs;
+    @JsonProperty("data_blobs")
+    private Long dataBlobs;
 
     /**
-     * Number of tree blobs added (int64)
+     * 添加的树块数量
      */
-    private long treeBlobs;
+    @JsonProperty("tree_blobs")
+    private Long treeBlobs;
 
     /**
-     * Amount of (uncompressed) data added, in bytes (uint64)
+     * 添加的数据量（未压缩），单位：字节
      */
+    @JsonProperty("data_added")
     private BigInteger dataAdded;
 
     /**
-     * Amount of data added (after compression), in bytes (uint64)
+     * 添加的数据量（压缩后），单位：字节
      */
+    @JsonProperty("data_added_packed")
     private BigInteger dataAddedPacked;
 
     /**
-     * Total number of files processed (uint64)
+     * 处理的总文件数
      */
+    @JsonProperty("total_files_processed")
     private BigInteger totalFilesProcessed;
 
     /**
-     * Total number of bytes processed (uint64)
+     * 处理的总字节数
      */
+    @JsonProperty("total_bytes_processed")
     private BigInteger totalBytesProcessed;
 
 }

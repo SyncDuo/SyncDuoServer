@@ -53,9 +53,16 @@
 2. 接收 source_directory, backup_repository 和 backup_password 三个参数
 3. 成功则输出/聚合 json, 存储在 context_data 中
 ### RESTIC 备份信息表
-1. 定义一个 json extract 节点
-2. 从 flow execution 的 context data 中增量获取 json result
-3. mapping 到数据库表中(动态建表?)
+1. 定义一个 restic extract 节点
+2. 从 restic command 获取 snapshots 信息, 需要包括
+   1. source directory
+   2. backup repository
+   3. snapshot id
+   4. snapshot time
+   5. snapshot size
+   6. hostname, username
+   7. file count
+   8. directory count
 ### 云盘备份
 1. 定义一个 云盘备份节点
 2. 从 restic 备份表中获取未上传的备份信息
