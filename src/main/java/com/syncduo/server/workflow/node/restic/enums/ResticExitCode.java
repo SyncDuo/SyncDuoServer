@@ -25,7 +25,7 @@ public enum ResticExitCode {
 
     UNKNOWN(-1, "Unknown exit code. there must be an exception"),
 
-    ERROR_BEFORE_COMMAND_RUN(-2, "ERROR happened before command run"),
+    ERROR_WITHOUT_EXITCODE(-2, "ERROR happened before command run"),
 
     ;
 

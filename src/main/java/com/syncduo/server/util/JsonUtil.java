@@ -240,13 +240,37 @@ public class JsonUtil {
         }
     }
 
+    public static <T> T readLastLine(String commandLineOutput, Class<T> clazz) throws JsonException {
+        if (StringUtils.isAnyBlank(commandLineOutput)) {
+            return null;
+        }
+        String lastLine = null;
+        try (BufferedReader br = new BufferedReader(new StringReader(commandLineOutput))) {
+            String line;
+            while ((line = br.readLine()) != null && !line.isBlank()) {
+                line = line.trim();
+                if (ObjectUtils.isNotEmpty(line)) {
+                    lastLine = line;
+                }
+            }
+        } catch (IOException e) {
+            throw new JsonException("readLastLine failed. " +
+                    "commandLineOutput is %s".formatted(commandLineOutput),
+                    e);
+        }
+        try {
+            return StringUtils.isEmpty(lastLine) ? null : objectMapper.readValue(lastLine, clazz);
+        } catch (JsonProcessingException e) {
+            throw new JsonException(("readLastLine failed. " +
+                    "commandLineOutput is %s").formatted(commandLineOutput),
+                    e);
+        }
+    }
+
     public static <T> T parseResticJsonDocument(
             String commandLineOutput,
             Class<T> clazz
     ) throws ValidationException, JsonException {
-        if (ObjectUtils.isEmpty(clazz)) {
-            throw new ValidationException("parseResticJsonDocument failed. clazz is null.");
-        }
         if (StringUtils.isBlank(commandLineOutput)) {
             throw new ValidationException("parseResticJsonDocument failed. commandLineOutput is null.");
         }

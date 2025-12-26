@@ -1,12 +1,9 @@
 package com.syncduo.server.workflow.node.registry;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.syncduo.server.model.restic.backup.BackupError;
-import com.syncduo.server.model.restic.backup.BackupSummary;
-import com.syncduo.server.model.restic.global.ResticExecResult;
 import com.syncduo.server.util.JsonUtil;
 import com.syncduo.server.workflow.core.model.execution.FlowContext;
-import com.syncduo.server.workflow.node.restic.model.ResticCommandResult;
+import com.syncduo.server.workflow.node.rclone.model.CopyResult;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
@@ -30,6 +27,10 @@ public final class FieldRegistry {
 
     public static final String RESTIC_BACKUP_RESULT = "RESTIC_BACKUP_RESULT";
 
+    public static final String DST_DIRECTORY = "DST_DIRECTORY";
+
+    public static final String RCLONE_COPY_RESULT = "RCLONE_COPY_RESULT";
+
     // 静态元数据映射表
     private static final Map<String, Definition> FieldDefinitionMap = new HashMap<>();
 
@@ -38,6 +39,11 @@ public final class FieldRegistry {
         FieldDefinitionMap.put(SOURCE_DIRECTORY, new Definition(
                 new TypeReference<String>() {},
                 "源目录路径",
+                "filesystem"
+        ));
+        FieldDefinitionMap.put(DST_DIRECTORY, new Definition(
+                new TypeReference<String>() {},
+                "目的目录路径",
                 "filesystem"
         ));
         FieldDefinitionMap.put(DEDUPLICATE_FILES, new Definition(
@@ -56,9 +62,14 @@ public final class FieldRegistry {
                 "restic"
         ));
         FieldDefinitionMap.put(RESTIC_BACKUP_RESULT, new Definition(
-                new TypeReference<ResticCommandResult>() {},
-                "restic 备份结果",
+                new TypeReference<String>() {},
+                "restic 备份结果(json lines)",
                 "restic"
+        ));
+        FieldDefinitionMap.put(RCLONE_COPY_RESULT, new Definition(
+                new TypeReference<CopyResult>() {},
+                "rclone使用copy命令返回的结果",
+                "rclone"
         ));
     }
 

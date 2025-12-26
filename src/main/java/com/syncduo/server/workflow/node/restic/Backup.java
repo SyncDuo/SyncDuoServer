@@ -5,8 +5,8 @@ import com.syncduo.server.workflow.core.annotaion.Node;
 import com.syncduo.server.workflow.core.model.base.BaseNode;
 import com.syncduo.server.workflow.core.model.execution.FlowContext;
 import com.syncduo.server.workflow.core.model.execution.NodeResult;
+import com.syncduo.server.workflow.node.model.CommandResult;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
-import com.syncduo.server.workflow.node.restic.model.ResticCommandResult;
 import com.syncduo.server.workflow.node.restic.utils.ResticUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
@@ -46,14 +46,14 @@ public class Backup extends BaseNode {
         commandLine.addArgument(".");
         commandLine.addArgument("--skip-if-unchanged");
         // 执行备份
-        ResticCommandResult result = ResticUtil.execute(
+        CommandResult result = ResticUtil.execute(
                 resticPassword,
                 resticBackupRepository,
                 sourceDirectory,
                 commandLine
         );
         return result.isSuccess() ?
-                NodeResult.success(Map.of(FieldRegistry.RESTIC_BACKUP_RESULT, result)) :
-                NodeResult.failed(result.getErrorOutput());
+                NodeResult.success(Map.of(FieldRegistry.RESTIC_BACKUP_RESULT, result.getOutput())) :
+                NodeResult.failed(result.getError());
     }
 }

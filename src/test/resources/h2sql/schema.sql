@@ -140,3 +140,25 @@ CREATE TABLE
                        end_time TIMESTAMP,
                        PRIMARY KEY (`node_execution_id`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- snapshot 元数据表
+DROP TABLE IF EXISTS snapshot_meta;
+CREATE TABLE
+    snapshot_meta (
+                       snapshot_meta_id BIGINT(20) AUTO_INCREMENT,
+                       created_user varchar(255) not null,
+                       created_time TIMESTAMP not null DEFAULT CURRENT_TIMESTAMP(),
+                       last_updated_user varchar(255) not null,
+                       last_updated_time TIMESTAMP not null DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+                       record_deleted int(11) DEFAULT 0,
+                       source_directory varchar(255) not null,
+                       backup_repository bigint(20) NOT NULL,
+                       create_at timestamp NOT NULL,
+                       snapshot_id VARCHAR(200) NOT NULL,
+                       file_count bigint(20),
+                       dir_count bigint(20),
+                       snapshot_size_bytes bigint(20),
+                       hostname varchar(200),
+                       username varchar(200),
+                       PRIMARY KEY (`snapshot_meta_id`)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;

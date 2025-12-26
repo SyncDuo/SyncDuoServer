@@ -1,10 +1,7 @@
 package com.syncduo.server.workflow.node.restic.utils;
 
-import com.syncduo.server.enums.ResticExitCodeEnum;
-import com.syncduo.server.exception.BusinessException;
-import com.syncduo.server.model.restic.global.ResticExecResult;
+import com.syncduo.server.workflow.node.model.CommandResult;
 import com.syncduo.server.workflow.node.restic.enums.ResticExitCode;
-import com.syncduo.server.workflow.node.restic.model.ResticCommandResult;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.util.validation.ValidationException;
 import org.apache.commons.exec.*;
@@ -17,11 +14,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 public class ResticUtil {
-    public static ResticCommandResult execute(
+    public static CommandResult execute(
             String resticPassword,
             String resticRepository,
             CommandLine commandLine
@@ -29,7 +25,7 @@ public class ResticUtil {
         return execute(resticPassword, resticRepository, null, commandLine);
     }
 
-    public static ResticCommandResult execute(
+    public static CommandResult execute(
             String resticPassword,
             String resticRepository,
             String workingDirectory,
@@ -53,15 +49,14 @@ public class ResticUtil {
         try {
             // 4. 阻塞执行
             int exitCode = executor.execute(commandLine, genResticEnv(resticPassword, resticRepository));
-            ResticExitCode resticExitCode = ResticExitCode.fromCode(exitCode);
-            if (resticExitCode.equals(ResticExitCode.SUCCESS)) {
-                return ResticCommandResult.success(resticExitCode, getStdAsString(stdout));
+            if (exitCode == ResticExitCode.SUCCESS.getCode()) {
+                return CommandResult.success(exitCode, getStdAsString(stdout));
             } else {
-                return ResticCommandResult.failed(resticExitCode, getStdAsString(stderr));
+                return CommandResult.failed(exitCode, getStdAsString(stderr));
             }
         } catch (Exception e) {
-            return ResticCommandResult.failed(
-                    ResticExitCode.ERROR_BEFORE_COMMAND_RUN,
+            return CommandResult.failed(
+                    ResticExitCode.ERROR_WITHOUT_EXITCODE.getCode(),
                     "exception: %s with stderr: %s".formatted(e, getStdAsString(stderr))
             );
         }

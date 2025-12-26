@@ -46,6 +46,7 @@ import com.syncduo.server.workflow.model.api.editor.FieldSchemaDTO;
 import com.syncduo.server.workflow.model.api.global.FlowResponse;
 import com.syncduo.server.workflow.model.api.info.FlowInfoDTO;
 import com.syncduo.server.workflow.model.db.FlowDefinitionEntity;
+import com.syncduo.server.workflow.model.db.FlowExecutionEntity;
 import com.syncduo.server.workflow.model.db.SnapshotMetaEntity;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -179,6 +180,23 @@ class SyncDuoServerApplicationTests {
         this.flowDefinitionMapper = flowDefinitionMapper;
         this.snapshotMetaMapper = snapshotMetaMapper;
         this.flowEngine = flowEngine;
+    }
+
+    @Test
+    void RcloneCopyNodeTest() {
+        FlowNode node1 = new FlowNode(
+                "1",
+                "oneway_sync",
+                Map.of(
+                        FieldRegistry.SOURCE_DIRECTORY, new ParamValue(this.sourceFolderPath, ParamSourceType.MANUAL),
+                        FieldRegistry.DST_DIRECTORY, new ParamValue(this.contentFolderParentPath, ParamSourceType.MANUAL)
+                ),
+                List.of()
+        );
+        this.flowEngine.execute(1L, new FlowDefinition("tmp", List.of(node1)));
+        waitSec(1000);
+        List<FlowExecutionEntity> dbResult = this.flowExecutionMapper.selectList(new QueryWrapper<>());
+        log.debug(dbResult.toString());
     }
 
     @Test

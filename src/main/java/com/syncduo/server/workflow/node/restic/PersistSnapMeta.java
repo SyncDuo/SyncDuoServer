@@ -1,6 +1,5 @@
 package com.syncduo.server.workflow.node.restic;
 
-import com.syncduo.server.model.restic.snapshots.SnapshotSummary;
 import com.syncduo.server.util.JsonUtil;
 import com.syncduo.server.workflow.core.annotaion.Node;
 import com.syncduo.server.workflow.core.model.base.BaseNode;
@@ -8,8 +7,8 @@ import com.syncduo.server.workflow.core.model.execution.FlowContext;
 import com.syncduo.server.workflow.core.model.execution.NodeResult;
 import com.syncduo.server.workflow.mapper.SnapshotMetaMapper;
 import com.syncduo.server.workflow.model.db.SnapshotMetaEntity;
+import com.syncduo.server.workflow.node.model.CommandResult;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
-import com.syncduo.server.workflow.node.restic.model.ResticCommandResult;
 import com.syncduo.server.workflow.node.restic.model.Snapshot;
 import com.syncduo.server.workflow.node.restic.utils.ResticUtil;
 import lombok.RequiredArgsConstructor;
@@ -50,15 +49,15 @@ public class PersistSnapMeta extends BaseNode {
         CommandLine commandLine = new CommandLine("restic");
         commandLine.addArgument("--json");
         commandLine.addArgument("snapshots");
-        ResticCommandResult result = ResticUtil.execute(
+        CommandResult result = ResticUtil.execute(
                 resticPassword,
                 resticBackupRepository,
                 commandLine
         );
         if (!result.isSuccess()) {
-            return NodeResult.failed("restic 运行失败: " + result.getErrorOutput());
+            return NodeResult.failed("restic 运行失败: " + result.getError());
         }
-        String jsonOutput = result.getJsonOutput();
+        String jsonOutput = result.getOutput();
         if (StringUtils.isBlank(jsonOutput)) {
             return NodeResult.success();
         }
@@ -86,28 +85,17 @@ public class PersistSnapMeta extends BaseNode {
     private List<SnapshotMetaEntity> createFromSnapshot(List<Snapshot> snapshots, String backupRepository) {
         ArrayList<SnapshotMetaEntity> result = new ArrayList<>();
         for (Snapshot snapshot : snapshots) {
-            SnapshotSummary summary = snapshot.getSummary();
             SnapshotMetaEntity snapshotMetaEntity = new SnapshotMetaEntity()
                     .setSourceDirectory(snapshot.getPaths().get(0))
                     .setBackupRepository(backupRepository)
                     .setCreatedAt(Timestamp.from(snapshot.getTime().toInstant()))
                     .setSnapshotId(snapshot.getId())
-                    .setFileCount(addBigIntegers(
-                            summary.getFilesChanged(), summary.getFilesNew(), summary.getFilesUnmodified()))
-                    .setDirCount(addBigIntegers(
-                            summary.getDirsChanged(), summary.getDirsNew(), summary.getDirsUnmodified()))
-                    .setSnapshotSizeBytes(summary.getTotalBytesProcessed())
+                    .setFileCount(snapshot.getFileCount())
+                    .setDirCount(snapshot.getDirCount())
+                    .setSnapshotSizeBytes(snapshot.getTotalBytes())
                     .setHostname(snapshot.getHostname())
                     .setUsername(snapshot.getUsername());
             result.add(snapshotMetaEntity);
-        }
-        return result;
-    }
-
-    private BigInteger addBigIntegers(BigInteger... values) {
-        BigInteger result = BigInteger.ZERO;
-        for (BigInteger value : values) {
-            result = result.add(value);
         }
         return result;
     }
