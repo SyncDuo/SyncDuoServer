@@ -52,7 +52,7 @@
 1. 定义一个 backup 节点
 2. 接收 source_directory, backup_repository 和 backup_password 三个参数
 3. 成功则输出/聚合 json, 存储在 context_data 中
-### RESTIC 备份信息表
+### RESTIC 备份信息表 -- 完成
 1. 定义一个 restic extract 节点
 2. 从 restic command 获取 snapshots 信息, 需要包括
    1. source directory
@@ -67,7 +67,7 @@
 1. 定义一个 云盘备份节点
 2. 从 restic 备份表中获取未上传的备份信息
 3. 上传
-### RCLONE 文件夹同步
+### RCLONE 文件夹同步 -- 完成
 1. 定义一个 copy 节点
 2. 接收 source_directory, dest_directory 两个参数
 3. 成功则输出/聚合 json, 存储在 context data 中

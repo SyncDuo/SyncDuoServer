@@ -29,7 +29,7 @@ import java.util.Map;
         }
 )
 @Slf4j
-public class Copy extends BaseNode {
+public class LocalCopy extends BaseNode {
         @Override
         public NodeResult execute(FlowContext context) {
                 String srcDir = FieldRegistry.getString(FieldRegistry.SOURCE_DIRECTORY, context);
