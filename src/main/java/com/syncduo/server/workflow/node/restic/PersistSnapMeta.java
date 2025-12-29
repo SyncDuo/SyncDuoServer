@@ -7,14 +7,11 @@ import com.syncduo.server.workflow.core.model.execution.FlowContext;
 import com.syncduo.server.workflow.core.model.execution.NodeResult;
 import com.syncduo.server.workflow.mapper.SnapshotMetaMapper;
 import com.syncduo.server.workflow.model.db.SnapshotMetaEntity;
-import com.syncduo.server.workflow.node.model.CommandResult;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
 import com.syncduo.server.workflow.node.restic.model.Snapshot;
-import com.syncduo.server.workflow.node.restic.utils.ResticUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.executor.BatchResult;
 
@@ -25,11 +22,10 @@ import java.util.Set;
 
 @Node(
         name = "persist_snap_meta",
-        description = "使用 restic command 获取 snapshot 的元数据, 存储到数据库",
+        description = "使用 restic command 获取 snapshot 的元数据, 增量新增到数据库",
         group = "restic",
         inputParams = {
-                FieldRegistry.RESTIC_BACKUP_REPOSITORY,
-                FieldRegistry.RESTIC_PASSWORD
+                FieldRegistry.RESTIC_SNAPSHOTS
         }
 )
 @Slf4j
@@ -40,32 +36,15 @@ public class PersistSnapMeta extends BaseNode {
     @Override
     public NodeResult execute(FlowContext context) {
         String resticBackupRepository = FieldRegistry.getString(FieldRegistry.RESTIC_BACKUP_REPOSITORY, context);
-        String resticPassword = FieldRegistry.getString(FieldRegistry.RESTIC_PASSWORD, context);
-        if (StringUtils.isAnyBlank(resticBackupRepository, resticPassword)) {
-            return NodeResult.failed("resticBackupRepository 或 resticPassword 为空");
+        if (StringUtils.isAnyBlank(resticBackupRepository)) {
+            return NodeResult.failed("resticBackupRepository 为空");
         }
-        // build snapshots command line
-        CommandLine commandLine = new CommandLine("restic");
-        commandLine.addArgument("--json");
-        commandLine.addArgument("snapshots");
-        CommandResult result = ResticUtil.execute(
-                resticPassword,
-                resticBackupRepository,
-                commandLine
-        );
-        if (!result.isSuccess()) {
-            return NodeResult.failed("restic 运行失败: " + result.getError());
-        }
-        String jsonOutput = result.getOutput();
-        if (StringUtils.isBlank(jsonOutput)) {
-            return NodeResult.success();
-        }
-        List<Snapshot> snapshots = JsonUtil.deserToList(jsonOutput, Snapshot.class);
+        // 获取输出
+        List<Snapshot> snapshots = FieldRegistry.getResticSnapshots(context);
         if (CollectionUtils.isEmpty(snapshots)) {
             return NodeResult.success();
         }
         // 找出不在 DB 的 snapshot id
-        // todo: 找出不在 restic backup repository 的 snapshot meta
         String snapshotIdsJson = JsonUtil.serializeToString(snapshots.stream().map(Snapshot::getId).toList());
         Set<String> missingSnapshotIds = this.snapshotMetaMapper.findMissingSnapshotIds(snapshotIdsJson);
         if (CollectionUtils.isEmpty(missingSnapshotIds)) {

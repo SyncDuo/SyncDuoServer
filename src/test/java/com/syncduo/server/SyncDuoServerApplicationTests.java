@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.controller.FileSystemAccessController;
 import com.syncduo.server.controller.SystemInfoController;
+import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.enums.ResticExitCodeEnum;
 import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.SyncDuoException;
@@ -163,6 +164,65 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
+    void DeleteSnapMetaNodeTest() {
+        FlowNode node1 = new FlowNode(
+                "1",
+                "backup",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL),
+                        FieldRegistry.SOURCE_DIRECTORY, new ParamValue(this.sourceFolderPath, ParamSourceType.MANUAL)
+                ),
+                List.of("2")
+        );
+        FlowNode node2 = new FlowNode(
+                "2",
+                "fetch_snapshots",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL)
+                ),
+                List.of("3")
+        );
+        FlowNode node3 = new FlowNode(
+                "3",
+                "persist_snap_meta",
+                Map.of(
+                        FieldRegistry.RESTIC_SNAPSHOTS, new ParamValue(null, ParamSourceType.NODE_OUTPUT)
+                ),
+                List.of("4")
+        );
+        // 注意, 需要在 fetch_snapshots node 执行前手动删除 snapshots
+        FlowNode node4 = new FlowNode(
+                "4",
+                "fetch_snapshots",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL)
+                ),
+                List.of("5")
+        );
+        FlowNode node5 = new FlowNode(
+                "5",
+                "delete_snap_meta",
+                Map.of(
+                        FieldRegistry.RESTIC_SNAPSHOTS, new ParamValue(null, ParamSourceType.NODE_OUTPUT)
+                ),
+                Collections.emptyList()
+        );
+        FlowDefinition tmp = new FlowDefinition("tmp", List.of(node1, node2, node3, node4, node5));
+        this.flowEngine.execute(1L, tmp);
+        waitSec(60);
+        List<SnapshotMetaEntity> allResult = this.snapshotMetaMapper.selectList(new QueryWrapper<>());
+        assertEquals(0,
+                allResult.stream()
+                        .filter(n -> n.getRecordDeleted().equals(DeletedEnum.DELETED.getCode()))
+                        .toList()
+                        .size()
+        );
+    }
+
+    @Test
     void PersistSnapDataNodeTest() {
         FlowNode node1 = new FlowNode(
                 "1",
@@ -176,19 +236,18 @@ class SyncDuoServerApplicationTests {
         );
         FlowNode node2 = new FlowNode(
                 "2",
-                "persist_snap_meta",
+                "fetch_snapshots",
                 Map.of(
                         FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
                         FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL)
                 ),
-                Collections.emptyList()
+                List.of("3")
         );
         FlowNode node3 = new FlowNode(
                 "3",
                 "persist_snap_meta",
                 Map.of(
-                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
-                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL)
+                        FieldRegistry.RESTIC_SNAPSHOTS, new ParamValue(null, ParamSourceType.NODE_OUTPUT)
                 ),
                 Collections.emptyList()
         );

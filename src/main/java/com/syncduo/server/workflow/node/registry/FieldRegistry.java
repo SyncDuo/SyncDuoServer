@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.syncduo.server.util.JsonUtil;
 import com.syncduo.server.workflow.core.model.execution.FlowContext;
 import com.syncduo.server.workflow.node.rclone.model.CopyResult;
+import com.syncduo.server.workflow.node.restic.model.Snapshot;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
@@ -26,6 +27,8 @@ public final class FieldRegistry {
     public static final String RESTIC_PASSWORD = "RESTIC_PASSWORD";
 
     public static final String RESTIC_BACKUP_RESULT = "RESTIC_BACKUP_RESULT";
+
+    public static final String RESTIC_SNAPSHOTS = "RESTIC_SNAPSHOTS";
 
     public static final String DST_DIRECTORY = "DST_DIRECTORY";
 
@@ -66,6 +69,11 @@ public final class FieldRegistry {
                 "restic 备份结果(json lines)",
                 "restic"
         ));
+        FieldDefinitionMap.put(RESTIC_SNAPSHOTS, new Definition(
+                new TypeReference<List<Snapshot>>() {},
+                "restic snapshots 命令结果(json lines)",
+                "restic"
+        ));
         FieldDefinitionMap.put(RCLONE_COPY_RESULT, new Definition(
                 new TypeReference<CopyResult>() {},
                 "rclone使用copy命令返回的结果",
@@ -75,6 +83,10 @@ public final class FieldRegistry {
 
     public static String getString(String fieldName, FlowContext context) {
         return getValue(fieldName, context);
+    }
+
+    public static List<Snapshot> getResticSnapshots(FlowContext context) {
+        return getValue(FieldRegistry.RESTIC_SNAPSHOTS, context);
     }
 
     /**
