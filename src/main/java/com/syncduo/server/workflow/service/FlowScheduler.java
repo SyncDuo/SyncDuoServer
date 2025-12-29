@@ -124,7 +124,7 @@ public class FlowScheduler implements SmartLifecycle {
 
     @Override
     public boolean isRunning() {
-        return MapUtils.isEmpty(flowScheduleMap);
+        return MapUtils.isNotEmpty(flowScheduleMap);
     }
 
     @RequiredArgsConstructor

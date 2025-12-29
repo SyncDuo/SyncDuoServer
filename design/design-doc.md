@@ -12,6 +12,22 @@
    2. flow name 全局唯一, 需要查重
 5. 点击保存
 
+### 新建手动触发 Flow
+1. 点击 "新建手动触发Flow" 按钮
+2. 展示Json编辑器, 编排 "Node"
+   1. 前端校验 json 完整性
+   2. 后端校验 json 正确性(是否有序号, node是否定义存在)
+3. 点击下一步, 配置所有 "Node" 需要的参数
+   1. 后端返回依赖分析, 哪些参数需要配置, 哪些参数"由前置node提供". 前置node提供的参数预填充, 用户可以覆盖
+4. 点击下一步, 设置 "Flow"的名字
+   1. flow name 全局唯一, 需要查重
+5. 点击保存
+
+### HTTP 触发 Flow 执行
+1. 暴露 HTTP 节点, 传入需要手动触发的 FlowInfoDTO(必须先完成创建)
+2. 执行 Flow
+3. 暴露 HTTP 节点, 支持执行完成的 Flow 在 5 minutes 内查询状态
+
 ### 查看Flow -- 完成
 1. 点击dashboard的Workflow目录
 2. 展示workflow列表,包含 id, name, corn, status, next_run_date 四列. 详情,编辑,删除三个按钮
@@ -47,7 +63,7 @@
       2. 异常结束, mq 发出 "node 失败" 和 "flow 失败", 终止 flow
    4. flow 结束后, 发出 "flow 成功"
 
-## 功能用户故事
+## 节点用户故事
 ### RESTIC 备份 -- 完成
 1. 定义一个 backup 节点
 2. 接收 source_directory, backup_repository 和 backup_password 三个参数
@@ -63,6 +79,10 @@
    6. hostname, username
    7. file count
    8. directory count
+### RESTIC 备份还原
+1. 定义一个 restic restore 节点
+2. 接受 snapshot meta entity id, 需要还原的文件的 path(List<String>)
+3. 还原到指定的目录
 ### 云盘备份
 1. 定义一个 云盘备份节点
 2. 从 restic 备份表中获取未上传的备份信息

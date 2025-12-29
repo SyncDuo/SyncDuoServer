@@ -18,7 +18,6 @@ import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.executor.BatchResult;
 
-import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +65,7 @@ public class PersistSnapMeta extends BaseNode {
             return NodeResult.success();
         }
         // 找出不在 DB 的 snapshot id
+        // todo: 找出不在 restic backup repository 的 snapshot meta
         String snapshotIdsJson = JsonUtil.serializeToString(snapshots.stream().map(Snapshot::getId).toList());
         Set<String> missingSnapshotIds = this.snapshotMetaMapper.findMissingSnapshotIds(snapshotIdsJson);
         if (CollectionUtils.isEmpty(missingSnapshotIds)) {
