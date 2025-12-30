@@ -5,6 +5,7 @@ import com.syncduo.server.util.JsonUtil;
 import com.syncduo.server.workflow.core.model.execution.FlowContext;
 import com.syncduo.server.workflow.node.rclone.model.CopyResult;
 import com.syncduo.server.workflow.node.restic.model.Snapshot;
+import com.syncduo.server.workflow.node.restic.model.SnapshotItem;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
@@ -29,6 +30,12 @@ public final class FieldRegistry {
     public static final String RESTIC_BACKUP_RESULT = "RESTIC_BACKUP_RESULT";
 
     public static final String RESTIC_SNAPSHOTS = "RESTIC_SNAPSHOTS";
+
+    public static final String RESTIC_SNAPSHOT_ID = "RESTIC_SNAPSHOT_ID";
+
+    public static final String RESTIC_LS_FILTER = "RESTIC_LS_FILTER";
+
+    public static final String RESTIC_LS_RESULT = "RESTIC_LS_RESULT";
 
     public static final String DST_DIRECTORY = "DST_DIRECTORY";
 
@@ -72,6 +79,21 @@ public final class FieldRegistry {
         FieldDefinitionMap.put(RESTIC_SNAPSHOTS, new Definition(
                 new TypeReference<List<Snapshot>>() {},
                 "restic snapshots 命令结果(json lines)",
+                "restic"
+        ));
+        FieldDefinitionMap.put(RESTIC_SNAPSHOT_ID, new Definition(
+                new TypeReference<String>() {},
+                "restic snapshot id",
+                "restic"
+        ));
+        FieldDefinitionMap.put(RESTIC_LS_FILTER, new Definition(
+                new TypeReference<String>() {},
+                "restic ls 命令传入的 filter, 过滤文件和文件夹路径",
+                "restic"
+        ));
+        FieldDefinitionMap.put(RESTIC_LS_RESULT, new Definition(
+                new TypeReference<List<SnapshotItem>>() {},
+                "restic ls 命令返回的 node 信息",
                 "restic"
         ));
         FieldDefinitionMap.put(RCLONE_COPY_RESULT, new Definition(

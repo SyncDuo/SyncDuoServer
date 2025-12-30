@@ -1,5 +1,6 @@
 package com.syncduo.server;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.syncduo.server.bus.FolderWatcher;
 import com.syncduo.server.controller.FileSystemAccessController;
@@ -144,6 +145,53 @@ class SyncDuoServerApplicationTests {
         this.flowDefinitionMapper = flowDefinitionMapper;
         this.snapshotMetaMapper = snapshotMetaMapper;
         this.flowEngine = flowEngine;
+    }
+
+    @Test
+    void FetchSnapshotItemNodeTest() {
+        FlowNode node1 = new FlowNode(
+                "1",
+                "backup",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL),
+                        FieldRegistry.SOURCE_DIRECTORY, new ParamValue(this.sourceFolderPath, ParamSourceType.MANUAL)
+                ),
+                List.of("2")
+        );
+        FlowNode node2 = new FlowNode(
+                "2",
+                "fetch_snapshots",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL)
+                ),
+                List.of("3")
+        );
+        FlowNode node3 = new FlowNode(
+                "3",
+                "persist_snap_meta",
+                Map.of(
+                        FieldRegistry.RESTIC_SNAPSHOTS, new ParamValue(null, ParamSourceType.NODE_OUTPUT)
+                ),
+                List.of()
+        );
+        this.flowEngine.execute(1L, new FlowDefinition("tmp", List.of(node1, node2, node3)));
+        waitSec(20);
+        String snapshotId = this.snapshotMetaMapper.selectList(new LambdaQueryWrapper<>()).get(0).getSnapshotId();
+        FlowNode node4 = new FlowNode(
+                "1",
+                "fetch_snapshot_item",
+                Map.of(
+                        FieldRegistry.RESTIC_LS_FILTER, new ParamValue("/", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_SNAPSHOT_ID, new ParamValue(snapshotId, ParamSourceType.MANUAL)
+                ),
+                List.of()
+        );
+        this.flowEngine.execute(1L, new FlowDefinition("tmp", List.of(node4)));
+        waitSec(15);
     }
 
     @Test

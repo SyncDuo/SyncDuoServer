@@ -81,8 +81,12 @@
    8. directory count
 ### RESTIC 备份还原
 1. 定义一个 restic restore 节点
-2. 接受 snapshot meta entity id, 需要还原的文件的 path(List<String>)
-3. 还原到指定的目录
+2. 接受 snapshot meta entity id, 需要还原的 item path(单个文件 or 文件夹)
+3. 返回还原的文件or文件夹(zip)的 java.nio.Path
+### RESTIC LS 节点
+1. 定义一个 restic ls 节点
+2. 接收 snapshot meta entity, 和 filter 选项(默认是 "/")
+3. 返回 filter 下的文件和文件夹(不是递归)
 ### 云盘备份
 1. 定义一个 云盘备份节点
 2. 从 restic 备份表中获取未上传的备份信息
