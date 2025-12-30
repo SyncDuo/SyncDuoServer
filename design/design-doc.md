@@ -79,11 +79,11 @@
    6. hostname, username
    7. file count
    8. directory count
-### RESTIC 备份还原
+### RESTIC 备份还原 -- 完成
 1. 定义一个 restic restore 节点
 2. 接受 snapshot meta entity id, 需要还原的 item path(单个文件 or 文件夹)
 3. 返回还原的文件or文件夹(zip)的 java.nio.Path
-### RESTIC LS 节点
+### RESTIC LS 节点 -- 完成
 1. 定义一个 restic ls 节点
 2. 接收 snapshot meta entity, 和 filter 选项(默认是 "/")
 3. 返回 filter 下的文件和文件夹(不是递归)
@@ -98,4 +98,11 @@
 
 
 ## DAG 引擎用户故事
-### NODE 执行日志
+### 临时执行
+1. 接口一: 接收一个 flow 定义, 返回 jobId; 
+   1. jobId 是随机 number, 放入 map
+   2. 执行 flow
+   3. flow 完成把 flow msg 放入 map
+   4. 开启 5 分钟任务把这个 entry 从 map 中去掉
+2. 接口二: 接收 jobId, 返回 flow 执行状态和结果
+   1. 查询 map 并返回

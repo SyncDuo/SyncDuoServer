@@ -28,7 +28,7 @@ import java.util.Map;
                 FieldRegistry.RESTIC_BACKUP_REPOSITORY
         },
         outputParams = {
-                FieldRegistry.RESTIC_LS_RESULT
+                FieldRegistry.RESTIC_SNAPSHOT_ITEMS
         }
 )
 @Slf4j
@@ -60,6 +60,6 @@ public class FetchSnapItem extends BaseNode {
         );
         return CollectionUtils.isEmpty(snapshotItems) ?
                 NodeResult.success() :
-                NodeResult.success(Map.of(FieldRegistry.RESTIC_LS_RESULT, snapshotItems));
+                NodeResult.success(Map.of(FieldRegistry.RESTIC_SNAPSHOT_ITEMS, snapshotItems));
     }
 }

@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +36,9 @@ public final class FieldRegistry {
 
     public static final String RESTIC_LS_FILTER = "RESTIC_LS_FILTER";
 
-    public static final String RESTIC_LS_RESULT = "RESTIC_LS_RESULT";
+    public static final String RESTIC_SNAPSHOT_ITEMS = "RESTIC_SNAPSHOT_ITEMS";
+
+    public static final String RESTIC_RESTORE_RESULT = "RESTIC_RESTORE_RESULT";
 
     public static final String DST_DIRECTORY = "DST_DIRECTORY";
 
@@ -91,9 +94,14 @@ public final class FieldRegistry {
                 "restic ls 命令传入的 filter, 过滤文件和文件夹路径",
                 "restic"
         ));
-        FieldDefinitionMap.put(RESTIC_LS_RESULT, new Definition(
+        FieldDefinitionMap.put(RESTIC_SNAPSHOT_ITEMS, new Definition(
                 new TypeReference<List<SnapshotItem>>() {},
                 "restic ls 命令返回的 node 信息",
+                "restic"
+        ));
+        FieldDefinitionMap.put(RESTIC_RESTORE_RESULT, new Definition(
+                new TypeReference<Path>() {},
+                "restic restore 的结果(单个文件则保持原样, 文件夹或多个文件/文件夹则 zip 文件",
                 "restic"
         ));
         FieldDefinitionMap.put(RCLONE_COPY_RESULT, new Definition(

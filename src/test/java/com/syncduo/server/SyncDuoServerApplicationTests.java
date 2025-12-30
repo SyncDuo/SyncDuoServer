@@ -148,6 +148,64 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
+    void RestoreNodeTest() {
+        FlowNode node1 = new FlowNode(
+                "1",
+                "backup",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL),
+                        FieldRegistry.SOURCE_DIRECTORY, new ParamValue(this.sourceFolderPath, ParamSourceType.MANUAL)
+                ),
+                List.of("2")
+        );
+        FlowNode node2 = new FlowNode(
+                "2",
+                "fetch_snapshots",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL)
+                ),
+                List.of("3")
+        );
+        FlowNode node3 = new FlowNode(
+                "3",
+                "persist_snap_meta",
+                Map.of(
+                        FieldRegistry.RESTIC_SNAPSHOTS, new ParamValue(null, ParamSourceType.NODE_OUTPUT)
+                ),
+                List.of()
+        );
+        this.flowEngine.execute(1L, new FlowDefinition("tmp", List.of(node1, node2, node3)));
+        waitSec(20);
+        String snapshotId = this.snapshotMetaMapper.selectList(new LambdaQueryWrapper<>()).get(0).getSnapshotId();
+        FlowNode node4 = new FlowNode(
+                "1",
+                "fetch_snapshot_item",
+                Map.of(
+                        FieldRegistry.RESTIC_LS_FILTER, new ParamValue("/TestFolder1_1/TestFile1_1.bin", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_SNAPSHOT_ID, new ParamValue(snapshotId, ParamSourceType.MANUAL)
+                ),
+                List.of()
+        );
+        FlowNode node5 = new FlowNode(
+                "2",
+                "restore",
+                Map.of(
+                        FieldRegistry.RESTIC_SNAPSHOT_ID, new ParamValue(snapshotId, ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_SNAPSHOT_ITEMS, new ParamValue(null, ParamSourceType.NODE_OUTPUT),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL)
+                ),
+                List.of()
+        );
+        this.flowEngine.execute(1L, new FlowDefinition("tmp", List.of(node4, node5)));
+        waitSec(10);
+    }
+
+    @Test
     void FetchSnapshotItemNodeTest() {
         FlowNode node1 = new FlowNode(
                 "1",
@@ -583,6 +641,7 @@ class SyncDuoServerApplicationTests {
         // delete restore folder
         FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(restorePath));
         log.info("delete all folder");
+        // delete temp folder(start with "restore")
     }
 
     void truncateAllTable() {
