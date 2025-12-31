@@ -21,6 +21,7 @@ import com.syncduo.server.service.db.impl.SyncFlowService;
 import com.syncduo.server.service.restic.ResticFacadeService;
 import com.syncduo.server.workflow.controller.FlowEditorController;
 import com.syncduo.server.workflow.controller.FlowInfoController;
+import com.syncduo.server.workflow.controller.ResticController;
 import com.syncduo.server.workflow.core.engine.FlowEngine;
 import com.syncduo.server.workflow.core.enums.ParamSourceType;
 import com.syncduo.server.workflow.core.model.definition.FlowDefinition;
@@ -34,6 +35,8 @@ import com.syncduo.server.workflow.model.api.editor.CreateFlowRequest;
 import com.syncduo.server.workflow.model.api.editor.FieldSchemaDTO;
 import com.syncduo.server.workflow.model.api.global.FlowResponse;
 import com.syncduo.server.workflow.model.api.info.FlowInfoDTO;
+import com.syncduo.server.workflow.model.api.snapshot.RestoreRequest;
+import com.syncduo.server.workflow.model.api.snapshot.SnapshotItemDTO;
 import com.syncduo.server.workflow.model.db.FlowDefinitionEntity;
 import com.syncduo.server.workflow.model.db.FlowExecutionEntity;
 import com.syncduo.server.workflow.model.db.SnapshotMetaEntity;
@@ -42,11 +45,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -84,6 +91,8 @@ class SyncDuoServerApplicationTests {
     private final RestoreJobService restoreJobService;
 
     private final SystemInfoController systemInfoController;
+
+    private final ResticController resticController;
 
     private final FileSystemAccessController fileSystemAccessController;
 
@@ -124,6 +133,7 @@ class SyncDuoServerApplicationTests {
             BackupJobService backupJobService,
             RestoreJobService restoreJobService,
             SystemInfoController systemInfoController,
+            ResticController resticController,
             FileSystemAccessController fileSystemAccessController,
             FlowExecutionMapper flowExecutionMapper,
             NodeExecutionMapper nodeExecutionMapper,
@@ -139,12 +149,39 @@ class SyncDuoServerApplicationTests {
         this.backupJobService = backupJobService;
         this.restoreJobService = restoreJobService;
         this.systemInfoController = systemInfoController;
+        this.resticController = resticController;
         this.fileSystemAccessController = fileSystemAccessController;
         this.flowExecutionMapper = flowExecutionMapper;
         this.nodeExecutionMapper = nodeExecutionMapper;
         this.flowDefinitionMapper = flowDefinitionMapper;
         this.snapshotMetaMapper = snapshotMetaMapper;
         this.flowEngine = flowEngine;
+    }
+
+    @Test
+    void GetAllSnapshotsTest() throws IOException {
+        this.CreateDataInDB();
+        FlowResponse<List<SnapshotMetaEntity>> result = this.resticController.getAllSnapshot();
+        Assertions.assertEquals(200, result.getStatusCode());
+        assertTrue(CollectionUtils.isNotEmpty(result.getData()));
+        FlowResponse<List<SnapshotItemDTO>> ls = this.resticController.getSnapshotItem(result.getData().get(0), "/");
+        Assertions.assertEquals(200, ls.getStatusCode());
+        assertTrue(CollectionUtils.isNotEmpty(ls.getData()));
+        ResponseEntity<Resource> responseEntity = this.resticController.download(
+                new RestoreRequest(
+                        result.getData().get(0),
+                        ls.getData()
+                ),
+                false
+        );
+        assertEquals(200, responseEntity.getStatusCode().value());
+        ContentDisposition contentDisposition = responseEntity.getHeaders().getContentDisposition();
+        assertNotNull(contentDisposition);
+        assertTrue(contentDisposition.isAttachment());
+        assertNotNull(contentDisposition.getFilename());
+        assertTrue(contentDisposition.getFilename().contains("zip"));
+        assertNotNull(responseEntity.getBody());
+        assertTrue(responseEntity.getBody().contentLength() > 0);
     }
 
     @Test
@@ -195,7 +232,7 @@ class SyncDuoServerApplicationTests {
                 "restore",
                 Map.of(
                         FieldRegistry.RESTIC_SNAPSHOT_ID, new ParamValue(snapshotId, ParamSourceType.MANUAL),
-                        FieldRegistry.RESTIC_SNAPSHOT_ITEMS, new ParamValue(null, ParamSourceType.NODE_OUTPUT),
+                        FieldRegistry.RESTIC_SNAPSHOT_NODES, new ParamValue(null, ParamSourceType.NODE_OUTPUT),
                         FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL),
                         FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL)
                 ),
@@ -362,24 +399,6 @@ class SyncDuoServerApplicationTests {
         waitSec(15);
         List<SnapshotMetaEntity> allResult = this.snapshotMetaMapper.selectList(new QueryWrapper<>());
         assertEquals(1, allResult.size());
-    }
-
-    @Test
-    void CreateDataInDB() {
-        for (int i = 0; i < 4; i++) {
-            FlowResponse<FlowDefinitionEntity> response = this.flowEditorController.createFlow(new CreateFlowRequest(
-                    "tmp" + i,
-                    "0 0 18 * * MON-FRI",
-                    "tmp" + i,
-                    this.nodeList,
-                    this.fieldSchemaDTOList
-            ));
-            FlowDefinition definition = response.getData().getDefinition();
-            Future<?> task = this.flowEngine.execute(response.getData().getFlowDefinitionId(), definition);
-            while (!task.isDone()) {
-                waitSec(5);
-            }
-        }
     }
 
     @Test
@@ -558,6 +577,25 @@ class SyncDuoServerApplicationTests {
                 systemSettings.getRestic());
     }
 
+    @Test
+    void CreateDataInDB() throws IOException {
+        for (int i = 0; i < 4; i++) {
+            FlowResponse<FlowDefinitionEntity> response = this.flowEditorController.createFlow(new CreateFlowRequest(
+                    "tmp" + i,
+                    "0 0 18 * * MON-FRI",
+                    "tmp" + i,
+                    this.nodeList,
+                    this.fieldSchemaDTOList
+            ));
+            FlowDefinition definition = response.getData().getDefinition();
+            Future<?> task = this.flowEngine.execute(response.getData().getFlowDefinitionId(), definition);
+            while (!task.isDone()) {
+                waitSec(10);
+            }
+            FileOperationTestUtil.modifyFile(Path.of(this.sourceFolderPath), i+1);
+        }
+    }
+
     @BeforeEach
     void createFlowDefinition() {
         FlowNode node1 = new FlowNode(
@@ -574,9 +612,27 @@ class SyncDuoServerApplicationTests {
                         FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
                         FieldRegistry.SOURCE_DIRECTORY, new ParamValue(this.sourceFolderPath, ParamSourceType.MANUAL)
                 ),
-                List.of()
+                List.of("3")
         );
-        this.nodeList = List.of(node1, node2);
+        FlowNode node3 = new FlowNode(
+                "3",
+                "fetch_snapshots",
+                Map.of(
+                        FieldRegistry.RESTIC_PASSWORD, new ParamValue("0608", ParamSourceType.MANUAL),
+                        FieldRegistry.RESTIC_BACKUP_REPOSITORY, new ParamValue(this.backupPath, ParamSourceType.MANUAL)
+                ),
+                List.of("4")
+        );
+        FlowNode node4 = new FlowNode(
+                "4",
+                "persist_snap_meta",
+                Map.of(
+                        FieldRegistry.RESTIC_SNAPSHOTS, new ParamValue(null, ParamSourceType.NODE_OUTPUT)
+                ),
+                Collections.emptyList()
+        );
+        this.nodeList = List.of(node1, node2, node3, node4);
+        // node 1 schema
         FieldSchemaDTO node1Schema = new FieldSchemaDTO(node1);
         node1Schema.addFieldSchema(
                 FieldRegistry.SOURCE_DIRECTORY,
@@ -584,6 +640,7 @@ class SyncDuoServerApplicationTests {
                 FieldRegistry.getMeta(FieldRegistry.SOURCE_DIRECTORY),
                 this.sourceFolderPath
         );
+        // node 2 schema
         FieldSchemaDTO node2Schema = new FieldSchemaDTO(node2);
         node2Schema.addFieldSchema(
                 FieldRegistry.RESTIC_BACKUP_REPOSITORY,
@@ -603,7 +660,28 @@ class SyncDuoServerApplicationTests {
                 FieldRegistry.getMeta(FieldRegistry.SOURCE_DIRECTORY),
                 this.sourceFolderPath
         );
-        this.fieldSchemaDTOList = List.of(node1Schema, node2Schema);
+        // node 3 schema
+        FieldSchemaDTO node3Schema = new FieldSchemaDTO(node3);
+        node3Schema.addFieldSchema(
+                FieldRegistry.RESTIC_BACKUP_REPOSITORY,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.RESTIC_BACKUP_REPOSITORY),
+                this.backupPath
+        );
+        node3Schema.addFieldSchema(
+                FieldRegistry.RESTIC_PASSWORD,
+                ParamSourceType.MANUAL.name(),
+                FieldRegistry.getMeta(FieldRegistry.RESTIC_PASSWORD),
+                "0608"
+        );
+        // node 4 schema
+        FieldSchemaDTO node4Schema = new FieldSchemaDTO(node4);
+        node4Schema.addFieldSchema(
+                FieldRegistry.RESTIC_SNAPSHOTS,
+                ParamSourceType.NODE_OUTPUT.name(),
+                FieldRegistry.getMeta(FieldRegistry.RESTIC_SNAPSHOTS)
+        );
+        this.fieldSchemaDTOList = List.of(node1Schema, node2Schema, node3Schema, node4Schema);
     }
 
     void waitSec(long sec) throws SyncDuoException {

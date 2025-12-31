@@ -44,6 +44,8 @@ public class SystemSettings {
 
         private String restorePath;
 
+        private String backupPassword;
+
         @JsonSerialize(using = ToStringSerializer.class)
         private Long restoreAgeSec;
     }

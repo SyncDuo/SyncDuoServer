@@ -7,7 +7,7 @@ import com.syncduo.server.workflow.core.model.execution.FlowContext;
 import com.syncduo.server.workflow.core.model.execution.NodeResult;
 import com.syncduo.server.workflow.node.model.CommandResult;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
-import com.syncduo.server.workflow.node.restic.model.SnapshotItem;
+import com.syncduo.server.workflow.node.restic.model.SnapshotNode;
 import com.syncduo.server.workflow.node.restic.utils.ResticUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @Node(
-        name = "fetch_snapshot_item",
+        name = "fetch_snapshot_nodes",
         description = "使用 restic ls 命令获取 snapshot 内的文件夹和文件路径",
         group = "restic",
         inputParams = {
@@ -28,21 +28,20 @@ import java.util.Map;
                 FieldRegistry.RESTIC_BACKUP_REPOSITORY
         },
         outputParams = {
-                FieldRegistry.RESTIC_SNAPSHOT_ITEMS
+                FieldRegistry.RESTIC_SNAPSHOT_NODES
         }
 )
 @Slf4j
-public class FetchSnapItem extends BaseNode {
+public class FetchSnapNodes extends BaseNode {
     @Override
     public NodeResult execute(FlowContext context) {
         String snapshotId = FieldRegistry.getString(FieldRegistry.RESTIC_SNAPSHOT_ID, context);
         String password = FieldRegistry.getString(FieldRegistry.RESTIC_PASSWORD, context);
         String repository = FieldRegistry.getString(FieldRegistry.RESTIC_BACKUP_REPOSITORY, context);
-        if (StringUtils.isAnyBlank(snapshotId, password, repository)) {
-            return NodeResult.failed("snapshotId, password, repository id is null");
-        }
         String filter = FieldRegistry.getString(FieldRegistry.RESTIC_LS_FILTER, context);
-        filter = StringUtils.isBlank(filter) ? "/" : filter;
+        if (StringUtils.isAnyBlank(snapshotId, password, repository, filter)) {
+            return NodeResult.failed("snapshotId, password, repository id, filter is null");
+        }
         // build command line
         CommandLine commandLine = new CommandLine("restic");
         commandLine.addArgument("ls");
@@ -53,13 +52,13 @@ public class FetchSnapItem extends BaseNode {
         if (!commandResult.isSuccess()) {
             return NodeResult.failed(commandResult.getError());
         }
-        List<SnapshotItem> snapshotItems = JsonUtil.parseResticJsonLines(
+        List<SnapshotNode> snapshotNodes = JsonUtil.parseResticJsonLines(
                 commandResult.getOutput(),
                 "node",
-                SnapshotItem.class
+                SnapshotNode.class
         );
-        return CollectionUtils.isEmpty(snapshotItems) ?
+        return CollectionUtils.isEmpty(snapshotNodes) ?
                 NodeResult.success() :
-                NodeResult.success(Map.of(FieldRegistry.RESTIC_SNAPSHOT_ITEMS, snapshotItems));
+                NodeResult.success(Map.of(FieldRegistry.RESTIC_SNAPSHOT_NODES, snapshotNodes));
     }
 }

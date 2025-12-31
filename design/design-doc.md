@@ -12,22 +12,6 @@
    2. flow name 全局唯一, 需要查重
 5. 点击保存
 
-### 新建手动触发 Flow
-1. 点击 "新建手动触发Flow" 按钮
-2. 展示Json编辑器, 编排 "Node"
-   1. 前端校验 json 完整性
-   2. 后端校验 json 正确性(是否有序号, node是否定义存在)
-3. 点击下一步, 配置所有 "Node" 需要的参数
-   1. 后端返回依赖分析, 哪些参数需要配置, 哪些参数"由前置node提供". 前置node提供的参数预填充, 用户可以覆盖
-4. 点击下一步, 设置 "Flow"的名字
-   1. flow name 全局唯一, 需要查重
-5. 点击保存
-
-### HTTP 触发 Flow 执行
-1. 暴露 HTTP 节点, 传入需要手动触发的 FlowInfoDTO(必须先完成创建)
-2. 执行 Flow
-3. 暴露 HTTP 节点, 支持执行完成的 Flow 在 5 minutes 内查询状态
-
 ### 查看Flow -- 完成
 1. 点击dashboard的Workflow目录
 2. 展示workflow列表,包含 id, name, corn, status, next_run_date 四列. 详情,编辑,删除三个按钮
@@ -62,6 +46,19 @@
       1. 正常结束, 则取出 outputsParam, 放入 context, mq 发出 "node 成功"
       2. 异常结束, mq 发出 "node 失败" 和 "flow 失败", 终止 flow
    4. flow 结束后, 发出 "flow 成功"
+
+## 备份用户故事
+### 查看备份
+1. 点击dashboard的Backup目录
+2. 展示snapshot列表,by source_directory 聚合展示 
+   1. backup time, backup repository, file count + dir count + size, hostname + username, snapshotId(隐藏)
+   2. 文件浏览器按钮
+### 查看备份文件
+1. 点击文件浏览器按钮
+2. 起点默认为 "/", 点击目录则跳转至下一级
+3. 文件/文件夹展示 name, size, modify time, 区分文件/文件夹的 logo
+4. 文件支持预览/下载, 文件夹支持下载
+5. 支持多选下载
 
 ## 节点用户故事
 ### RESTIC 备份 -- 完成
@@ -99,10 +96,6 @@
 
 ## DAG 引擎用户故事
 ### 临时执行
-1. 接口一: 接收一个 flow 定义, 返回 jobId; 
-   1. jobId 是随机 number, 放入 map
-   2. 执行 flow
-   3. flow 完成把 flow msg 放入 map
-   4. 开启 5 分钟任务把这个 entry 从 map 中去掉
-2. 接口二: 接收 jobId, 返回 flow 执行状态和结果
-   1. 查询 map 并返回
+1. 传入 FlowDefinition
+2. 执行 FlowDefinition
+3. 返回的 FutureTask 包含 FlowContext

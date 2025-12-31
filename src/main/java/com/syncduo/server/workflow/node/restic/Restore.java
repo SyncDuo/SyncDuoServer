@@ -7,7 +7,7 @@ import com.syncduo.server.workflow.core.model.execution.FlowContext;
 import com.syncduo.server.workflow.core.model.execution.NodeResult;
 import com.syncduo.server.workflow.node.model.CommandResult;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
-import com.syncduo.server.workflow.node.restic.model.SnapshotItem;
+import com.syncduo.server.workflow.node.restic.model.SnapshotNode;
 import com.syncduo.server.workflow.node.restic.utils.ResticUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -29,7 +29,7 @@ import java.util.UUID;
         group = "restic",
         inputParams = {
                 FieldRegistry.RESTIC_SNAPSHOT_ID,
-                FieldRegistry.RESTIC_SNAPSHOT_ITEMS,
+                FieldRegistry.RESTIC_SNAPSHOT_NODES,
                 FieldRegistry.RESTIC_BACKUP_REPOSITORY,
                 FieldRegistry.RESTIC_PASSWORD
         },
@@ -47,8 +47,8 @@ public class Restore extends BaseNode {
         if (StringUtils.isAnyBlank(snapshotId, repository, password)) {
             return NodeResult.failed("snapshotId, repository, password is null");
         }
-        List<SnapshotItem> snapshotItems = FieldRegistry.getValue(FieldRegistry.RESTIC_SNAPSHOT_ITEMS, context);
-        if (CollectionUtils.isEmpty(snapshotItems)) {
+        List<SnapshotNode> snapshotNodes = FieldRegistry.getValue(FieldRegistry.RESTIC_SNAPSHOT_NODES, context);
+        if (CollectionUtils.isEmpty(snapshotNodes)) {
             return NodeResult.failed("snapshot items is null");
         }
         // build command line
@@ -58,16 +58,16 @@ public class Restore extends BaseNode {
         } catch (IOException e) {
             return NodeResult.failed(e.getMessage());
         }
-        CommandLine commandLine = snapshotItems.size() == 1 ?
-                this.buildCommandLine(snapshotId, snapshotItems.get(0), tempDirectory) :
-                this.buildCommandLine(snapshotId, snapshotItems, tempDirectory);
+        CommandLine commandLine = snapshotNodes.size() == 1 ?
+                this.buildCommandLine(snapshotId, snapshotNodes.get(0), tempDirectory) :
+                this.buildCommandLine(snapshotId, snapshotNodes, tempDirectory);
         CommandResult commandResult = ResticUtil.execute(password, repository, commandLine);
         if (!commandResult.isSuccess()) {
             return NodeResult.failed(commandResult.getError());
         }
         // pack files and dirs
-        if (snapshotItems.size() == 1 && snapshotItems.get(0).isFile()) {
-            File file = FileUtils.getFile(tempDirectory.toFile(), snapshotItems.get(0).getName());
+        if (snapshotNodes.size() == 1 && snapshotNodes.get(0).isFile()) {
+            File file = FileUtils.getFile(tempDirectory.toFile(), snapshotNodes.get(0).getName());
             return NodeResult.success(Map.of(
                     FieldRegistry.RESTIC_RESTORE_RESULT, file.toPath()
             ));
@@ -79,26 +79,26 @@ public class Restore extends BaseNode {
         }
     }
 
-    private CommandLine buildCommandLine(String snapshotId, SnapshotItem snapshotItem, Path tempDir) {
+    private CommandLine buildCommandLine(String snapshotId, SnapshotNode snapshotNode, Path tempDir) {
         CommandLine commandLine = new CommandLine("restic");
         commandLine.addArgument("restore");
-        commandLine.addArgument(snapshotId + ":" + snapshotItem.getParentPath());
+        commandLine.addArgument(snapshotId + ":" + snapshotNode.getParentPath());
         commandLine.addArgument("--target");
         commandLine.addArgument(tempDir.toAbsolutePath().toString());
         commandLine.addArgument("--include");
-        commandLine.addArgument("/" + snapshotItem.getName());
+        commandLine.addArgument("/" + snapshotNode.getName());
         return commandLine;
     }
 
-    private CommandLine buildCommandLine(String snapshotId, List<SnapshotItem> snapshotItems, Path tempDir) {
+    private CommandLine buildCommandLine(String snapshotId, List<SnapshotNode> snapshotNodes, Path tempDir) {
         CommandLine commandLine = new CommandLine("restic");
         commandLine.addArgument("restore");
         commandLine.addArgument(snapshotId);
         commandLine.addArgument("--target");
         commandLine.addArgument(tempDir.toAbsolutePath().toString());
-        for (SnapshotItem snapshotItem : snapshotItems) {
+        for (SnapshotNode snapshotNode : snapshotNodes) {
             commandLine.addArgument("--include");
-            commandLine.addArgument("/" + snapshotItem.getName());
+            commandLine.addArgument("/" + snapshotNode.getName());
         }
         return commandLine;
     }

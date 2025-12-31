@@ -40,6 +40,26 @@ public class FlowEngine {
         return executor.submit(() -> this.executeFlow(sortedNodes, flowContext));
     }
 
+    public Future<FlowContext> executeOnce(FlowDefinition flowDefinition) {
+        List<FlowNode> flowNodes = this.flowValidator.topologicalSort(flowDefinition);
+        FlowContext flowContext = this.createFlowContextFromNodes(-1L, flowDefinition); // -1 代表执行一次
+        return executor.submit(() -> {
+            for (FlowNode flowNode : flowNodes) {
+                // 获取 node 对应的实现
+                BaseNode node = this.flowValidator.getNodeByName(flowNode.getName());
+                // Node 执行开始
+                NodeResult nodeResult = node.execute(flowContext);
+                // Node 执行结束
+                if (nodeResult.getExecStatus().equals(ExecStatus.FAILED)) {
+                    throw new Exception("node execute failed, error is %s".formatted(nodeResult.getError()));
+                }
+                // 将 node 的输出放入 context
+                flowContext.putAll(nodeResult);
+            }
+            return flowContext;
+        });
+    }
+
     private void executeFlow(List<FlowNode> sortedNodes, FlowContext flowContext) {
         // Flow 执行开始
         this.mq.sendFlowMessage(flowContext, ExecStatus.RUNNING);

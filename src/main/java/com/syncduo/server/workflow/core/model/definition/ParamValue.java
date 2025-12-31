@@ -13,4 +13,9 @@ public class ParamValue {
     private Object value;
 
     private ParamSourceType paramSourceType; // param 来源
+
+    public ParamValue(Object value) {
+        this.value = value;
+        this.paramSourceType = ParamSourceType.MANUAL;
+    }
 }

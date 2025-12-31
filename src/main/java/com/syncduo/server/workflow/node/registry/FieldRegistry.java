@@ -5,8 +5,7 @@ import com.syncduo.server.util.JsonUtil;
 import com.syncduo.server.workflow.core.model.execution.FlowContext;
 import com.syncduo.server.workflow.node.rclone.model.CopyResult;
 import com.syncduo.server.workflow.node.restic.model.Snapshot;
-import com.syncduo.server.workflow.node.restic.model.SnapshotItem;
-import lombok.Data;
+import com.syncduo.server.workflow.node.restic.model.SnapshotNode;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -16,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Data
 @RequiredArgsConstructor
 public final class FieldRegistry {
 
@@ -36,7 +34,7 @@ public final class FieldRegistry {
 
     public static final String RESTIC_LS_FILTER = "RESTIC_LS_FILTER";
 
-    public static final String RESTIC_SNAPSHOT_ITEMS = "RESTIC_SNAPSHOT_ITEMS";
+    public static final String RESTIC_SNAPSHOT_NODES = "RESTIC_SNAPSHOT_NODES";
 
     public static final String RESTIC_RESTORE_RESULT = "RESTIC_RESTORE_RESULT";
 
@@ -94,8 +92,8 @@ public final class FieldRegistry {
                 "restic ls 命令传入的 filter, 过滤文件和文件夹路径",
                 "restic"
         ));
-        FieldDefinitionMap.put(RESTIC_SNAPSHOT_ITEMS, new Definition(
-                new TypeReference<List<SnapshotItem>>() {},
+        FieldDefinitionMap.put(RESTIC_SNAPSHOT_NODES, new Definition(
+                new TypeReference<List<SnapshotNode>>() {},
                 "restic ls 命令返回的 node 信息",
                 "restic"
         ));
