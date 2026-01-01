@@ -293,7 +293,8 @@ public class JsonUtil {
 
     public static List<String> deserializeStringToList(String jsonString) throws JsonException {
         try {
-            return objectMapper.readValue(jsonString, new TypeReference<>() {});
+            return objectMapper.readValue(jsonString, new TypeReference<>() {
+            });
         } catch (JsonProcessingException e) {
             throw new JsonException("deserializeStringToList failed. jsonString is %s".formatted(jsonString), e);
         }

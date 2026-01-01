@@ -43,7 +43,7 @@ public class FilesystemUtil {
 
     public static List<Path> getAllFile(Path folder)
             throws FileOperationException {
-        try(Stream<Path> list = Files.list(folder)) {
+        try (Stream<Path> list = Files.list(folder)) {
             return list.filter(Files::isRegularFile).toList();
         } catch (IOException e) {
             throw new FileOperationException("getAllFile failed.", e);
