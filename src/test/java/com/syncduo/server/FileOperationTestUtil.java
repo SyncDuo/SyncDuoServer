@@ -3,13 +3,10 @@ package com.syncduo.server;
 import com.syncduo.server.exception.FlowException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -116,54 +113,6 @@ public class FileOperationTestUtil {
         writeRandomBinaryData(binFile);
     }
 
-    // pair<Txt File, Binary File>
-    public static Pair<Path, Path> createTxtAndBinFile(Path folderPath) throws IOException {
-        // Create .txt file with the naming convention
-        Path txtFile = folderPath.resolve("justText" + ".txt");
-        if (!Files.exists(txtFile)) {
-            Files.createFile(txtFile);
-        }
-        // Write numbers 1 to 10 to the .txt file
-        Files.write(txtFile, generateNumbers(), StandardOpenOption.WRITE);
-        // Create .bin file with the naming convention
-        Path binFile = folderPath.resolve("justBinary" + ".bin");
-        if (!Files.exists(binFile)) {
-            Files.createFile(binFile);
-        }
-        // Write random binary data to the .bin file
-        writeRandomBinaryData(binFile);
-        return new ImmutablePair<>(txtFile, binFile);
-    }
-
-    public static void createDuplicateFiles(Path folderPath) throws IOException {
-        int chunkSize = 1024 * 1024; // 1 MB
-        int totalChunks = 5; // 5 MB
-        byte[] buffer = new byte[chunkSize];
-        random.nextBytes(buffer);
-        for (int i = 0; i < 10; i++) {
-            // Create duplicate .txt file
-            Path txtFile = folderPath.resolve("justText" + i + ".txt");
-            if (!Files.exists(txtFile)) {
-                Files.createFile(txtFile);
-            }
-            Files.write(txtFile, "12345678910".getBytes(), StandardOpenOption.WRITE);
-            // Create duplicate .bin file
-            Path binFile = folderPath.resolve("justBinary" + i + ".bin");
-            if (!Files.exists(binFile)) {
-                Files.createFile(binFile);
-            }
-            // Write binary data to the .bin file
-            try (var out = Files.newOutputStream(
-                    binFile,
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING)) {
-                for (int j = 0; j < totalChunks; j++) {
-                    out.write(buffer);
-                }
-            }
-        }
-    }
-
     public static void modifyFile(Path folderPath, int number) throws IOException, FlowException {
         // 获取所有文件
         List<Path> allFile = getAllFile(folderPath);
@@ -180,23 +129,6 @@ public class FileOperationTestUtil {
             }
             cur++;
         }
-    }
-
-    public static List<Path> deleteFile(Path folderPath, int number) throws IOException, FlowException {
-        List<Path> files = new ArrayList<>(number);
-        // 获取所有文件
-        List<Path> allFile = getAllFile(folderPath);
-        // 遍历 number 个文件, 并删除, 且作为结果返回
-        int cur = 0;
-        for (Path file : allFile) {
-            if (cur == number) {
-                break;
-            }
-            Files.deleteIfExists(file);
-            cur++;
-            files.add(file);
-        }
-        return files;
     }
 
     public static void writeToTextFile(Path file) throws IOException {
