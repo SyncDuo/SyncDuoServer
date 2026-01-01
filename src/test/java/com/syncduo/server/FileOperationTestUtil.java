@@ -1,6 +1,8 @@
 package com.syncduo.server;
 
 import com.syncduo.server.exception.SyncDuoException;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -16,6 +18,25 @@ import static com.syncduo.server.util.FilesystemUtil.getAllFile;
 public class FileOperationTestUtil {
 
     private static final Random random = new Random();
+
+    public static void deleteDirWithPrefix(String prefix) {
+        if (StringUtils.isAnyBlank(prefix)) {
+            return;
+        }
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(FileUtils.getTempDirectory().toPath())) {
+            for (Path dir : stream) {
+                if (!Files.isDirectory(dir)) {
+                    continue;
+                }
+                if (!dir.getFileName().toString().startsWith(prefix)) {
+                    continue;
+                }
+                FileUtils.deleteDirectory(dir.toFile());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("操作临时文件夹失败", e);
+        }
+    }
 
     public static void createFolders(String path, int depth, int width) throws IOException {
         Path folderPath = Paths.get(path);
@@ -143,8 +164,7 @@ public class FileOperationTestUtil {
         }
     }
 
-    public static List<Path> modifyFile(Path folderPath, int number) throws IOException, SyncDuoException {
-        List<Path> files = new ArrayList<>(number);
+    public static void modifyFile(Path folderPath, int number) throws IOException, SyncDuoException {
         // 获取所有文件
         List<Path> allFile = getAllFile(folderPath);
         // 遍历 number 个文件, 并修改, 且作为结果返回
@@ -159,9 +179,7 @@ public class FileOperationTestUtil {
                 writeRandomBinaryData(file);
             }
             cur++;
-            files.add(file);
         }
-        return files;
     }
 
     public static List<Path> deleteFile(Path folderPath, int number) throws IOException, SyncDuoException {

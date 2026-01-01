@@ -1,5 +1,6 @@
 package com.syncduo.server.workflow.node.restic.utils;
 
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.workflow.node.model.CommandResult;
 import com.syncduo.server.workflow.node.restic.enums.ResticExitCode;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
@@ -17,6 +19,7 @@ import java.util.Map;
 
 @Slf4j
 public class ResticUtil {
+
     public static CommandResult execute(
             String resticPassword,
             String resticRepository,
@@ -33,6 +36,9 @@ public class ResticUtil {
             ) throws ValidationException {
         if (StringUtils.isAnyBlank(resticPassword, resticRepository)) {
             throw new ValidationException("restic execute failed. resticPassWord or resticRepository is null");
+        }
+        if (!isInitialized(resticPassword, resticRepository)) {
+            initRepository(resticPassword, resticRepository);
         }
         Executor executor = DefaultExecutor.builder().get();
         // 1. 工作目录
@@ -62,6 +68,43 @@ public class ResticUtil {
         }
     }
 
+    private static void initRepository(String resticPassword, String resticRepository) {
+        // build command line
+        DefaultExecutor executor = DefaultExecutor.builder().get();
+        try {
+            int exitCode = executor.execute(
+                    CommandLine.parse("restic init --json"),
+                    genResticEnv(resticPassword, resticRepository)
+            );
+            ResticExitCode resticExitCode = ResticExitCode.fromCode(exitCode);
+            if (resticExitCode != ResticExitCode.SUCCESS) {
+                throw new BusinessException("restic init 命令返回未处理 exitCode %s".formatted(exitCode));
+            }
+        } catch (IOException e) {
+            throw new BusinessException("restic init 命令执行失败", e);
+        }
+    }
+
+    private static boolean isInitialized(String resticPassword, String resticRepository) {
+        // build command line
+        DefaultExecutor executor = DefaultExecutor.builder().get();
+        try {
+            int exitCode = executor.execute(
+                    CommandLine.parse("restic cat config --json"),
+                    genResticEnv(resticPassword, resticRepository)
+            );
+            if (exitCode == ResticExitCode.SUCCESS.getCode()) {
+                return true;
+            } else if (exitCode == ResticExitCode.REPOSITORY_NOT_FOUND.getCode()) {
+                return false;
+            } else {
+                throw new BusinessException("restic cat config 命令返回未处理退出码 %s".formatted(exitCode));
+            }
+        } catch (IOException e) {
+            throw new BusinessException("restic cat config 命令执行失败", e);
+        }
+    }
+
     private static String getStdAsString(ByteArrayOutputStream std) {
         if (ObjectUtils.isEmpty(std)) {
             return "";
@@ -69,9 +112,7 @@ public class ResticUtil {
         return std.toString(StandardCharsets.UTF_8).trim();
     }
 
-    private static Map<String, String> genResticEnv(
-            String resticPassword,
-            String resticRepository) {
+    private static Map<String, String> genResticEnv(String resticPassword, String resticRepository) {
         // 获取当前系统变量
         Map<String, String> result = new HashMap<>(System.getenv());
         // 设置 RESTIC 密码和备份目录

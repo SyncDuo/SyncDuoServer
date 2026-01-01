@@ -2,23 +2,10 @@ package com.syncduo.server;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.syncduo.server.bus.FolderWatcher;
-import com.syncduo.server.controller.FileSystemAccessController;
-import com.syncduo.server.controller.SystemInfoController;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.enums.ResticExitCodeEnum;
 import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.SyncDuoException;
 import com.syncduo.server.exception.ValidationException;
-import com.syncduo.server.model.api.filesystem.Folder;
-import com.syncduo.server.model.api.global.SyncDuoHttpResponse;
-import com.syncduo.server.model.api.systeminfo.SystemSettings;
-import com.syncduo.server.model.restic.global.ResticExecResult;
-import com.syncduo.server.service.db.impl.BackupJobService;
-import com.syncduo.server.service.db.impl.CopyJobService;
-import com.syncduo.server.service.db.impl.RestoreJobService;
-import com.syncduo.server.service.db.impl.SyncFlowService;
-import com.syncduo.server.service.restic.ResticFacadeService;
 import com.syncduo.server.workflow.controller.FlowEditorController;
 import com.syncduo.server.workflow.controller.FlowInfoController;
 import com.syncduo.server.workflow.controller.ResticController;
@@ -43,8 +30,6 @@ import com.syncduo.server.workflow.model.db.SnapshotMetaEntity;
 import com.syncduo.server.workflow.node.registry.FieldRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,23 +63,7 @@ class SyncDuoServerApplicationTests {
 
     private final FlowInfoController flowInfoController;
 
-    private final SyncFlowService syncFlowService;
-
-    private final FolderWatcher folderWatcher;
-
-    private final ResticFacadeService resticFacadeService;
-
-    private final CopyJobService copyJobService;
-
-    private final BackupJobService backupJobService;
-
-    private final RestoreJobService restoreJobService;
-
-    private final SystemInfoController systemInfoController;
-
     private final ResticController resticController;
-
-    private final FileSystemAccessController fileSystemAccessController;
 
     private final FlowExecutionMapper flowExecutionMapper;
 
@@ -126,15 +95,7 @@ class SyncDuoServerApplicationTests {
     public SyncDuoServerApplicationTests(
             FlowEditorController flowEditorController,
             FlowInfoController flowInfoController,
-            SyncFlowService syncFlowService,
-            FolderWatcher folderWatcher,
-            ResticFacadeService resticFacadeService,
-            CopyJobService copyJobService,
-            BackupJobService backupJobService,
-            RestoreJobService restoreJobService,
-            SystemInfoController systemInfoController,
             ResticController resticController,
-            FileSystemAccessController fileSystemAccessController,
             FlowExecutionMapper flowExecutionMapper,
             NodeExecutionMapper nodeExecutionMapper,
             FlowDefinitionMapper flowDefinitionMapper,
@@ -142,15 +103,7 @@ class SyncDuoServerApplicationTests {
             FlowEngine flowEngine) {
         this.flowEditorController = flowEditorController;
         this.flowInfoController = flowInfoController;
-        this.syncFlowService = syncFlowService;
-        this.folderWatcher = folderWatcher;
-        this.resticFacadeService = resticFacadeService;
-        this.copyJobService = copyJobService;
-        this.backupJobService = backupJobService;
-        this.restoreJobService = restoreJobService;
-        this.systemInfoController = systemInfoController;
         this.resticController = resticController;
-        this.fileSystemAccessController = fileSystemAccessController;
         this.flowExecutionMapper = flowExecutionMapper;
         this.nodeExecutionMapper = nodeExecutionMapper;
         this.flowDefinitionMapper = flowDefinitionMapper;
@@ -505,24 +458,6 @@ class SyncDuoServerApplicationTests {
     }
 
     @Test
-    void ShouldReturnTrueWhenValidParamPojo() {
-        this.fieldSchemaDTOList.get(0).addFieldSchema(
-                FieldRegistry.RESTIC_BACKUP_RESULT,
-                ParamSourceType.MANUAL.name(),
-                FieldRegistry.getMeta(FieldRegistry.RESTIC_BACKUP_RESULT),
-                ResticExecResult.success(ResticExitCodeEnum.SUCCESS, "456")
-        );
-        assertThrows(ValidationException.class, () -> this.flowEditorController.validFieldSchema(this.fieldSchemaDTOList));
-        this.fieldSchemaDTOList.get(0).addFieldSchema(
-                FieldRegistry.RESTIC_BACKUP_RESULT,
-                ParamSourceType.MANUAL.name(),
-                FieldRegistry.getMeta(FieldRegistry.RESTIC_BACKUP_RESULT),
-                ResticExecResult.failed(ResticExitCodeEnum.SUCCESS, "789")
-        );
-        assertThrows(ValidationException.class, () -> this.flowEditorController.validFieldSchema(this.fieldSchemaDTOList));
-    }
-
-    @Test
     void ShouldReturnTrueWhenValidParamCollections() {
         this.fieldSchemaDTOList.get(0).addFieldSchema(
                 FieldRegistry.DEDUPLICATE_FILES,
@@ -546,35 +481,6 @@ class SyncDuoServerApplicationTests {
             assertEquals(v.sourceType(), fieldSchema.sourceType());
             assertEquals(v.typeReference(), fieldSchema.typeReference());
         });
-    }
-
-    @Test
-    void ShouldReturnTrueWhenGettingHostName() {
-        SyncDuoHttpResponse<String> hostName = this.fileSystemAccessController.getHostName();
-        assert StringUtils.isNotBlank(hostName.getData());
-    }
-
-    @Test
-    void ShouldReturnTrueWhenGettingSubfolders() {
-        SyncDuoHttpResponse<List<Folder>> subfolders =
-                this.fileSystemAccessController.getSubfolders(sourceFolderPath);
-        List<Folder> data = subfolders.getData();
-        assert CollectionUtils.isNotEmpty(data);
-        for (Folder folder : data) {
-            assert ObjectUtils.isNotEmpty(folder);
-        }
-    }
-
-    @Test
-    void ShouldReturnTrueWhenGettingSystemSettings() {
-        SyncDuoHttpResponse<SystemSettings> result = this.systemInfoController.getSystemSettings();
-        assert result.getStatusCode() == 200;
-        SystemSettings systemSettings = result.getData();
-        assert ObjectUtils.isNotEmpty(systemSettings);
-        assert ObjectUtils.allNotNull(
-                systemSettings.getSystem(),
-                systemSettings.getRclone(),
-                systemSettings.getRestic());
     }
 
     @Test
@@ -698,14 +604,8 @@ class SyncDuoServerApplicationTests {
         this.truncateAllTable();
         // 清空文件夹
         this.deleteFolder();
-        // 停止 watcher
-        this.destroyStatefulComponent();
         // 创建 source folder
         FileOperationTestUtil.createFolders(sourceFolderPath, 4, 3);
-        // 因为 spring boot 的 PostConstruct 方法在整个测试中只会执行一次
-        // 而 deleteFolder 在每个测试方法前都会执行, 把 restic 的 backup folder 清空
-        // 所以这里需要再执行一次 restic init
-        this.resticFacadeService.init();
         log.info("initial finish");
     }
 
@@ -718,19 +618,12 @@ class SyncDuoServerApplicationTests {
         FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(backupPath));
         // delete restore folder
         FileOperationTestUtil.deleteAllFoldersLeaveItSelf(Path.of(restorePath));
+        // clean temp dir
+        FileOperationTestUtil.deleteDirWithPrefix("restore");
         log.info("delete all folder");
-        // delete temp folder(start with "restore")
     }
 
     void truncateAllTable() {
-        // sync flow truncate
-        this.syncFlowService.remove(new QueryWrapper<>());
-        // copy job truncate
-        this.copyJobService.remove(new QueryWrapper<>());
-        // backup job truncate
-        this.backupJobService.remove(new QueryWrapper<>());
-        // restore job truncate
-        this.restoreJobService.remove(new QueryWrapper<>());
         // flow definition truncate
         this.flowDefinitionMapper.delete(new QueryWrapper<>());
         // flow execution truncate
@@ -740,9 +633,5 @@ class SyncDuoServerApplicationTests {
         // snapshot meta truncate
         this.snapshotMetaMapper.delete(new QueryWrapper<>());
         log.info("truncate all table");
-    }
-
-    void destroyStatefulComponent() {
-        this.folderWatcher.destroy();
     }
 }

@@ -1,4 +1,4 @@
-package com.syncduo.server.model.entity;
+package com.syncduo.server.workflow.model.db;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;

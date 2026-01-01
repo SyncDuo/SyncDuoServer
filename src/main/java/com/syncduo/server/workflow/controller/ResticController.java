@@ -54,21 +54,7 @@ public class ResticController {
     public FlowResponse<List<SnapshotItemDTO>> getSnapshotItem(
             @RequestBody SnapshotMetaEntity snapshotMetaEntity,
             @RequestParam(value = "filter", defaultValue = "/") String filter) {
-        FlowDefinition tempFlow = new FlowDefinition("restic-ls-temp", List.of(
-                new FlowNode(
-                        "1",
-                        "fetch_snapshot_nodes",
-                        Map.of(
-                                FieldRegistry.RESTIC_SNAPSHOT_ID, new ParamValue(snapshotMetaEntity.getSnapshotId()),
-                                FieldRegistry.RESTIC_LS_FILTER, new ParamValue(filter),
-                                FieldRegistry.RESTIC_PASSWORD,
-                                new ParamValue(systemSettings.getRestic().getBackupPassword()),
-                                FieldRegistry.RESTIC_BACKUP_REPOSITORY,
-                                new ParamValue(snapshotMetaEntity.getBackupRepository())
-                        ),
-                        List.of()
-                )
-        ));
+        FlowDefinition tempFlow = buildLsFlow(snapshotMetaEntity, filter);
         FlowContext context;
         try {
             context = this.flowEngine.executeOnce(tempFlow).get();
@@ -84,6 +70,24 @@ public class ResticController {
                         n.isDirectory() ? 0L : n.getSize().longValue(),
                         n.getCtime().toInstant()))
                 .toList());
+    }
+
+    private FlowDefinition buildLsFlow(SnapshotMetaEntity snapshotMetaEntity, String filter) {
+        return new FlowDefinition("restic-ls-temp", List.of(
+                new FlowNode(
+                        "1",
+                        "fetch_snapshot_nodes",
+                        Map.of(
+                                FieldRegistry.RESTIC_SNAPSHOT_ID, new ParamValue(snapshotMetaEntity.getSnapshotId()),
+                                FieldRegistry.RESTIC_LS_FILTER, new ParamValue(filter),
+                                FieldRegistry.RESTIC_PASSWORD,
+                                new ParamValue(systemSettings.getRestic().getBackupPassword()),
+                                FieldRegistry.RESTIC_BACKUP_REPOSITORY,
+                                new ParamValue(snapshotMetaEntity.getBackupRepository())
+                        ),
+                        List.of()
+                )
+        ));
     }
 
     @PostMapping("/download-restore-file")
@@ -104,7 +108,6 @@ public class ResticController {
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException("restore 执行失败", e.getCause());
         }
-
         Path file = FieldRegistry.getValue(FieldRegistry.RESTIC_RESTORE_RESULT, context);
         UrlResource urlResource;
         try {
