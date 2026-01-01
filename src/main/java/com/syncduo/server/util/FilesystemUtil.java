@@ -9,9 +9,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
 import java.util.Random;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -37,15 +35,6 @@ public class FilesystemUtil {
             throw new BusinessException(("isFolderPathValid failed. " +
                     "folderPathString doesn't exist or is not folder." +
                     "folderPathString is %s").formatted(folderPathString));
-        }
-    }
-
-    public static List<Path> getAllFile(Path folder)
-            throws BusinessException {
-        try (Stream<Path> list = Files.list(folder)) {
-            return list.filter(Files::isRegularFile).toList();
-        } catch (IOException e) {
-            throw new BusinessException("getAllFile failed.", e);
         }
     }
 

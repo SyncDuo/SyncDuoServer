@@ -1,5 +1,6 @@
 package com.syncduo.server;
 
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.FlowException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -9,8 +10,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Random;
-
-import static com.syncduo.server.util.FilesystemUtil.getAllFile;
+import java.util.stream.Stream;
 
 public class FileOperationTestUtil {
 
@@ -63,6 +63,15 @@ public class FileOperationTestUtil {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    private static List<Path> getAllFile(Path folder)
+            throws BusinessException {
+        try (Stream<Path> list = Files.list(folder)) {
+            return list.filter(Files::isRegularFile).toList();
+        } catch (IOException e) {
+            throw new BusinessException("getAllFile failed.", e);
+        }
     }
 
     private static void createFoldersRecursive(
