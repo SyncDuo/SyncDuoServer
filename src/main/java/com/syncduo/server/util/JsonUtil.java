@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.syncduo.server.exception.JsonException;
 import com.syncduo.server.exception.ValidationException;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -180,45 +179,14 @@ public class JsonUtil {
         return fields;
     }
 
-    public static List<String> getResticJsonLinesByMsgType(String json, String msgType) {
-        ArrayList<String> result = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new StringReader(json))) {
-            String line;
-            while ((line = br.readLine()) != null && !line.isBlank()) {
-                // Parse to a tree to inspect message_type quickly
-                JsonNode root = objectMapper.readTree(line);
-                String type = root.path("message_type").asText();
-                if (type.equals(msgType)) {
-                    result.add(objectMapper.writeValueAsString(root));
-                }
-            }
-            return result;
-        } catch (IOException e) {
-            throw new JsonException("getResticJsonLineByMsgType failed. " +
-                    "commandLineOutput is %s".formatted(json),
-                    e);
-        }
-    }
-
-    public static <T> T parseResticJsonLine(
-            String stdout,
-            String condition,
-            Class<T> clazz) throws ValidationException, JsonException {
-        List<T> result = parseResticJsonLines(stdout, condition, clazz);
-        if (CollectionUtils.isEmpty(result)) {
-            return null;
-        }
-        return result.get(0);
-    }
-
-    public static <T> List<T> parseResticJsonLines(
+    public static <T> List<T> aggResticOutputByMsgType(
             String commandLineOutput,
-            String condition,
+            String msgType,
             Class<T> clazz) throws ValidationException, JsonException {
         if (ObjectUtils.isEmpty(clazz)) {
             throw new ValidationException("parseLine failed. clazz is null.");
         }
-        if (StringUtils.isAnyBlank(commandLineOutput, condition)) {
+        if (StringUtils.isAnyBlank(commandLineOutput, msgType)) {
             return null;
         }
         List<T> result = new ArrayList<>();
@@ -228,7 +196,7 @@ public class JsonUtil {
                 // Parse to a tree to inspect message_type quickly
                 JsonNode root = objectMapper.readTree(line);
                 String type = root.path("message_type").asText();
-                if (condition.equals(type)) {
+                if (msgType.equals(type)) {
                     result.add(objectMapper.treeToValue(root, clazz));
                 }
             }
@@ -267,39 +235,6 @@ public class JsonUtil {
         }
     }
 
-    public static <T> T parseResticJsonDocument(
-            String commandLineOutput,
-            Class<T> clazz
-    ) throws ValidationException, JsonException {
-        if (StringUtils.isBlank(commandLineOutput)) {
-            throw new ValidationException("parseResticJsonDocument failed. commandLineOutput is null.");
-        }
-        try {
-            return objectMapper.readValue(commandLineOutput, clazz);
-        } catch (JsonProcessingException e) {
-            throw new JsonException("parseResticJsonDocument failed. " +
-                    "commandLineOutput is %s".formatted(commandLineOutput),
-                    e);
-        }
-    }
-
-    public static <T> T deserializeObjectToPojo(Object source, Class<T> clazz) throws JsonException {
-        try {
-            return objectMapper.convertValue(source, clazz);
-        } catch (IllegalArgumentException e) {
-            throw new JsonException("deserializeObjectToPojo failed. source is %s".formatted(source), e);
-        }
-    }
-
-    public static List<String> deserializeStringToList(String jsonString) throws JsonException {
-        try {
-            return objectMapper.readValue(jsonString, new TypeReference<>() {
-            });
-        } catch (JsonProcessingException e) {
-            throw new JsonException("deserializeStringToList failed. jsonString is %s".formatted(jsonString), e);
-        }
-    }
-
     public static <T> List<T> deserToList(String jsonString, Class<T> elementType) {
         try {
             return objectMapper.readValue(
@@ -308,14 +243,6 @@ public class JsonUtil {
             );
         } catch (JsonProcessingException e) {
             throw new JsonException("deserToList failed", e);
-        }
-    }
-
-    public static String serializeListToString(List<String> list) throws JsonException {
-        try {
-            return objectMapper.writeValueAsString(list);
-        } catch (JsonProcessingException e) {
-            throw new JsonException("serializeListToString failed. list is %s".formatted(list), e);
         }
     }
 

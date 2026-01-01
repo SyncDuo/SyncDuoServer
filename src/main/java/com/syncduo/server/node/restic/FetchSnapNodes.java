@@ -52,7 +52,7 @@ public class FetchSnapNodes extends BaseNode {
         if (!commandResult.isSuccess()) {
             return NodeResult.failed(commandResult.getError());
         }
-        List<SnapshotNode> snapshotNodes = JsonUtil.parseResticJsonLines(
+        List<SnapshotNode> snapshotNodes = JsonUtil.aggResticOutputByMsgType(
                 commandResult.getOutput(),
                 "node",
                 SnapshotNode.class
