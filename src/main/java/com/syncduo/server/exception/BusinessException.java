@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 
 
 @EqualsAndHashCode(callSuper = false)
-public class BusinessException extends SyncDuoException {
+public class BusinessException extends FlowException {
     public BusinessException(String message) {
         super(HttpStatus.INTERNAL_SERVER_ERROR, message);
     }

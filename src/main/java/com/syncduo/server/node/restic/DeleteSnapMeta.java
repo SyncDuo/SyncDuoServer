@@ -6,7 +6,7 @@ import com.syncduo.server.core.model.base.BaseNode;
 import com.syncduo.server.core.model.execution.FlowContext;
 import com.syncduo.server.core.model.execution.NodeResult;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.exception.DbException;
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.mapper.SnapshotMetaMapper;
 import com.syncduo.server.model.db.SnapshotMetaEntity;
 import com.syncduo.server.node.registry.FieldRegistry;
@@ -65,7 +65,7 @@ public class DeleteSnapMeta extends BaseNode {
         dbResult.forEach(n -> n.setRecordDeleted(DeletedEnum.DELETED.getCode()));
         List<BatchResult> batchResults = this.snapshotMetaMapper.updateById(dbResult);
         if (batchResults.size() != dbResult.size()) {
-            throw new DbException("更新 DB 失败");
+            throw new BusinessException("更新 DB 失败");
         }
     }
 }

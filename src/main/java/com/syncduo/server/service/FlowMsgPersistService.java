@@ -7,8 +7,7 @@ import com.syncduo.server.core.channel.Message;
 import com.syncduo.server.core.engine.FlowValidator;
 import com.syncduo.server.core.model.definition.FlowNode;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.exception.DbException;
-import com.syncduo.server.exception.ResourceNotFoundException;
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.mapper.FlowDefinitionMapper;
 import com.syncduo.server.mapper.FlowExecutionMapper;
@@ -110,7 +109,7 @@ public class FlowMsgPersistService implements SmartLifecycle {
                 // 查找数据库
                 NodeExecutionEntity dbResult = this.getNodeExecutionByUuidV4(msg.nodeExecutionUuidV4());
                 if (ObjectUtils.isEmpty(dbResult)) {
-                    throw new ResourceNotFoundException("找不到 node execution." +
+                    throw new BusinessException("找不到 node execution." +
                             "UUID 是 %s".formatted(msg.nodeExecutionUuidV4()));
                 }
                 // entity 设置数据库 ID, output data 和 end time
@@ -125,7 +124,7 @@ public class FlowMsgPersistService implements SmartLifecycle {
     private NodeExecutionEntity createNodeExecutionFromMsg(Message msg) {
         FlowExecutionEntity flowExecution = this.getFlowExecutionByUuidV4(msg.flowExecutionUuidV4());
         if (ObjectUtils.isEmpty(flowExecution)) {
-            throw new ResourceNotFoundException("找不到 flow execution. " +
+            throw new BusinessException("找不到 flow execution. " +
                     "UUID 是 %s".formatted(msg.flowExecutionUuidV4()));
         }
         return new NodeExecutionEntity()
@@ -164,7 +163,7 @@ public class FlowMsgPersistService implements SmartLifecycle {
                 queryWrapper.eq(FlowExecutionEntity::getFlowExecutionUuidV4, entity.getFlowExecutionUuidV4());
                 FlowExecutionEntity dbResult = this.flowExecutionMapper.selectOne(queryWrapper);
                 if (ObjectUtils.isEmpty(dbResult)) {
-                    throw new ResourceNotFoundException(("找不到 flow execution. " +
+                    throw new BusinessException(("找不到 flow execution. " +
                             "uuid 是 %s").formatted(entity.getFlowExecutionUuidV4()));
                 }
                 // entity 设置数据库 id 和 结束时间
@@ -187,7 +186,7 @@ public class FlowMsgPersistService implements SmartLifecycle {
 
     private void isDbOperationSuccess(int count) {
         if (count != 1) {
-            throw new DbException("db 操作失败, count = %s".formatted(count));
+            throw new BusinessException("db 操作失败, count = %s".formatted(count));
         }
     }
 

@@ -1,6 +1,6 @@
 package com.syncduo.server;
 
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.FlowException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -164,7 +164,7 @@ public class FileOperationTestUtil {
         }
     }
 
-    public static void modifyFile(Path folderPath, int number) throws IOException, SyncDuoException {
+    public static void modifyFile(Path folderPath, int number) throws IOException, FlowException {
         // 获取所有文件
         List<Path> allFile = getAllFile(folderPath);
         // 遍历 number 个文件, 并修改, 且作为结果返回
@@ -182,7 +182,7 @@ public class FileOperationTestUtil {
         }
     }
 
-    public static List<Path> deleteFile(Path folderPath, int number) throws IOException, SyncDuoException {
+    public static List<Path> deleteFile(Path folderPath, int number) throws IOException, FlowException {
         List<Path> files = new ArrayList<>(number);
         // 获取所有文件
         List<Path> allFile = getAllFile(folderPath);

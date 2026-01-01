@@ -7,16 +7,16 @@ import org.springframework.http.HttpStatus;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class SyncDuoException extends RuntimeException {
+public class FlowException extends RuntimeException {
 
     private HttpStatus status;
 
-    public SyncDuoException(HttpStatus status, String message) {
+    public FlowException(HttpStatus status, String message) {
         super(message);
         this.status = status;
     }
 
-    public SyncDuoException(HttpStatus status, String message, Throwable cause) {
+    public FlowException(HttpStatus status, String message, Throwable cause) {
         super(message, cause);
         this.status = status;
     }
@@ -40,7 +40,7 @@ public class SyncDuoException extends RuntimeException {
         sb.append("%s : %s -> ".formatted(
                 throwable.getClass().getSimpleName(),
                 // 解决其他异常无具体信息问题
-                throwable instanceof SyncDuoException ? throwable.getMessage() : throwable.toString()));
+                throwable instanceof FlowException ? throwable.getMessage() : throwable.toString()));
         // 递归处理cause
         buildMessageChain(throwable.getCause(), sb, depth + 1);
     }

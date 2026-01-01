@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.syncduo.server.exception.JsonException;
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.ValidationException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -182,7 +182,7 @@ public class JsonUtil {
     public static <T> List<T> aggResticOutputByMsgType(
             String commandLineOutput,
             String msgType,
-            Class<T> clazz) throws ValidationException, JsonException {
+            Class<T> clazz) throws ValidationException, BusinessException {
         if (ObjectUtils.isEmpty(clazz)) {
             throw new ValidationException("parseLine failed. clazz is null.");
         }
@@ -202,13 +202,13 @@ public class JsonUtil {
             }
             return result;
         } catch (IOException e) {
-            throw new JsonException("parseResticJsonLine failed. " +
+            throw new BusinessException("aggResticOutputByMsgType failed. " +
                     "commandLineOutput is %s".formatted(commandLineOutput),
                     e);
         }
     }
 
-    public static <T> T readLastLine(String commandLineOutput, Class<T> clazz) throws JsonException {
+    public static <T> T readLastLine(String commandLineOutput, Class<T> clazz) throws BusinessException {
         if (StringUtils.isAnyBlank(commandLineOutput)) {
             return null;
         }
@@ -222,14 +222,14 @@ public class JsonUtil {
                 }
             }
         } catch (IOException e) {
-            throw new JsonException("readLastLine failed. " +
+            throw new BusinessException("readLastLine failed. " +
                     "commandLineOutput is %s".formatted(commandLineOutput),
                     e);
         }
         try {
             return StringUtils.isEmpty(lastLine) ? null : objectMapper.readValue(lastLine, clazz);
         } catch (JsonProcessingException e) {
-            throw new JsonException(("readLastLine failed. " +
+            throw new BusinessException(("readLastLine failed. " +
                     "commandLineOutput is %s").formatted(commandLineOutput),
                     e);
         }
@@ -242,15 +242,15 @@ public class JsonUtil {
                     typeFactory.constructCollectionType(List.class, elementType)
             );
         } catch (JsonProcessingException e) {
-            throw new JsonException("deserToList failed", e);
+            throw new BusinessException("deserToList failed", e);
         }
     }
 
-    public static String serializeToString(Object object) throws JsonException {
+    public static String serializeToString(Object object) throws BusinessException {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
-            throw new JsonException("serializeToString failed. object is %s".formatted(object), e);
+            throw new BusinessException("serializeToString failed. object is %s".formatted(object), e);
         }
     }
 

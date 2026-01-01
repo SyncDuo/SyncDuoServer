@@ -2,7 +2,7 @@ package com.syncduo.server.model.api.global;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.FlowException;
 import lombok.Data;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.http.HttpStatus;
@@ -45,7 +45,7 @@ public class FlowResponse<T> {
         return result;
     }
 
-    public static FlowResponse<Void> failed(SyncDuoException e) {
+    public static FlowResponse<Void> failed(FlowException e) {
         FlowResponse<Void> result = new FlowResponse<>();
         // fall back 方法
         result.statusCode = ObjectUtils.isEmpty(e.getStatus()) ?

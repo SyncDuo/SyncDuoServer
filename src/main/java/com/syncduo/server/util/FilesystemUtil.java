@@ -1,7 +1,6 @@
 package com.syncduo.server.util;
 
-import com.syncduo.server.exception.FileOperationException;
-import com.syncduo.server.exception.ResourceNotFoundException;
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.exception.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +26,7 @@ public class FilesystemUtil {
     private static final int NAME_LENGTH = 9;
 
     public static Path isFolderPathValid(
-            String folderPathString) throws ValidationException, ResourceNotFoundException {
+            String folderPathString) throws ValidationException, BusinessException {
         if (StringUtils.isBlank(folderPathString)) {
             throw new ValidationException("isFolderPathValid failed. folderPathString is null");
         }
@@ -35,24 +34,24 @@ public class FilesystemUtil {
         if (Files.exists(folder) && Files.isDirectory(folder)) {
             return folder;
         } else {
-            throw new ResourceNotFoundException(("isFolderPathValid failed. " +
+            throw new BusinessException(("isFolderPathValid failed. " +
                     "folderPathString doesn't exist or is not folder." +
                     "folderPathString is %s").formatted(folderPathString));
         }
     }
 
     public static List<Path> getAllFile(Path folder)
-            throws FileOperationException {
+            throws BusinessException {
         try (Stream<Path> list = Files.list(folder)) {
             return list.filter(Files::isRegularFile).toList();
         } catch (IOException e) {
-            throw new FileOperationException("getAllFile failed.", e);
+            throw new BusinessException("getAllFile failed.", e);
         }
     }
 
     // 获取 folderPathString 下所有的文件, 并压缩到同样路径下的 zip file
     public static Path zipAllFile(String folderPathString, String prefix)
-            throws ValidationException, ResourceNotFoundException, FileOperationException {
+            throws ValidationException, BusinessException {
         // 检查参数
         Path folder = isFolderPathValid(folderPathString);
         // 获取随机zip文件名称
@@ -65,7 +64,7 @@ public class FilesystemUtil {
         try {
             zipFile = folder.resolve(sb.append(".zip").toString());
         } catch (Exception e) {
-            throw new ResourceNotFoundException("zipAllFile resolve path failed.", e);
+            throw new BusinessException("zipAllFile resolve path failed.", e);
         }
         // 遍历所有文件和文件夹
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
@@ -101,7 +100,7 @@ public class FilesystemUtil {
                 }
             });
         } catch (IOException e) {
-            throw new FileOperationException("zipAllFile failed.", e);
+            throw new BusinessException("zipAllFile failed.", e);
         }
         return zipFile;
     }

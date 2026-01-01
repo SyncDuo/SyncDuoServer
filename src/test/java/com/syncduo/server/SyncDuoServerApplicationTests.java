@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.syncduo.server.enums.DeletedEnum;
 import com.syncduo.server.exception.BusinessException;
-import com.syncduo.server.exception.SyncDuoException;
+import com.syncduo.server.exception.FlowException;
 import com.syncduo.server.exception.ValidationException;
 import com.syncduo.server.controller.FlowEditorController;
 import com.syncduo.server.controller.FlowInfoController;
@@ -590,7 +590,7 @@ class SyncDuoServerApplicationTests {
         this.fieldSchemaDTOList = List.of(node1Schema, node2Schema, node3Schema, node4Schema);
     }
 
-    void waitSec(long sec) throws SyncDuoException {
+    void waitSec(long sec) throws FlowException {
         try {
             Thread.sleep(sec * 1000);
         } catch (InterruptedException e) {
@@ -599,7 +599,7 @@ class SyncDuoServerApplicationTests {
     }
 
     @BeforeEach
-    void prepareEnvironment() throws IOException, SyncDuoException {
+    void prepareEnvironment() throws IOException, FlowException {
         // 清空数据库
         this.truncateAllTable();
         // 清空文件夹

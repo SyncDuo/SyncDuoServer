@@ -3,7 +3,7 @@ package com.syncduo.server.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.syncduo.server.core.engine.FlowEngine;
 import com.syncduo.server.enums.DeletedEnum;
-import com.syncduo.server.exception.DbException;
+import com.syncduo.server.exception.BusinessException;
 import com.syncduo.server.mapper.FlowDefinitionMapper;
 import com.syncduo.server.model.db.FlowDefinitionEntity;
 import lombok.Data;
@@ -69,7 +69,7 @@ public class FlowScheduler implements SmartLifecycle {
             dbResult.setEnabled(0);
             int count = this.flowDefinitionMapper.updateById(dbResult);
             if (count != 1) {
-                throw new DbException("db 操作失败, count = %s".formatted(count));
+                throw new BusinessException("db 操作失败, count = %s".formatted(count));
             }
             return dbResult;
         }
@@ -84,7 +84,7 @@ public class FlowScheduler implements SmartLifecycle {
         dbResult.setRecordDeleted(DeletedEnum.DELETED.getCode());
         int count = this.flowDefinitionMapper.updateById(dbResult);
         if (count != 1) {
-            throw new DbException("db 操作失败, count = %s".formatted(count));
+            throw new BusinessException("db 操作失败, count = %s".formatted(count));
         }
     }
 
